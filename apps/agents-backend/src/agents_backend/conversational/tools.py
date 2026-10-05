@@ -260,7 +260,7 @@ def guardar_pregunta(
     por separado tras la confirmación explícita del profesor.
     """
     # Embedding para guardar (RAG de preguntas).
-    from core.infrastructure.embeddings import embedder
+    from core.infrastructure.embeddings.embedder import embedder
 
     vec = embedder.embed([question_text])[0]
 
@@ -356,7 +356,7 @@ def guardar_pregunta_pendiente(verificar_humano: bool = False) -> str:
         )
     item = item_model.model_dump()
 
-    from core.infrastructure.embeddings import embedder
+    from core.infrastructure.embeddings.embedder import embedder
     from agents_backend.shared.verifier import review_question
 
     # Embedding para guardar (RAG de preguntas).

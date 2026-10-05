@@ -23,7 +23,7 @@ from pathlib import Path
 
 from core.infrastructure.db.connection import SessionLocal
 from core.domain.models import Subject, MaterialChunk
-from core.infrastructure.embeddings import embedder
+from core.infrastructure.embeddings.embedder import embedder
 from core.infrastructure.files.extract import (
     _extract_pdf,
     _extract_docx,

@@ -4,17 +4,25 @@ El directorio de salida se comparte con el latex-compiler vía volumen y es
 servido por exam-app en `GET /output/{filename}`.
 
 Resolución (en orden):
-  1. `/app/output` (contenedor: volumen compartido con latex-compiler).
-  2. `data/agent_outputs` relativo a la raíz del repo (desarrollo local).
+  1. `EXAM_OUTPUT_DIR` (override explícito).
+  2. `/app/output` (contenedor: volumen compartido con latex-compiler).
+  3. `data/agent_outputs` relativo a la raíz del repo (desarrollo local).
 """
 from __future__ import annotations
 
 import os
 from pathlib import Path
 
+
+def _repo_root_candidates() -> list[Path]:
+    """Raíces candidatas del repo (dev local), desde la ubicación de este archivo."""
+    here = Path(__file__).resolve()
+    return [p / "data" / "agent_outputs" for p in here.parents if (p / "data").exists()]
+
+
 _CANDIDATE_OUTPUT = [
     Path("/app/output"),  # contenedor (volumen compartido con latex-compiler)
-    Path(__file__).resolve().parents[6] / "data" / "agent_outputs",  # desarrollo local
+    *_repo_root_candidates(),  # desarrollo local (data/ existe en la raíz)
 ]
 
 

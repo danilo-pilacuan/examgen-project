@@ -131,7 +131,7 @@ def index_subject(subject_id: str, req: IndexRequest):
     if not all_chunks:
         raise HTTPException(status_code=400, detail="No se pudo extraer texto")
 
-    from core.infrastructure.embeddings import embedder
+    from core.infrastructure.embeddings.embedder import embedder
     from core.domain.models import MaterialChunk
 
     contents = [c for _, _, c in all_chunks]

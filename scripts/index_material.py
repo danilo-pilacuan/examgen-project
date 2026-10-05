@@ -23,7 +23,7 @@ from sqlalchemy import select  # noqa: E402
 
 from core.infrastructure.db.connection import SessionLocal  # noqa: E402
 from core.domain.models import Subject, MaterialChunk  # noqa: E402
-from core.infrastructure.embeddings import embedder  # noqa: E402
+from core.infrastructure.embeddings.embedder import embedder  # noqa: E402
 from core.infrastructure.files.extract import (  # noqa: E402
     _extract_pdf,
     _extract_docx,

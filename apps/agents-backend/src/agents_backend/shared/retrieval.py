@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from core.infrastructure.db.connection import SessionLocal
 from core.domain.models import MaterialChunk
-from core.infrastructure.embeddings import embedder
+from core.infrastructure.embeddings.embedder import embedder
 
 
 def retrieve_chunks(

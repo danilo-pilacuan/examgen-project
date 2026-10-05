@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 
 from core.infrastructure.db.connection import SessionLocal
 from core.domain.models import GeneratedQuestion
-from core.infrastructure.embeddings import embedder
+from core.infrastructure.embeddings.embedder import embedder
 
 
 def persist_generated_items(

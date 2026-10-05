@@ -12,6 +12,7 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 COPY libs/core/src/core /app/core
 COPY apps/agents-backend/src/agents_backend /app/agents_backend
 COPY apps/exam-app/src/exam_app /app/exam_app
+COPY libs/core/src/core/infrastructure/db/migrations /app/libs/core/src/core/infrastructure/db/migrations
 COPY scripts/ /app/scripts/
 COPY alembic.ini /app/alembic.ini
 COPY apps/exam-app/entrypoint.sh /app/entrypoint.sh
