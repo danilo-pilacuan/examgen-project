@@ -1,18 +1,18 @@
-[submodule "apps/frontend"]
-	path = apps/frontend
-	url = ./apps/frontend
-[submodule "apps/exam-app"]
-	path = apps/exam-app
-	url = ./apps/exam-app
-[submodule "apps/agents-backend"]
-	path = apps/agents-backend
-	url = ./apps/agents-backend
-[submodule "apps/latex-compiler"]
-	path = apps/latex-compiler
-	url = ./apps/latex-compiler
-[submodule "apps/embedding-service"]
-	path = apps/embedding-service
-	url = ./apps/embedding-service
-[submodule "libs/core"]
-	path = libs/core
-	url = ./libs/core
+﻿[submodule "projects/frontend"]
+	path = projects/frontend
+	url = ./projects/frontend
+[submodule "projects/exam-app"]
+	path = projects/exam-app
+	url = ./projects/exam-app
+[submodule "projects/agents-backend"]
+	path = projects/agents-backend
+	url = ./projects/agents-backend
+[submodule "projects/latex-compiler"]
+	path = projects/latex-compiler
+	url = ./projects/latex-compiler
+[submodule "projects/embedding-service"]
+	path = projects/embedding-service
+	url = ./projects/embedding-service
+[submodule "projects/core"]
+	path = projects/core
+	url = ./projects/core
