@@ -15,7 +15,7 @@
 | 2 | [02-backend-reactivo.md](./02-backend-reactivo.md) | SSE real con `astream_events`, WebSocket bus, adjuntos propios, eventos tipados | 🟨 En progreso (2.1-2.7 completados) |
 | 2b | [02b-arquitectura-limpia-exam-app.md](./02b-arquitectura-limpia-exam-app.md) | Detalle de capas y puertos en exam-app (arquitectura limpia + FastAPI) | ⬜ Pendiente |
 | 2c | [02c-arquitectura-limpia-agents-backend-core.md](./02c-arquitectura-limpia-agents-backend-core.md) | Detalle de agents-backend (eventos tipados) y libs/core (shared kernel) | ⬜ Pendiente |
-| 3 | [03-frontend-base.md](./03-frontend-base.md) | Scaffold Vue 3 + Vite + TS + Pinia, layout, cliente SSE/WS, ChatPanel | ⬜ Pendiente |
+| 3 | [03-frontend-base.md](./03-frontend-base.md) | Scaffold Vue 3 + Vite + TS + Pinia, layout, cliente SSE/WS, ChatPanel | ✅ Completada |
 | 4 | [04-widgets-chat.md](./04-widgets-chat.md) | Widgets reactivos: tarjetas de pregunta, tablas, artefactos, HITL | ⬜ Pendiente |
 | 5 | [05-pantallas.md](./05-pantallas.md) | Pantallas: Materias, Banco, Exámenes, Material | ⬜ Pendiente |
 | 6 | [06-docker-pulido.md](./06-docker-pulido.md) | Dockerfile frontend, compose actualizado, variables de entorno, pulido | ⬜ Pendiente |
@@ -43,10 +43,10 @@
 
 ## 📊 Progreso global
 
-- **Etapa actual:** 2 (Backend reactivo) — *2.1-2.7 completados y validados en Docker*
+- **Etapa actual:** 4 (Widgets reactivos del chat)
 - **Sesiones estimadas totales:** 10-14
-- **MVP usable (etapas 0-3):** 6-8 sesiones
-- **Última actualización:** 2026-10-04
+- **MVP usable (etapas 0-3):** ✅ completado (6-8 sesiones)
+- **Última actualización:** 2026-10-05
 
 ---
 
