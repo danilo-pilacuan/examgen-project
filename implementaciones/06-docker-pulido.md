@@ -44,9 +44,9 @@
 
 ### 6.6 — Validación final
 - [x] `docker compose config` valida ambos compose
-- [ ] Frontend accesible en :3000 (requiere `docker compose up --build`)
-- [ ] Chat con streaming funciona en el contenedor
-- [ ] Flujo end-to-end funciona en Docker (materia → material → pregunta → examen → PDF)
+- [x] Frontend accesible en :3000 (validado con `docker compose up --build`)
+- [x] Chat con streaming funciona en el contenedor
+- [x] Flujo end-to-end funciona en Docker (materia → material → pregunta → examen → PDF)
 - [ ] OpenWebUI (legado) sigue funcionando si se levanta con el perfil
 
 ---
@@ -54,8 +54,8 @@
 ## ✅ Criterios de aceptación
 
 - [x] `docker compose config` valida la configuración
-- [ ] Frontend en :3000 funcional (pendiente de levantar Docker en máquina local)
-- [ ] Flujo end-to-end en Docker funciona
+- [x] Frontend en :3000 funcional (validado en máquina local)
+- [x] Flujo end-to-end en Docker funciona
 - [ ] Deploy en servidor remoto funciona (con los nuevos puertos)
 - [x] Documentación actualizada
 
@@ -71,3 +71,11 @@
 - **Puertos**: dev frontend en 3000 (antes era OpenWebUI); OpenWebUI movido a 3001 con perfil `legacy`. Deploy: frontend en 39005.
 - **Healthcheck** de exam-app con `python -c urllib` (la imagen slim no tiene curl).
 - **Pendiente**: validar `docker compose up --build` completo en la máquina local (Docker Desktop no estaba corriendo durante la sesión) y el deploy remoto.
+
+### Sesión 2026-10-05 (validación E2E)
+
+- **`docker compose up --build` validado**: los 5 contenedores arriba (postgres, latex-compiler, embedding-service, exam-app healthy, frontend).
+- **Frontend en :3000 funcional**: SPA servida por nginx, proxy de `/api`, `/ws`, `/output` y rutas REST (`/subjects`, `/exams`, `/questions`) verificado con curl a través del proxy.
+- **Chat con streaming en el contenedor**: `POST /v1/chat/completions` con tool `list_subjects` respondiendo en inglés.
+- **Flujo E2E completo**: `POST /exams/generate` (vía proxy del frontend) → PDF de 29KB generado por latex-compiler y descargable en `/output/{id}.pdf`.
+- **Pendiente**: deploy remoto (DGX) — fuera del alcance de esta etapa por regla del plan.

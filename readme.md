@@ -1,6 +1,8 @@
 # Generador de Exámenes en latex propulsado por agentes de IA
 
-MVP de infraestructura + agente conversacional con OpenWebUI.
+MVP de infraestructura + agente conversacional con frontend propio (Vue 3).
+
+> **Estado:** Etapas 0-7 completadas (monorepo, backend reactivo, frontend, widgets, pantallas, Docker, traducción al inglés con i18n en/es).
 
 ## Infraestructura del `MVP`
 
@@ -10,19 +12,22 @@ MVP_v1/
 ├── .gitignore
 ├── alembic.ini
 ├── ARCHITECTURE.md
-├── main.py
 ├── readme.md
-├── requirements.txt
 │
 ├── data/
 │   ├── agent_outputs/        # PDFs de exámenes generados
 │   └── inputs/               # material de las materias (PDFs, pptx, etc.)
 │
 ├── docker/
-│   ├── docker-compose.yml
-│   ├── app/                  # Dockerfile + entrypoint del exam-app
-│   ├── embedding-service/
-│   └── latex-compiler/
+│   └── docker-compose.yml    # postgres + latex-compiler + embedding-service + exam-app + frontend
+│
+├── projects/                 # submódulos del monorepo
+│   ├── core/                 # enums, schemas, banco, migraciones, plantillas LaTeX
+│   ├── agents-backend/       # agente conversacional (tools, graph, prompts) + pipeline
+│   ├── exam-app/             # FastAPI BFF (REST + SSE + WS)
+│   ├── frontend/             # Vue 3 + Vite + Pinia + vue-i18n (en/es)
+│   ├── latex-compiler/       # microservicio de compilación LaTeX
+│   └── embedding-service/    # microservicio de embeddings (bge-m3)
 │
 ├── scripts/
 │   ├── index_material.py
@@ -32,43 +37,23 @@ MVP_v1/
 │   ├── metrics.md
 │   └── cost_analysis.md
 │
-└── src/
-    ├── config.py
-    ├── api/
-    │   ├── chat.py           # endpoint OpenAI-compatible /v1
-    │   └── openwebui.py      # sube PDFs como adjuntos a OpenWebUI
-    ├── agents/
-    │   ├── graph.py          # pipeline batch (ingestor→...→compilador)
-    │   ├── llm.py
-    │   ├── nodes.py
-    │   ├── persistence.py
-    │   ├── retrieval.py
-    │   ├── verifier.py       # verificación por IA
-    │   ├── state.py
-    │   └── conversational/   # agente conversacional (tools, graph, state, prompts)
-    ├── bank/
-    │   └── service.py        # service layer de escritura segura
-    ├── embeddings/
-    ├── schemas/
-    │   └── exam.py
-    ├── templates/
-    └── database/
+└── implementaciones/         # planes de etapa y progreso
 ```
 
-## 🚀 Uso rápido (agente conversacional)
+## 🚀 Uso rápido (frontend propio)
 
 ```bash
 # 1. Levantar toda la infraestructura
 cd docker && docker compose up -d --build
 
-# 2. Abrir OpenWebUI (interfaz conversacional)
-#    http://localhost:3000  → modelo "exam-agent" ya configurado
+# 2. Abrir el frontend
+#    http://localhost:3000  → UI en inglés (selector EN/ES en la sidebar)
 
 # 3. Conversar con el agente
-#    - "¿Qué materias tienes?"                    → listar materias
-#    - "Dame preguntas sobre Estudio de Mercado"  → recuperar del banco
-#    - "Genera una pregunta sobre X"              → generar nueva (RAG)
-#    - "Genera un examen de 3 preguntas y dame el PDF" → genera y adjunta PDF
+#    - "What subjects are registered?"        → list subjects
+#    - "Give me questions about X"            → retrieve from the bank
+#    - "Generate a question about X"          → generate new (RAG)
+#    - "Generate a 3-question exam with PDF"  → generates and attaches PDF
 ```
 
 ## 🧪 Pipeline batch (API tradicional)

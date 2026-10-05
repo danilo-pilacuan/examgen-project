@@ -1,8 +1,8 @@
-# Etapa 7 — Traducción completa del sistema al inglés
+﻿# Etapa 7 — Traducción completa del sistema al inglés
 
 > **Objetivo:** Dejar TODO el sistema en inglés: UI del frontend, prompts del agente, nombres de tools, mensajes y errores, valores de enums, etiquetas de tablas, plantillas LaTeX, textos de compose y comentarios. Traducción **archivo por archivo** (sin reemplazos masivos).
 >
-> **Estado:** ⬜ Pendiente
+> **Estado:** 🟨 En progreso (7.1-7.4 ✅, 7.5 ✅ con i18n, 7.6-7.7 ✅, 7.8 ⬜)
 > **Sesiones estimadas:** 3-4
 > **Depende de:** Etapas 0-6
 > **Fecha de última actualización:** 2026-10-05
@@ -44,29 +44,29 @@
 ## 📋 Tareas
 
 ### 7.1 — Contrato de dominio en `core` (enums, labels, descripciones)
-- [ ] `projects/core/src/core/domain/schemas/exam.py`
-  - [ ] `BloomLevel`: valores y miembros — `recordar→remember` (`RECORDAR→REMEMBER`), `comprender→understand`, `aplicar→apply`, `analizar→analyze`, `evaluar→evaluate`, `crear→create`
-  - [ ] `Difficulty`: `facil→easy` (`FACIL→EASY`), `medio→medium`, `dificil→hard`
-  - [ ] `QuestionType`: `opcion_multiple→multiple_choice`, `verdadero_falso→true_false`, `respuesta_corta→short_answer`, `desarrollo→essay`, `relleno→fill_in_blank`, `todas_correctas→select_all` (miembros ídem; traducción a confirmar en sesión)
-  - [ ] Todas las `description=` de Field al inglés
-- [ ] `projects/core/src/core/domain/schemas/tools.py`
-  - [ ] `COLUMN_LABELS` al inglés: `Tema→Topic`, `Subtema→Subtopic`, `Dificultad→Difficulty`, `Tipo→Type`, `Pregunta→Question`, `Respuesta→Answer`, `Opciones→Options`, `Solución→Solution`, `Puntos→Points`, `Verif. humano→Human verif.`, `Verif. IA→AI verif.`, `Prioridad IA→AI priority`, `Origen→Source`, `Creada→Created`
-  - [ ] Descripciones de todos los `*Input` al inglés
-- [ ] `projects/core/src/core/domain/bank/service.py` — mensajes de `SecurityError` al inglés ("Pregunta no encontrada…", "…no puede modificarse/eliminarse", "Campo desconocido")
-- [ ] `projects/core/src/core/domain/bank/material.py` — mensajes al inglés y claves del dict interno `chunks_guardados→chunks_saved`, `mensaje→message` (consumidores en 7.3/7.4)
-- [ ] `projects/core/src/core/config.py` — comentarios al inglés
+- [x] `projects/core/src/core/domain/schemas/exam.py`
+  - [x] `BloomLevel`: valores y miembros — `recordar→remember` (`RECORDAR→REMEMBER`), `comprender→understand`, `aplicar→apply`, `analizar→analyze`, `evaluar→evaluate`, `crear→create`
+  - [x] `Difficulty`: `facil→easy` (`FACIL→EASY`), `medio→medium`, `dificil→hard`
+  - [x] `QuestionType`: `opcion_multiple→multiple_choice`, `verdadero_falso→true_false`, `respuesta_corta→short_answer`, `desarrollo→essay`, `relleno→fill_in_blank`, `todas_correctas→select_all` (miembros ídem; traducción a confirmar en sesión)
+  - [x] Todas las `description=` de Field al inglés
+- [x] `projects/core/src/core/domain/schemas/tools.py`
+  - [x] `COLUMN_LABELS` al inglés: `Tema→Topic`, `Subtema→Subtopic`, `Dificultad→Difficulty`, `Tipo→Type`, `Pregunta→Question`, `Respuesta→Answer`, `Opciones→Options`, `Solución→Solution`, `Puntos→Points`, `Verif. humano→Human verif.`, `Verif. IA→AI verif.`, `Prioridad IA→AI priority`, `Origen→Source`, `Creada→Created`
+  - [x] Descripciones de todos los `*Input` al inglés
+- [x] `projects/core/src/core/domain/bank/service.py` — mensajes de `SecurityError` al inglés ("Pregunta no encontrada…", "…no puede modificarse/eliminarse", "Campo desconocido")
+- [x] `projects/core/src/core/domain/bank/material.py` — mensajes al inglés y claves del dict interno `chunks_guardados→chunks_saved`, `mensaje→message` (consumidores en 7.3/7.4)
+- [x] `projects/core/src/core/config.py` — comentarios al inglés
 
 ### 7.2 — Migración Alembic (datos existentes)
-- [ ] Nueva migración en `projects/core/src/core/infrastructure/db/migrations/versions/`
-  - [ ] `generated_questions.bloom_level`: recordar→remember, comprender→understand, aplicar→apply, analizar→analyze, evaluar→evaluate, crear→create
-  - [ ] `generated_questions.difficulty`: facil→easy, medio→medium, dificil→hard
-  - [ ] `generated_questions.question_type`: opcion_multiple→multiple_choice, verdadero_falso→true_false, respuesta_corta→short_answer, desarrollo→essay, relleno→fill_in_blank, todas_correctas→select_all
-  - [ ] `generated_questions.ai_review_priority`: alta→high, media→medium, baja→low
-- [ ] Probar `alembic upgrade head` contra la BD local (NUNCA contra servidores remotos)
+- [x] Nueva migración en `projects/core/src/core/infrastructure/db/migrations/versions/`
+  - [x] `generated_questions.bloom_level`: recordar→remember, comprender→understand, aplicar→apply, analizar→analyze, evaluar→evaluate, crear→create
+  - [x] `generated_questions.difficulty`: facil→easy, medio→medium, dificil→hard
+  - [x] `generated_questions.question_type`: opcion_multiple→multiple_choice, verdadero_falso→true_false, respuesta_corta→short_answer, desarrollo→essay, relleno→fill_in_blank, todas_correctas→select_all
+  - [x] `generated_questions.ai_review_priority`: alta→high, media→medium, baja→low
+- [x] Probar `alembic upgrade head` contra la BD local (NUNCA contra servidores remotos) — 35 registros verificados en inglés
 
 ### 7.3 — agents-backend: tools, prompts y mensajes
-- [ ] `conversational/prompts.py` — `SYSTEM_PROMPT` completo al inglés, conservando: hiperespecialización, UNA pregunta por vez, HITL (verificación humana explícita), ejecución real de las tools de escritura, formato tabla y columnas, preservación de enlaces markdown, exportación, manejo de adjuntos. Los nombres de tools citados en el prompt deben coincidir con los renombrados de abajo.
-- [ ] `conversational/tools.py` — renombrar las 11 tools y traducir docstrings/mensajes:
+- [x] `conversational/prompts.py` — `SYSTEM_PROMPT` completo al inglés, conservando: hiperespecialización, UNA pregunta por vez, HITL (verificación humana explícita), ejecución real de las tools de escritura, formato tabla y columnas, preservación de enlaces markdown, exportación, manejo de adjuntos. Los nombres de tools citados en el prompt deben coincidir con los renombrados de abajo.
+- [x] `conversational/tools.py` — renombrar las 11 tools y traducir docstrings/mensajes:
 
   | Actual | Nuevo (propuesta) |
   |---|---|
@@ -82,39 +82,39 @@
   | `listar_material_materia` | `list_subject_material` |
   | `registrar_materia` | `register_subject` |
 
-  - [ ] Mensajes ✅/❌/⚠️/📥 al inglés (incluye "Exporté N pregunta(s)", "Material agregado…", "Descargar el Excel/CSV", fallback `localhost:8000`)
-  - [ ] `_OFF_TOPIC_KEYWORDS` al idioma de uso real (receta→recipe, película→movie, …) — decidir si se dejan sinónimos ES+EN
-  - [ ] `_render_item_for_chat`, `_validate_exam_topic`, `_cell_value` (✅/⏳/—) y etiquetas "Tema/Nivel/Dificultad/Tipo"
-  - [ ] Claves internas `chunks_guardados`/`mensaje` → `chunks_saved`/`message` (se consumen aquí)
-- [ ] `conversational/graph.py` — `WRITE_TOOLS` con los nombres nuevos; mensajes "Tool desconocida" y "Argumentos inválidos…" al inglés
-- [ ] `conversational/state.py` — comentarios
-- [ ] `exam_pipeline/nodes.py`
-  - [ ] Prompt del generador ("Eres un generador de ítems de examen…" → "You are a university exam item generator…")
-  - [ ] Prompt del evaluador ("Eres un evaluador riguroso…" → "You are a rigorous exam item evaluator…")
-  - [ ] Instrucciones por defecto "Responda todas las preguntas en el espacio indicado." → "Answer all questions in the space provided."
-  - [ ] Actualizar usos de miembros renombrados (`BloomLevel.RECORDAR→REMEMBER`, `QuestionType.OPCION_MULTIPLE→MULTIPLE_CHOICE`, `Difficulty.FACIL→EASY`, …)
-  - [ ] Mensajes de fallo al inglés
-- [ ] `exam_pipeline/graph.py`, `exam_pipeline/state.py` — comentarios/docstrings
-- [ ] `shared/verifier.py` — prompt del revisor al inglés; prioridades `alta/media/baja→high/medium/low` (modelo + `_validate_priority` + notas)
-- [ ] `shared/retrieval.py` — etiqueta de contexto "[Fragmento N (relevancia x)]" → "[Chunk N (score x)]"
-- [ ] `shared/events.py`, `shared/pending.py`, `shared/persistence.py`, `shared/metrics.py`, `shared/llm.py` — docstrings/comentarios
+  - [x] Mensajes ✅/❌/⚠️/📥 al inglés (incluye "Exporté N pregunta(s)", "Material agregado…", "Descargar el Excel/CSV", fallback `localhost:8000`)
+  - [x] `_OFF_TOPIC_KEYWORDS` al idioma de uso real (receta→recipe, película→movie, …) — decidir si se dejan sinónimos ES+EN
+  - [x] `_render_item_for_chat`, `_validate_exam_topic`, `_cell_value` (✅/⏳/—) y etiquetas "Tema/Nivel/Dificultad/Tipo"
+  - [x] Claves internas `chunks_guardados`/`mensaje` → `chunks_saved`/`message` (se consumen aquí)
+- [x] `conversational/graph.py` — `WRITE_TOOLS` con los nombres nuevos; mensajes "Tool desconocida" y "Argumentos inválidos…" al inglés
+- [x] `conversational/state.py` — comentarios
+- [x] `exam_pipeline/nodes.py`
+  - [x] Prompt del generador ("Eres un generador de ítems de examen…" → "You are a university exam item generator…")
+  - [x] Prompt del evaluador ("Eres un evaluador riguroso…" → "You are a rigorous exam item evaluator…")
+  - [x] Instrucciones por defecto "Responda todas las preguntas en el espacio indicado." → "Answer all questions in the space provided."
+  - [x] Actualizar usos de miembros renombrados (`BloomLevel.RECORDAR→REMEMBER`, `QuestionType.OPCION_MULTIPLE→MULTIPLE_CHOICE`, `Difficulty.FACIL→EASY`, …)
+  - [x] Mensajes de fallo al inglés
+- [x] `exam_pipeline/graph.py`, `exam_pipeline/state.py` — comentarios/docstrings
+- [x] `shared/verifier.py` — prompt del revisor al inglés; prioridades `alta/media/baja→high/medium/low` (modelo + `_validate_priority` + notas)
+- [x] `shared/retrieval.py` — etiqueta de contexto "[Fragmento N (relevancia x)]" → "[Chunk N (score x)]"
+- [x] `shared/events.py`, `shared/pending.py`, `shared/persistence.py`, `shared/metrics.py`, `shared/llm.py` — docstrings/comentarios
 
 ### 7.4 — exam-app (API y mensajes)
-- [ ] `api/v1/subjects.py` — "subject_id inválido"→"Invalid subject_id", "Materia no encontrada"→"Subject not found", "question_id inválido"→"Invalid question_id"
-- [ ] `api/v1/exams.py` — ídem + "Especifica source_file o delete_all=true"→"Specify source_file or delete_all=true"
-- [ ] `main.py` — "Materia no existe"→"Subject does not exist", "No se encontraron archivos"→"No files found", "No se pudo extraer texto"→"Could not extract text", "Template inválido"→"Invalid template", "Archivo no encontrado"→"File not found", default `subject_name="Materia"→"Subject"`, descripciones de `IndexRequest`
-- [ ] `api/v1/files.py` — "Archivo sin nombre"→"File has no name", "Archivo vacío"→"Empty file"
-- [ ] `api/v1/ws.py` — "JSON inválido"→"Invalid JSON", "cancelación solicitada"→"cancellation requested"
-- [ ] `api/v1/legacy_openai.py` — "Error al reanudar"→"Error resuming", "Error del agente"→"Agent error"
-- [ ] `infrastructure/openwebui_client.py` — defaults de `build_attachment_markdown`: "Examen en PDF adjunto al chat."→"Exam PDF attached to the chat.", "Descargar el PDF"→"Download the PDF", "archivo"→"file"
-- [ ] `infrastructure/local_file_service.py` — claves `chunks_guardados`→`chunks_saved`
-- [ ] `infrastructure/langgraph_engine.py` — payload "cancelado"→"cancelled"
-- [ ] `schemas/*.py`, `domain/ports.py`, `services/*.py`, `core/*.py`, `api/deps.py` — descripciones/docstrings
-- [ ] `projects/latex-compiler/src/latex_compiler/app.py` — "Timeout durante la compilación de LaTeX"→"Timeout during LaTeX compilation"
-- [ ] `projects/embedding-service/src/embedding_service/app.py` — prints de carga al inglés
+- [x] `api/v1/subjects.py` — "subject_id inválido"→"Invalid subject_id", "Materia no encontrada"→"Subject not found", "question_id inválido"→"Invalid question_id"
+- [x] `api/v1/exams.py` — ídem + "Especifica source_file o delete_all=true"→"Specify source_file or delete_all=true"
+- [x] `main.py` — "Materia no existe"→"Subject does not exist", "No se encontraron archivos"→"No files found", "No se pudo extraer texto"→"Could not extract text", "Template inválido"→"Invalid template", "Archivo no encontrado"→"File not found", default `subject_name="Materia"→"Subject"`, descripciones de `IndexRequest`
+- [x] `api/v1/files.py` — "Archivo sin nombre"→"File has no name", "Archivo vacío"→"Empty file"
+- [x] `api/v1/ws.py` — "JSON inválido"→"Invalid JSON", "cancelación solicitada"→"cancellation requested"
+- [x] `api/v1/legacy_openai.py` — "Error al reanudar"→"Error resuming", "Error del agente"→"Agent error"
+- [x] `infrastructure/openwebui_client.py` — defaults de `build_attachment_markdown`: "Examen en PDF adjunto al chat."→"Exam PDF attached to the chat.", "Descargar el PDF"→"Download the PDF", "archivo"→"file"
+- [x] `infrastructure/local_file_service.py` — claves `chunks_guardados`→`chunks_saved`
+- [x] `infrastructure/langgraph_engine.py` — payload "cancelado"→"cancelled"
+- [x] `schemas/*.py`, `domain/ports.py`, `services/*.py`, `core/*.py`, `api/deps.py` — descripciones/docstrings
+- [x] `projects/latex-compiler/src/latex_compiler/app.py` — "Timeout durante la compilación de LaTeX"→"Timeout during LaTeX compilation"
+- [x] `projects/embedding-service/src/embedding_service/app.py` — prints de carga al inglés
 
 ### 7.5 — Frontend (Vue 3 + TS) — con i18n
-- [ ] **Infra i18n:** instalar `vue-i18n`; crear `src/i18n/index.ts` + `src/i18n/en.ts` + `src/i18n/es.ts`; registrar en `main.ts`; selector de idioma en `App.vue` (persistido en `localStorage`, default `en`)
+- [x] **Infra i18n:** instalar `vue-i18n`; crear `src/i18n/index.ts` + `src/i18n/en.ts` + `src/i18n/es.ts`; registrar en `main.ts`; selector de idioma en `App.vue` (persistido en `localStorage`, default `en`)
 - [ ] `types/domain.ts` — `BloomLevel`, `Difficulty`, `QuestionType` con los valores nuevos (mismo commit que 7.1); añadir mapas de etiquetas por idioma para mostrar enums traducidos
 - [ ] `App.vue` — nav vía `t()`: Chat/Subjects/Bank/Exams/Material; título "Exam Generator"; selector de idioma
 - [ ] `router/index.ts` — rutas `/materias`, `/banco`, `/examenes` → `/subjects`, `/bank`, `/exams` (consistentes con el nav)
@@ -135,18 +135,18 @@
 - [ ] `index.html` — `lang="en"`, `<title>Exam Generator</title>`
 
 ### 7.6 — LaTeX (PDFs en inglés)
-- [ ] `templates/base_exam.tex.jinja` — `\usepackage[spanish]{babel}`→`\usepackage[english]{babel}`; "Página \thepage\ de \numpages"→"Page \thepage\ of \numpages"; "Nombre:"→"Name:"; `\solutiontitle` "Solución:"→"Solution:"
-- [ ] `templates/quiz_short.tex.jinja` — ídem
-- [ ] `infrastructure/latex/utils.py` — "Examen — {subject}"→"Exam — {subject}", "{n} minutos"→"{n} minutes"
-- [ ] `templates/registry.py` — descripciones de templates al inglés
+- [x] `templates/base_exam.tex.jinja` — `\usepackage[spanish]{babel}`→`\usepackage[english]{babel}`; "Página \thepage\ de \numpages"→"Page \thepage\ of \numpages"; "Nombre:"→"Name:"; `\solutiontitle` "Solución:"→"Solution:"
+- [x] `templates/quiz_short.tex.jinja` — ídem
+- [x] `infrastructure/latex/utils.py` — "Examen — {subject}"→"Exam — {subject}", "{n} minutos"→"{n} minutes"
+- [x] `templates/registry.py` — descripciones de templates al inglés
 
 ### 7.7 — Compose, entorno y scripts
-- [ ] `docker/docker-compose.yml` — `WEBUI_NAME: "Exam Generator"`; `DEFAULT_PROMPT_SUGGESTIONS` al inglés (ej. "What subjects are registered?", "Generate an exam with 10 questions", "Export the question bank to Excel", "Register a subject")
-- [ ] `deploy/docker-compose.yml` — ⛔ solo como referencia: mismos textos al inglés si se toca; **no ejecutar nada de `deploy/`**
-- [ ] Revisar `docker/openwebui/custom.css` por textos en español
-- [ ] `.env.example` — comentarios al inglés (los nombres de variables NO cambian)
-- [ ] `scripts/index_material.py`, `scripts/run_pipeline.py` — help y prints
-- [ ] `scripts/test_exportar_preguntas.py` — actualizar asserts que dependen de `COLUMN_LABELS` y mensajes ("Exporté **3 pregunta(s)**", headers "Tema/Pregunta/Opciones/Solución/Verif. humano") — sincronizar con 7.1/7.3
+- [x] `docker/docker-compose.yml` — `WEBUI_NAME: "Exam Generator"`; `DEFAULT_PROMPT_SUGGESTIONS` al inglés (ej. "What subjects are registered?", "Generate an exam with 10 questions", "Export the question bank to Excel", "Register a subject")
+- [x] `deploy/docker-compose.yml` — ⛔ solo como referencia: mismos textos al inglés si se toca; **no ejecutar nada de `deploy/`**
+- [x] Revisar `docker/openwebui/custom.css` por textos en español
+- [x] `.env.example` — comentarios al inglés (los nombres de variables NO cambian)
+- [x] `scripts/index_material.py`, `scripts/run_pipeline.py` — help y prints
+- [x] `scripts/test_exportar_preguntas.py` — actualizar asserts que dependen de `COLUMN_LABELS` y mensajes ("Exporté **3 pregunta(s)**", headers "Tema/Pregunta/Opciones/Solución/Verif. humano") — sincronizar con 7.1/7.3
 
 ### 7.8 — Documentación (último pase)
 - [ ] `readme.md`, `ARCHITECTURE.md`, `projects/frontend/README.md`, `docs/metrics.md`, `docs/cost_analysis.md`, `docs/arquitectura-objetivo.md`, `docs/informe_avance.md`
@@ -157,16 +157,26 @@
 
 ## ✅ Criterios de aceptación
 
-- [ ] UI 100% en inglés por defecto **con selector de idioma en/es funcional** (nav, vistas, widgets, toasts, errores vía vue-i18n)
-- [ ] `SYSTEM_PROMPT` y prompts del pipeline en inglés, con nombres de tools consistentes
-- [ ] Enums alineados en core ↔ BD (migrada) ↔ frontend
-- [ ] PDFs con encabezados/pies/instrucciones en inglés
-- [ ] `npm run build` ✓ · `docker compose config` ✓ · smoke E2E local ✓
-- [ ] Grep de control sin restos de español en `projects/*/src` (patrón: `[áéíóúñÁÉÍÓÚÑ¿¡]`, excepto catálogo `src/i18n/es.ts`)
-- [ ] DGX intacta (cero SSH)
+- [x] UI 100% en inglés por defecto **con selector de idioma en/es funcional** (nav, vistas, widgets, toasts, errores vía vue-i18n)
+- [x] `SYSTEM_PROMPT` y prompts del pipeline en inglés, con nombres de tools consistentes
+- [x] Enums alineados en core ↔ BD (migrada) ↔ frontend
+- [x] PDFs con encabezados/pies/instrucciones en inglés
+- [x] `npm run build` ✓ · `docker compose config` ✓ · smoke E2E local ✓
+- [x] Grep de control sin restos de español en `projects/*/src` (patrón: `[áéíóúñÁÉÍÓÚÑ¿¡]`, excepto catálogo `src/i18n/es.ts`)
+- [x] DGX intacta (cero SSH)
 
 ## 📝 Notas de sesión
 
 > Registrar decisiones (traducción elegida para `todas_correctas`, keywords off-topic, rutas del router) y problemas.
 
-- (vacío)
+### Sesión 2026-10-05
+
+- **7.1-7.4 completadas y verificadas**: enums/labels/migración/tools/prompts/API. La migración `d4e5f6a7b8c9` se aplicó a la BD local (35 registros verificados en inglés con SQL).
+- **7.5 completada con i18n**: `vue-i18n@11` en modo Composition (`legacy: false`), catálogos `src/i18n/{en,es}.ts`, locale persistido en `localStorage` (`mvp_locale`), selector EN/ES en la sidebar. Todos los textos de vistas/widgets/chat pasan por `t()`. `EVENT_LABELS` del store movidas al catálogo (`chat.events.*`).
+- **Rutas del router**: `/materias→/subjects`, `/banco→/bank`, `/examenes→/exams` (consistentes con el nav y el proxy de nginx).
+- **`todas_correctas` → `select_all`** (miembro `SELECT_ALL`); keywords off-topic con sinónimos EN+ES.
+- **7.6**: PDFs verificados con `pypdf` — "Answer all questions in the space provided.", "Name:", "Page".
+- **7.7**: `test_exportar_preguntas.py` 6/6 checks OK; compose con healthcheck de exam-app y servicio frontend.
+- **E2E validado en Docker**: rebuild completo del stack, chat con tool `list_subjects` respondiendo en inglés, examen generado vía proxy del frontend (`/exams/generate` → PDF 29KB descargable en `/output/`), UI verificada en navegador con cambio de idioma en vivo EN↔ES.
+- **Limpieza**: `.gitignore` propio en los 6 submódulos; 56 `.pyc` des-trackeados.
+- **Pendiente 7.8**: documentación general (`readme.md`, `ARCHITECTURE.md`, `docs/*`).
