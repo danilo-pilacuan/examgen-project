@@ -1,0 +1,18 @@
+[submodule "apps/frontend"]
+	path = apps/frontend
+	url = ./apps/frontend
+[submodule "apps/exam-app"]
+	path = apps/exam-app
+	url = ./apps/exam-app
+[submodule "apps/agents-backend"]
+	path = apps/agents-backend
+	url = ./apps/agents-backend
+[submodule "apps/latex-compiler"]
+	path = apps/latex-compiler
+	url = ./apps/latex-compiler
+[submodule "apps/embedding-service"]
+	path = apps/embedding-service
+	url = ./apps/embedding-service
+[submodule "libs/core"]
+	path = libs/core
+	url = ./libs/core
