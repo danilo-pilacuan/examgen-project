@@ -1,4 +1,4 @@
-services:
+﻿services:
   # BDD
   postgres-db:
     image: pgvector/pgvector:pg16
@@ -16,7 +16,7 @@ services:
   # Compilador latex
   latex-compiler:
     build:
-      context: ../apps/latex-compiler
+      context: ../projects/latex-compiler
       dockerfile: Dockerfile
     container_name: exam_latex_compiler
     restart: always
@@ -28,7 +28,7 @@ services:
   # Servicio de embeddings (OpenAI-compatible)
   embedding-service:
     build:
-      context: ../apps/embedding-service
+      context: ../projects/embedding-service
       dockerfile: Dockerfile
     container_name: exam_embedding_service
     restart: always
@@ -38,12 +38,12 @@ services:
     ports:
       - "8081:8081"
 
-  # Aplicación orquestadora (FastAPI) — expone la API REST + el agente
+  # AplicaciÃ³n orquestadora (FastAPI) â€” expone la API REST + el agente
   # conversacional OpenAI-compatible (/v1/chat/completions) para OpenWebUI.
   exam-app:
     build:
       context: ..
-      dockerfile: apps/exam-app/Dockerfile
+      dockerfile: projects/exam-app/Dockerfile
     container_name: exam_app
     restart: always
     env_file:
@@ -57,7 +57,7 @@ services:
       OPENWEBUI_PUBLIC_URL: http://localhost:3000
       OPENWEBUI_ADMIN_EMAIL: admin@localhost
       OPENWEBUI_ADMIN_PASSWORD: admin
-      # Directorio raíz del material de las materias (montado en /app/inputs).
+      # Directorio raÃ­z del material de las materias (montado en /app/inputs).
       MATERIAL_ROOT: /app/inputs
     ports:
       - "8000:8000"
@@ -83,17 +83,17 @@ services:
       OPENAI_API_BASE_URLS: http://exam-app:8000/v1
       OPENAI_API_KEYS: no-key
       WEBUI_AUTH: "false"   # sin login para el MVP (un solo usuario)
-      # Clave secreta estable: mantiene sesiones válidas entre reinicios
+      # Clave secreta estable: mantiene sesiones vÃ¡lidas entre reinicios
       WEBUI_SECRET_KEY: "ee95d3be2fee38ba92098420869c00ff4c15e457dbbf18518db9e0542f9b7724"
 
-      # ===== Modo "chat de producción" =====
+      # ===== Modo "chat de producciÃ³n" =====
       # Forzar que las variables de entorno manden (no valores persistidos en DB)
       ENABLE_PERSISTENT_CONFIG: "false"
       # Marca/identidad de la interfaz
-      WEBUI_NAME: "Generador de Exámenes"
+      WEBUI_NAME: "Generador de ExÃ¡menes"
       # Pre-seleccionar el agente exam-agent en cada chat nuevo
       DEFAULT_MODELS: "exam-agent"
-      # Ocultar el botón "Controls" (agente, system prompt, parámetros, valves)
+      # Ocultar el botÃ³n "Controls" (agente, system prompt, parÃ¡metros, valves)
       USER_PERMISSIONS_CHAT_CONTROLS: "false"
       USER_PERMISSIONS_CHAT_VALVES: "false"
       USER_PERMISSIONS_CHAT_SYSTEM_PROMPT: "false"
@@ -102,13 +102,13 @@ services:
       USER_PERMISSIONS_CHAT_MULTIPLE_MODELS: "false"
       # Todos los usuarios ven todos los modelos (MVP de un solo agente)
       BYPASS_MODEL_ACCESS_CONTROL: "true"
-      # Ocultar chat temporal y otras acciones no deseadas en producción
+      # Ocultar chat temporal y otras acciones no deseadas en producciÃ³n
       USER_PERMISSIONS_CHAT_TEMPORARY: "false"
       USER_PERMISSIONS_CHAT_TEMPORARY_ENFORCED: "false"
-      # Permitir SOLO subir archivos en el chat (ocultar "Adjuntar página web")
+      # Permitir SOLO subir archivos en el chat (ocultar "Adjuntar pÃ¡gina web")
       USER_PERMISSIONS_CHAT_FILE_UPLOAD: "true"
       USER_PERMISSIONS_CHAT_WEB_UPLOAD: "false"
-      # Ocultar funcionalidades no necesarias en producción
+      # Ocultar funcionalidades no necesarias en producciÃ³n
       ENABLE_PLUGINS: "false"
       ENABLE_NOTES: "false"
       ENABLE_MEMORIES: "false"
@@ -130,8 +130,8 @@ services:
       USER_PERMISSIONS_WORKSPACE_PROMPTS_ACCESS: "false"
       USER_PERMISSIONS_WORKSPACE_TOOLS_ACCESS: "false"
       USER_PERMISSIONS_WORKSPACE_SKILLS_ACCESS: "false"
-      # Sugerencias de inicio relevantes para el generador de exámenes
-      DEFAULT_PROMPT_SUGGESTIONS: '[{"title":["¿Qué materias","hay registradas?"],"content":"¿Qué materias hay registradas?"},{"title":["Genera un examen","de Economía Aplicada"],"content":"Genera un examen de Economía Aplicada"},{"title":["Preguntas de repaso","de Inglés Técnico"],"content":"Hazme preguntas de repaso de Inglés Técnico"},{"title":["Registra una pregunta","sobre elasticidad"],"content":"Registra una pregunta sobre elasticidad en Economía Aplicada"}]'
+      # Sugerencias de inicio relevantes para el generador de exÃ¡menes
+      DEFAULT_PROMPT_SUGGESTIONS: '[{"title":["Â¿QuÃ© materias","hay registradas?"],"content":"Â¿QuÃ© materias hay registradas?"},{"title":["Genera un examen","de EconomÃ­a Aplicada"],"content":"Genera un examen de EconomÃ­a Aplicada"},{"title":["Preguntas de repaso","de InglÃ©s TÃ©cnico"],"content":"Hazme preguntas de repaso de InglÃ©s TÃ©cnico"},{"title":["Registra una pregunta","sobre elasticidad"],"content":"Registra una pregunta sobre elasticidad en EconomÃ­a Aplicada"}]'
     volumes:
       - open_webui_data:/app/backend/data
       # Inyectar CSS personalizado (ocultar opciones de adjuntos y selector de modelo)

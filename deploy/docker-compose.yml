@@ -1,15 +1,15 @@
-# ============================================================
-# docker-compose.yml — Despliegue remoto en 172.28.230.10
+﻿# ============================================================
+# docker-compose.yml â€” Despliegue remoto en 172.28.230.10
 # (DGX H200 USFQ, usuario dpilacuan)
 #
-# PRINCIPIOS DE DISEÑO (para no dañar el servidor de la institución):
+# PRINCIPIOS DE DISEÃ‘O (para no daÃ±ar el servidor de la instituciÃ³n):
 #   1. TODO vive en ~/my_containers/exam/ (directorio del usuario).
 #   2. Red AISLADA propia (no usa la red del host).
-#   3. LÍMITES de CPU/memoria estrictos (nunca satura el host).
-#   4. restart: "no" — NO auto-arranca al iniciar el servidor.
-#   5. Sin montar rutas del sistema; solo volúmenes nombrados y
+#   3. LÃMITES de CPU/memoria estrictos (nunca satura el host).
+#   4. restart: "no" â€” NO auto-arranca al iniciar el servidor.
+#   5. Sin montar rutas del sistema; solo volÃºmenes nombrados y
 #      directorios bajo el home del usuario.
-#   6. Fácil de eliminar: `down.sh` quita contenedores+volúmenes
+#   6. FÃ¡cil de eliminar: `down.sh` quita contenedores+volÃºmenes
 #      conservando los datos en el home.
 #
 # PUERTOS (rango alto 39000+, para no chocar con otros servicios):
@@ -21,7 +21,7 @@
 #
 # Levantar:   docker compose up -d --build
 # Derribar:   docker compose down            (borra contenedores+red)
-# Limpiar:    docker compose down -v         (borra también volúmenes)
+# Limpiar:    docker compose down -v         (borra tambiÃ©n volÃºmenes)
 # ============================================================
 
 x-exam-root: &exam_root /home/dpilacuan/my_containers/exam
@@ -44,7 +44,7 @@ services:
   # Compilador latex
   latex-compiler:
     build:
-      context: /home/dpilacuan/my_containers/exam/apps/latex-compiler
+      context: /home/dpilacuan/my_containers/exam/projects/latex-compiler
       dockerfile: Dockerfile
     container_name: exam_latex_compiler
     restart: "no"
@@ -56,7 +56,7 @@ services:
   # Servicio de embeddings (OpenAI-compatible)
   embedding-service:
     build:
-      context: /home/dpilacuan/my_containers/exam/apps/embedding-service
+      context: /home/dpilacuan/my_containers/exam/projects/embedding-service
       dockerfile: Dockerfile
     container_name: exam_embedding_service
     restart: "no"
@@ -66,11 +66,11 @@ services:
     ports:
       - "39004:8081"
 
-  # Aplicación orquestadora (FastAPI) — expone la API REST + el agente
+  # AplicaciÃ³n orquestadora (FastAPI) â€” expone la API REST + el agente
   exam-app:
     build:
       context: /home/dpilacuan/my_containers/exam
-      dockerfile: apps/exam-app/Dockerfile
+      dockerfile: projects/exam-app/Dockerfile
     container_name: exam_app
     restart: "no"
     environment:
@@ -84,7 +84,7 @@ services:
       # LLM remoto vLLM (ya corre en el host)
       LLM_BASE_URL: http://172.28.230.10:12555/v1
       LLM_MODEL: zai-org/GLM-5.3-Flash
-      # Directorio raíz del material de las materias
+      # Directorio raÃ­z del material de las materias
       MATERIAL_ROOT: /app/inputs
     ports:
       - "39002:8000"
@@ -109,7 +109,7 @@ services:
       WEBUI_AUTH: "false"
       WEBUI_SECRET_KEY: "ee95d3be2fee38ba92098420869c00ff4c15e457dbbf18518db9e0542f9b7724"
       ENABLE_PERSISTENT_CONFIG: "false"
-      WEBUI_NAME: "Generador de Exámenes"
+      WEBUI_NAME: "Generador de ExÃ¡menes"
       DEFAULT_MODELS: "exam-agent"
       USER_PERMISSIONS_CHAT_CONTROLS: "false"
       USER_PERMISSIONS_CHAT_VALVES: "false"
@@ -141,7 +141,7 @@ services:
       USER_PERMISSIONS_WORKSPACE_PROMPTS_ACCESS: "false"
       USER_PERMISSIONS_WORKSPACE_TOOLS_ACCESS: "false"
       USER_PERMISSIONS_WORKSPACE_SKILLS_ACCESS: "false"
-      DEFAULT_PROMPT_SUGGESTIONS: '[{"title":["¿Qué materias","hay registradas?"],"content":"¿Qué materias hay registradas?"},{"title":["Genera un examen","de Economía Aplicada"],"content":"Genera un examen de Economía Aplicada"},{"title":["Preguntas de repaso","de Inglés Técnico"],"content":"Hazme preguntas de repaso de Inglés Técnico"},{"title":["Registra una pregunta","sobre elasticidad"],"content":"Registra una pregunta sobre elasticidad en Economía Aplicada"}]'
+      DEFAULT_PROMPT_SUGGESTIONS: '[{"title":["Â¿QuÃ© materias","hay registradas?"],"content":"Â¿QuÃ© materias hay registradas?"},{"title":["Genera un examen","de EconomÃ­a Aplicada"],"content":"Genera un examen de EconomÃ­a Aplicada"},{"title":["Preguntas de repaso","de InglÃ©s TÃ©cnico"],"content":"Hazme preguntas de repaso de InglÃ©s TÃ©cnico"},{"title":["Registra una pregunta","sobre elasticidad"],"content":"Registra una pregunta sobre elasticidad en EconomÃ­a Aplicada"}]'
     volumes:
       - /home/dpilacuan/my_containers/exam/data/openwebui:/app/backend/data
       - /home/dpilacuan/my_containers/exam/docker/openwebui/custom.css:/app/backend/open_webui/static/custom.css:ro
