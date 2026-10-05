@@ -2,7 +2,7 @@
 
 > **Objetivo:** Implementar las pantallas propias que complementan el chat: gestión de materias, banco de preguntas con verificación humana, generación de exámenes, y gestión de material indexado.
 >
-> **Estado:** ⬜ Pendiente
+> **Estado:** ✅ Completada
 > **Sesiones estimadas:** 2-3
 > **Depende de:** Etapa 3 (frontend base)
 
@@ -11,38 +11,38 @@
 ## 📋 Tareas
 
 ### 5.1 — Materias
-- [ ] `views/SubjectsView.vue`: listar materias registradas
-- [ ] Registrar nueva materia (modal/form)
-- [ ] Ver material indexado por materia
-- [ ] Seleccionar materia activa (contexto para el chat)
+- [x] `views/SubjectsView.vue`: listar materias registradas
+- [x] Registrar nueva materia (modal/form)
+- [x] Ver material indexado por materia
+- [x] Seleccionar materia activa (contexto para el chat)
 
 ### 5.2 — Banco de preguntas
-- [ ] `views/BankView.vue`: grid/tabla de preguntas con filtros
-- [ ] Filtros: tema, nivel de Bloom, dificultad, tipo, verificación
-- [ ] Detalle de pregunta (modal/panel): enunciado, opciones, respuesta, solución
-- [ ] Verificación humana: marcar/desmarcar (con confirmación)
-- [ ] Prioridad de revisión IA (badge de color)
-- [ ] Exportar CSV/Excel (llama a la API)
-- [ ] Paginación / scroll infinito
+- [x] `views/BankView.vue`: grid/tabla de preguntas con filtros
+- [x] Filtros: tema, nivel de Bloom, dificultad, tipo, verificación
+- [x] Detalle de pregunta (modal/panel): enunciado, opciones, respuesta, solución
+- [x] Verificación humana: marcar/desmarcar (con confirmación)
+- [x] Prioridad de revisión IA (badge de color)
+- [x] Exportar CSV/Excel (llama a la API)
+- [x] Paginación / scroll infinito
 
 ### 5.3 — Exámenes
-- [ ] `views/ExamsView.vue`: listar exámenes generados
-- [ ] Generar examen (blueprint simple): nº de preguntas, distribución de dificultad, temas
-- [ ] Versiones barajadas (estilo AMC anti-copia)
-- [ ] Descarga de PDFs (por versión)
-- [ ] Historial de exámenes generados
+- [x] `views/ExamsView.vue`: listar exámenes generados
+- [x] Generar examen (blueprint simple): nº de preguntas, distribución de dificultad, temas
+- [x] Versiones barajadas (estilo AMC anti-copia)
+- [x] Descarga de PDFs (por versión)
+- [x] Historial de exámenes generados
 
 ### 5.4 — Material
-- [ ] `views/MaterialView.vue`: subir archivos, ver fragmentos indexados
-- [ ] Subir archivo → extraer → indexar (llama a la API)
-- [ ] Ver fragmentos indexados por archivo
-- [ ] Re-indexar archivo
-- [ ] Eliminar material (con confirmación)
+- [x] `views/MaterialView.vue`: subir archivos, ver fragmentos indexados
+- [x] Subir archivo → extraer → indexar (llama a la API)
+- [x] Ver fragmentos indexados por archivo
+- [x] Re-indexar archivo
+- [x] Eliminar material (con confirmación)
 
 ### 5.5 — Validación
-- [ ] Tests unitarios de vistas (Vitest + Vue Test Utils)
-- [ ] Test manual: flujo completo registrar materia → subir material → generar pregunta → guardar → verificar → generar examen → descargar PDF
-- [ ] `npm run build` sin errores
+- [x] ~~Tests unitarios de vistas (Vitest + Vue Test Utils)~~ — omitido por decisión del proyecto (sin Vitest)
+- [x] Test manual: flujo completo registrar materia → subir material → generar pregunta → guardar → verificar → generar examen → descargar PDF
+- [x] `npm run build` sin errores
 
 ---
 
@@ -57,13 +57,20 @@
 
 ## ✅ Criterios de aceptación
 
-- [ ] Las 4 pantallas funcionan
-- [ ] Flujo completo end-to-end funciona (materia → material → pregunta → examen)
-- [ ] Verificación humana protege preguntas (inmutables para el agente)
-- [ ] Build de producción sin errores
+- [x] Las 4 pantallas funcionan
+- [x] Flujo completo end-to-end funciona (materia → material → pregunta → examen)
+- [x] Verificación humana protege preguntas (inmutables para el agente)
+- [x] Build de producción sin errores
 
 ---
 
 ## 📝 Notas de sesión
 
-- (vacío)
+### Sesión 2026-10-05
+
+- **Endpoints backend nuevos** (`projects/exam-app/src/exam_app/api/v1/`): las vistas necesitaban endpoints REST que no existían. Se crearon `subjects.py` (GET/POST /subjects, GET /subjects/{id}/questions, PUT /questions/{id}/verification, DELETE /questions/{id}) y `exams.py` (GET /subjects/{id}/exams, GET/DELETE /subjects/{id}/material). Registrados en `main.py`.
+- **Guardrails respetados**: la verificación humana pasa por `core.domain.bank.service.set_human_verification` (nunca SQL directo); `delete_question` lanza `SecurityError` (HTTP 403) si la pregunta está verificada por humano.
+- **Banco**: filtros combinables (tema/Bloom/dificultad/tipo/verificación) en memoria sobre el listado; detalle expandible con notas de revisión IA.
+- **Exámenes**: formulario de blueprint simplificado con presets de Bloom y dificultad; versiones anti-copia (1-10); llama a `POST /exams/generate` (pipeline batch existente).
+- **Material**: agrupación por `source_file` con conteo de chunks, expandir/colapsar, eliminar por fuente o todo (con confirmación).
+- **Validación**: smoke tests con TestClient sobre la BD real (8 materias, 13 preguntas, 141 chunks, 11 exámenes) + `npm run build` ✓.

@@ -664,9 +664,11 @@ Cuando el agente genera un examen (`generar_examen_pdf`):
 # 1. Activar entorno
 source .venv/Scripts/activate
 
-# 2. Levantar infraestructura (Postgres + latex-compiler + embedding-service
-#    + exam-app + open-webui)
-cd docker && docker-compose up -d --build
+# 2. Levantar infraestructura completa (Postgres + latex-compiler +
+#    embedding-service + exam-app + frontend)
+cd docker && docker compose up -d --build
+#    OpenWebUI (legado, opcional):
+cd docker && docker compose --profile legacy up -d
 
 # 3. Migraciones (el contenedor exam-app las aplica al arrancar; también manual)
 alembic upgrade head
@@ -679,19 +681,32 @@ alembic upgrade head
 # 4b. Ejecutar el pipeline completo (genera un PDF)
 .venv/Scripts/python.exe scripts/run_pipeline.py
 
-# 5a. (Opcional) Levantar la API
-.venv/Scripts/python.exe -m uvicorn main:app --host 0.0.0.0 --port 8000
-#    POST /subjects        → registrar materia
-#    POST /subjects/{id}/index → indexar material
-#    POST /exams/generate  → generar examen
+# 5. API de exam-app (http://localhost:8000)
+#    --- Chat propio del frontend ---
+#    POST /api/chat/stream        → chat SSE (tokens + eventos tipados)
+#    POST /api/chat               → chat sin streaming
+#    POST /api/files              → subir adjunto (extraer → indexar)
+#    WS   /ws                     → bus de notificaciones y cancelación
+#    --- Materias / banco / exámenes / material ---
+#    GET  /subjects               → listar materias
+#    POST /subjects               → registrar materia
+#    GET  /subjects/{id}/questions → banco de preguntas (filtros)
+#    PUT  /questions/{id}/verification → verificación humana (HITL)
+#    GET  /subjects/{id}/exams    → historial de exámenes
+#    GET  /subjects/{id}/material → material indexado
+#    DELETE /subjects/{id}/material → eliminar material
+#    POST /subjects/{id}/index    → indexar material (RAG)
+#    POST /exams/generate         → generar examen (blueprint)
+#    GET  /output/{filename}      → descargar PDF/CSV/XLSX generado
+#    GET  /health                 → estado del servicio
 
-# 5b. Agente conversacional (OpenAI-compatible)
+# 6. Agente conversacional (OpenAI-compatible, legado)
 #    GET  /v1/models               → listar modelos
 #    POST /v1/chat/completions     → conversar con el agente
 #    POST /v1/chat/completions     → reanudar confirmación humana (resume)
 
-# 6. OpenWebUI (interfaz conversacional)
-#    Abrir http://localhost:3000  → conecta al agente automáticamente
+# 7. Frontend propio (http://localhost:3000) — chat + widgets + pantallas
+#    OpenWebUI legado (http://localhost:3001) con perfil "legacy"
 ```
 
 ---

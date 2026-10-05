@@ -1,14 +1,14 @@
-"""Ejecuta el pipeline completo de generación de exámenes con una materia de prueba.
+"""Runs the full exam generation pipeline with a test subject.
 
-Uso:
+Usage:
     python scripts/run_pipeline.py
 
-Este script:
-  1. Carga los materiales de la materia "Economía Aplicada" (data/inputs).
-  2. Construye un ExamBlueprint realista con distribuciones de Bloom,
-     dificultad y temas.
-  3. Ejecuta el grafo LangGraph completo (ingestor → ... → compilador).
-  4. Muestra un resumen del resultado y guarda el PDF generado.
+This script:
+  1. Loads the materials of the subject "Applied Economics" (data/inputs).
+  2. Builds a realistic ExamBlueprint with Bloom, difficulty and topic
+     distributions.
+  3. Runs the full LangGraph graph (ingestor → ... → compiler).
+  4. Shows a summary of the result and saves the generated PDF.
 """
 import glob
 import json
@@ -32,7 +32,7 @@ BASE_DIR = Path("data/inputs/Economia_Aplicada")
 
 
 def load_materials() -> list[str]:
-    """Devuelve las rutas de los materiales de la materia (todos los formatos)."""
+    """Returns the paths of the subject's materials (all formats)."""
     patterns = [
         "Apuntes/*.pdf",
         "Apuntes/*.docx",
@@ -44,25 +44,25 @@ def load_materials() -> list[str]:
     files: list[str] = []
     for pat in patterns:
         files.extend(str(p) for p in glob.glob(str(BASE_DIR / pat)))
-    # Deduplicar y ordenar
+    # Deduplicate and sort
     return sorted(set(files))
 
 
 def build_blueprint(total_questions: int = 8) -> ExamBlueprint:
-    """Construye un blueprint realista para Economía Aplicada."""
+    """Builds a realistic blueprint for Applied Economics."""
     return ExamBlueprint(
         subject_id="economia-aplicada-test",
         total_questions=total_questions,
         bloom_distribution={
-            BloomLevel.RECORDAR: 0.25,
-            BloomLevel.COMPRENDER: 0.25,
-            BloomLevel.APLICAR: 0.25,
-            BloomLevel.ANALIZAR: 0.25,
+            BloomLevel.REMEMBER: 0.25,
+            BloomLevel.UNDERSTAND: 0.25,
+            BloomLevel.APPLY: 0.25,
+            BloomLevel.ANALYZE: 0.25,
         },
         difficulty_distribution={
-            Difficulty.FACIL: 0.4,
-            Difficulty.MEDIO: 0.4,
-            Difficulty.DIFICIL: 0.2,
+            Difficulty.EASY: 0.4,
+            Difficulty.MEDIUM: 0.4,
+            Difficulty.HARD: 0.2,
         },
         topics_weight={
             "Estudio de Mercado": 0.3,
@@ -76,54 +76,54 @@ def build_blueprint(total_questions: int = 8) -> ExamBlueprint:
 
 def main() -> None:
     materials = load_materials()
-    print(f"📚 Materiales cargados: {len(materials)} archivos")
+    print(f"📚 Materials loaded: {len(materials)} files")
     for m in materials:
         print(f"   - {Path(m).name}")
 
-    # Registrar/obtener la materia en la BD (para persistencia y RAG)
+    # Register/get the subject in the DB (for persistence and RAG)
     from core.infrastructure.db.connection import SessionLocal
     from core.domain.models import Subject
 
     db = SessionLocal()
     try:
-        subject = db.query(Subject).filter(Subject.name == "Economía Aplicada").first()
+        subject = db.query(Subject).filter(Subject.name == "Applied Economics").first()
         if subject is None:
-            subject = Subject(name="Economía Aplicada")
+            subject = Subject(name="Applied Economics")
             db.add(subject)
             db.commit()
             db.refresh(subject)
-            print(f"\n🆕 Materia registrada en BD: id={subject.id}")
+            print(f"\n🆕 Subject registered in DB: id={subject.id}")
         else:
-            print(f"\n✅ Materia existente en BD: id={subject.id}")
+            print(f"\n✅ Existing subject in DB: id={subject.id}")
         subject_id = str(subject.id)
     finally:
         db.close()
 
     blueprint = build_blueprint(total_questions=8)
     blueprint.subject_id = subject_id
-    print(f"\n📋 Blueprint: {blueprint.total_questions} preguntas")
+    print(f"\n📋 Blueprint: {blueprint.total_questions} questions")
     print(f"   Bloom: { {k.value: v for k, v in blueprint.bloom_distribution.items()} }")
-    print(f"   Dificultad: { {k.value: v for k, v in blueprint.difficulty_distribution.items()} }")
+    print(f"   Difficulty: { {k.value: v for k, v in blueprint.difficulty_distribution.items()} }")
 
-    print("\n🚀 Ejecutando pipeline...")
+    print("\n🚀 Running pipeline...")
     result = run_exam_pipeline(
         subject_id=subject_id,
-        subject_name="Economía Aplicada",
+        subject_name="Applied Economics",
         template_id=TemplateId.BASE_EXAM,
         raw_materials_paths=materials,
         blueprint=blueprint,
     )
 
-    print("\n=== RESULTADO ===")
+    print("\n=== RESULT ===")
     print(f"Status: {result.get('status')}")
     print(f"Error: {result.get('error_message')}")
-    print(f"Chunks indexados: {result.get('indexed_chunks_count')}")
-    print(f"Ítems aprobados: {len(result.get('approved_items', []))}")
-    print(f"Rechazos: {len(result.get('rejection_log', []))}")
-    print(f"Llamadas LLM: {result.get('total_llm_calls')}")
-    print(f"Intentos compilación: {result.get('compilation_attempts')}")
+    print(f"Indexed chunks: {result.get('indexed_chunks_count')}")
+    print(f"Approved items: {len(result.get('approved_items', []))}")
+    print(f"Rejections: {len(result.get('rejection_log', []))}")
+    print(f"LLM calls: {result.get('total_llm_calls')}")
+    print(f"Compilation attempts: {result.get('compilation_attempts')}")
 
-    # Guardar resumen en JSON para inspección
+    # Save summary to JSON for inspection
     out_dir = Path("data/agent_outputs")
     out_dir.mkdir(parents=True, exist_ok=True)
     summary = {
@@ -140,10 +140,10 @@ def main() -> None:
     summary_path = out_dir / "pipeline_result.json"
     with open(summary_path, "w", encoding="utf-8") as f:
         json.dump(summary, f, ensure_ascii=False, indent=2)
-    print(f"\n📄 Resumen guardado en: {summary_path}")
+    print(f"\n📄 Summary saved to: {summary_path}")
 
     if result.get("compiled_exam") and result["compiled_exam"].pdf_path:
-        print(f"✅ PDF generado en: {result['compiled_exam'].pdf_path}")
+        print(f"✅ PDF generated at: {result['compiled_exam'].pdf_path}")
 
 
 if __name__ == "__main__":

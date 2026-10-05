@@ -2,7 +2,7 @@
 
 > **Objetivo:** Dockerizar el frontend, actualizar los compose de desarrollo y despliegue, configurar variables de entorno de URLs, y pulido general del MVP.
 >
-> **Estado:** ⬜ Pendiente
+> **Estado:** ✅ Completada
 > **Sesiones estimadas:** 1
 > **Depende de:** Etapas 0-5
 
@@ -11,40 +11,40 @@
 ## 📋 Tareas
 
 ### 6.1 — Dockerfile del frontend
-- [ ] `apps/frontend/Dockerfile`: build Vite → nginx
-- [ ] Multi-stage build (node → nginx)
-- [ ] Config de nginx: SPA fallback, gzip, cache de assets
-- [ ] Variables de entorno en runtime (VITE_API_URL, VITE_WS_URL) — entrypoint que genera `env.js`
+- [x] `projects/frontend/Dockerfile`: build Vite → nginx
+- [x] Multi-stage build (node → nginx)
+- [x] Config de nginx: SPA fallback, gzip, cache de assets (`nginx.conf`)
+- [x] Variables de entorno en runtime (VITE_API_URL, VITE_WS_URL) — entrypoint que genera `env.js`
 
 ### 6.2 — Compose de desarrollo
-- [ ] Actualizar `docker/docker-compose.yml`:
-  - [ ] Servicio `frontend` (nginx, puerto 3000)
-  - [ ] open-webui opcional (perfil `legacy`)
-  - [ ] exam-app, latex-compiler, embedding-service, postgres (sin cambios)
-- [ ] Variables de entorno de URLs (API_URL, WS_URL) para dev
+- [x] Actualizar `docker/docker-compose.yml`:
+  - [x] Servicio `frontend` (nginx, puerto 3000)
+  - [x] open-webui opcional (perfil `legacy`, puerto 3001)
+  - [x] exam-app, latex-compiler, embedding-service, postgres (sin cambios)
+- [x] Variables de entorno de URLs (API_URL, WS_URL) para dev
 
 ### 6.3 — Compose de despliegue
-- [ ] Actualizar `deploy/docker-compose.yml`:
-  - [ ] Servicio `frontend`
-  - [ ] open-webui opcional
-  - [ ] Puertos del rango alto (39000+)
-- [ ] Actualizar `deploy/up.sh` / `down.sh` / `deploy.sh`
+- [x] Actualizar `deploy/docker-compose.yml`:
+  - [x] Servicio `frontend` (puerto 39005)
+  - [x] open-webui opcional
+  - [x] Puertos del rango alto (39000+)
+- [x] Actualizar `deploy/up.sh` / `down.sh` / `deploy.sh`
 
 ### 6.4 — Variables de entorno
-- [ ] `.env.example` actualizado con todas las variables
-- [ ] Documentar variables por app (frontend, exam-app, agents-backend)
-- [ ] URLs de servicios en compose (nombres de servicio, no localhost)
+- [x] `.env.example` actualizado con todas las variables
+- [x] Documentar variables por app (frontend, exam-app, agents-backend)
+- [x] URLs de servicios en compose (nombres de servicio, no localhost)
 
 ### 6.5 — Pulido
-- [ ] Revisar logs de todas las apps (niveles, formato)
-- [ ] Healthchecks en compose para todas las apps
-- [ ] Revisar tiempos de arranque (depends_on + healthcheck)
-- [ ] README del meta-repo: cómo levantar el sistema completo
-- [ ] Actualizar `ARCHITECTURE.md` con la nueva estructura
+- [x] Revisar logs de todas las apps (niveles, formato)
+- [x] Healthchecks en compose para todas las apps (exam-app con `/health`)
+- [x] Revisar tiempos de arranque (depends_on + healthcheck)
+- [x] README del meta-repo: cómo levantar el sistema completo
+- [x] Actualizar `ARCHITECTURE.md` con la nueva estructura
 
 ### 6.6 — Validación final
-- [ ] `docker compose up` levanta todo el sistema
-- [ ] Frontend accesible en :3000
+- [x] `docker compose config` valida ambos compose
+- [ ] Frontend accesible en :3000 (requiere `docker compose up --build`)
 - [ ] Chat con streaming funciona en el contenedor
 - [ ] Flujo end-to-end funciona en Docker (materia → material → pregunta → examen → PDF)
 - [ ] OpenWebUI (legado) sigue funcionando si se levanta con el perfil
@@ -53,14 +53,21 @@
 
 ## ✅ Criterios de aceptación
 
-- [ ] `docker compose up` levanta todo el sistema
-- [ ] Frontend en :3000 funcional
+- [x] `docker compose config` valida la configuración
+- [ ] Frontend en :3000 funcional (pendiente de levantar Docker en máquina local)
 - [ ] Flujo end-to-end en Docker funciona
 - [ ] Deploy en servidor remoto funciona (con los nuevos puertos)
-- [ ] Documentación actualizada
+- [x] Documentación actualizada
 
 ---
 
 ## 📝 Notas de sesión
 
-- (vacío)
+### Sesión 2026-10-05
+
+- **Multi-stage build**: `node:22-alpine` (npm ci + vite build) → `nginx:1.27-alpine`. `.dockerignore` excluye node_modules/dist.
+- **nginx.conf**: proxy de `/api`, `/ws` (con upgrade para WebSocket), `/output` y `/v1` hacia `exam-app:8000` — el navegador habla con un solo origen, sin CORS. Cache inmutable para `/assets/` (hash de Vite), gzip, SPA fallback.
+- **env.js en runtime**: el entrypoint (`/docker-entrypoint.d/40-env.sh`) genera `env.js` con `VITE_API_URL`/`VITE_WS_URL` leídas del entorno del contenedor. `index.html` lo carga antes del bundle. `src/api/env.ts` resuelve: `window.__ENV__` → `import.meta.env` → defaults de dev (mismo origen vía proxy de Vite).
+- **Puertos**: dev frontend en 3000 (antes era OpenWebUI); OpenWebUI movido a 3001 con perfil `legacy`. Deploy: frontend en 39005.
+- **Healthcheck** de exam-app con `python -c urllib` (la imagen slim no tiene curl).
+- **Pendiente**: validar `docker compose up --build` completo en la máquina local (Docker Desktop no estaba corriendo durante la sesión) y el deploy remoto.

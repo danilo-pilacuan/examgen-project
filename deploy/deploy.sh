@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 # ============================================================
 # deploy.sh â€” Despliega la infraestructura del "Generador de
 # ExÃ¡menes" en el servidor remoto 172.28.230.10 (DGX H200 USFQ)
@@ -40,6 +40,7 @@ cmd_up() {
   remote "mkdir -p ${REMOTE_BASE}/projects/latex-compiler \
                  ${REMOTE_BASE}/projects/embedding-service \
                  ${REMOTE_BASE}/projects/exam-app \
+                 ${REMOTE_BASE}/projects/frontend \
                  ${REMOTE_BASE}/docker/openwebui \
                  ${REMOTE_BASE}/data/agent_outputs \
                  ${REMOTE_BASE}/data/inputs \
@@ -81,6 +82,7 @@ EOF"
 
   echo ""
   echo "âœ… Infraestructura desplegada en ${REMOTE_HOST}"
+  echo "   - Frontend:   http://${REMOTE_HOST}:39005"
   echo "   - OpenWebUI:  http://${REMOTE_HOST}:39001"
   echo "   - API:        http://${REMOTE_HOST}:39002"
   echo "   - Postgres:   ${REMOTE_HOST}:39000"

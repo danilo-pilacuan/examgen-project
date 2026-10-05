@@ -13,12 +13,12 @@
 | 0 | [00-reestructuracion-monorepo.md](./00-reestructuracion-monorepo.md) | Reestructurar el repo a monorepo por apps (`apps/` + `libs/`) con arquitectura limpia | ✅ Completada |
 | 1 | [01-repos-submodulos.md](./01-repos-submodulos.md) | Convertir cada app/lib en repo propio + meta-repo con submódulos git | 🟨 En progreso (repos locales listos, remotos GitHub pendientes) |
 | 2 | [02-backend-reactivo.md](./02-backend-reactivo.md) | SSE real con `astream_events`, WebSocket bus, adjuntos propios, eventos tipados | 🟨 En progreso (2.1-2.7 completados) |
-| 2b | [02b-arquitectura-limpia-exam-app.md](./02b-arquitectura-limpia-exam-app.md) | Detalle de capas y puertos en exam-app (arquitectura limpia + FastAPI) | ⬜ Pendiente |
-| 2c | [02c-arquitectura-limpia-agents-backend-core.md](./02c-arquitectura-limpia-agents-backend-core.md) | Detalle de agents-backend (eventos tipados) y libs/core (shared kernel) | ⬜ Pendiente |
+| 2b | [02b-arquitectura-limpia-exam-app.md](./02b-arquitectura-limpia-exam-app.md) | Detalle de capas y puertos en exam-app (arquitectura limpia + FastAPI) | ✅ Completada (implementada de facto; routers no importan de agents-backend/core) |
+| 2c | [02c-arquitectura-limpia-agents-backend-core.md](./02c-arquitectura-limpia-agents-backend-core.md) | Detalle de agents-backend (eventos tipados) y libs/core (shared kernel) | ✅ Completada (implementada de facto) |
 | 3 | [03-frontend-base.md](./03-frontend-base.md) | Scaffold Vue 3 + Vite + TS + Pinia, layout, cliente SSE/WS, ChatPanel | ✅ Completada |
-| 4 | [04-widgets-chat.md](./04-widgets-chat.md) | Widgets reactivos: tarjetas de pregunta, tablas, artefactos, HITL | ⬜ Pendiente |
-| 5 | [05-pantallas.md](./05-pantallas.md) | Pantallas: Materias, Banco, Exámenes, Material | ⬜ Pendiente |
-| 6 | [06-docker-pulido.md](./06-docker-pulido.md) | Dockerfile frontend, compose actualizado, variables de entorno, pulido | ⬜ Pendiente |
+| 4 | [04-widgets-chat.md](./04-widgets-chat.md) | Widgets reactivos: tarjetas de pregunta, tablas, artefactos, HITL | ✅ Completada |
+| 5 | [05-pantallas.md](./05-pantallas.md) | Pantallas: Materias, Banco, Exámenes, Material | ✅ Completada |
+| 6 | [06-docker-pulido.md](./06-docker-pulido.md) | Dockerfile frontend, compose actualizado, variables de entorno, pulido | ✅ Completada (E2E en Docker pendiente de validar) |
 
 ---
 
@@ -43,9 +43,9 @@
 
 ## 📊 Progreso global
 
-- **Etapa actual:** 4 (Widgets reactivos del chat)
+- **Etapa actual:** 1 (push de remotos a GitHub) + validación E2E en Docker de la etapa 6
 - **Sesiones estimadas totales:** 10-14
-- **MVP usable (etapas 0-3):** ✅ completado (6-8 sesiones)
+- **MVP usable (etapas 0-6):** ✅ completado (pendiente: validación E2E en Docker, push a GitHub)
 - **Última actualización:** 2026-10-05
 
 ---

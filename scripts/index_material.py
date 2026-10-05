@@ -1,14 +1,14 @@
-"""Indexa el material de una materia en la BD (RAG).
+"""Indexes a subject's material into the DB (RAG).
 
-Uso:
-    python scripts/index_material.py --subject-id <id> --name "Economía Aplicada" \
-        --materials "data/inputs/Economia_Aplicada/Apuntes/*.pdf"
+Usage:
+    python scripts/index_material.py --subject-id <id> --name "Applied Economics" \
+        --materials "data/inputs/Applied_Economics/Notes/*.pdf"
 
-Este script:
-  1. Registra (o actualiza) la materia en la tabla `subjects`.
-  2. Lee los archivos de material y los divide en chunks.
-  3. Genera embeddings para cada chunk vía el servicio local.
-  4. Guarda los chunks + embeddings en `material_chunks`.
+This script:
+  1. Registers (or updates) the subject in the `subjects` table.
+  2. Reads the material files and splits them into chunks.
+  3. Generates embeddings for each chunk via the local service.
+  4. Saves chunks + embeddings into `material_chunks`.
 """
 import argparse
 import glob
@@ -32,12 +32,12 @@ from core.infrastructure.files.extract import (  # noqa: E402
     _extract_text_file,
 )
 
-CHUNK_SIZE = 1500  # caracteres por chunk
-CHUNK_OVERLAP = 150  # solapamiento para no cortar ideas
+CHUNK_SIZE = 1500  # characters per chunk
+CHUNK_OVERLAP = 150  # overlap to avoid cutting ideas
 
 
 def chunk_text(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> list[str]:
-    """Divide un texto en chunks con solapamiento."""
+    """Splits a text into chunks with overlap."""
     text = text.strip()
     if not text:
         return []
@@ -53,7 +53,7 @@ def chunk_text(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) 
 
 
 def extract_file(path: str) -> str:
-    """Extrae texto de un archivo según su extensión."""
+    """Extracts text from a file according to its extension."""
     ext = path.lower().rsplit(".", 1)[-1] if "." in path else ""
     if ext == "pdf":
         return _extract_pdf(path)
@@ -67,7 +67,7 @@ def extract_file(path: str) -> str:
 
 
 def resolve_materials(patterns: list[str]) -> list[str]:
-    """Expande patrones glob a lista de rutas de archivos."""
+    """Expands glob patterns into a list of file paths."""
     files: list[str] = []
     for pat in patterns:
         files.extend(str(p) for p in glob.glob(pat))
@@ -75,23 +75,23 @@ def resolve_materials(patterns: list[str]) -> list[str]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Indexa material de una materia en la BD")
-    parser.add_argument("--subject-id", help="ID de la materia (UUID). Si no existe, se crea.")
-    parser.add_argument("--name", required=True, help="Nombre de la materia")
+    parser = argparse.ArgumentParser(description="Indexes a subject's material into the DB")
+    parser.add_argument("--subject-id", help="Subject ID (UUID). Created if it doesn't exist.")
+    parser.add_argument("--name", required=True, help="Name of the subject")
     parser.add_argument(
         "--materials", nargs="+", required=True,
-        help="Patrones glob de los archivos de material (ej. 'data/inputs/**/*.pdf')",
+        help="Glob patterns of the material files (e.g. 'data/inputs/**/*.pdf')",
     )
-    parser.add_argument("--clear", action="store_true", help="Borrar chunks previos de la materia")
+    parser.add_argument("--clear", action="store_true", help="Delete previous chunks of the subject")
     args = parser.parse_args()
 
     files = resolve_materials(args.materials)
     if not files:
-        print("❌ No se encontraron archivos con los patrones dados.")
+        print("❌ No files found with the given patterns.")
         sys.exit(1)
-    print(f"📚 Archivos a indexar: {len(files)}")
+    print(f"📚 Files to index: {len(files)}")
 
-    # Recolectar todos los chunks
+    # Collect all chunks
     all_chunks: list[tuple[str, int, str]] = []  # (source_file, index, content)
     for f in files:
         try:
@@ -104,12 +104,12 @@ def main() -> None:
             print(f"  ⚠️ {Path(f).name}: error {e}")
 
     if not all_chunks:
-        print("❌ No se pudo extraer ningún chunk.")
+        print("❌ Could not extract any chunk.")
         sys.exit(1)
     print(f"\n🧩 Total chunks: {len(all_chunks)}")
 
-    # Generar embeddings (en lotes para no exceder el timeout del servicio)
-    print("🔄 Generando embeddings...")
+    # Generate embeddings (in batches to avoid exceeding the service timeout)
+    print("🔄 Generating embeddings...")
     contents = [c for _, _, c in all_chunks]
     vectors: list[list[float]] = []
     batch = 16
@@ -117,12 +117,12 @@ def main() -> None:
         part = contents[i:i + batch]
         vectors.extend(embedder.embed(part))
         print(f"  ... {min(i + batch, len(contents))}/{len(contents)}")
-    print(f"✅ Embeddings generados: {len(vectors)} (dim={len(vectors[0]) if vectors else 0})")
+    print(f"✅ Embeddings generated: {len(vectors)} (dim={len(vectors[0]) if vectors else 0})")
 
-    # Persistir en BD
+    # Persist to DB
     db = SessionLocal()
     try:
-        # Registrar/obtener la materia
+        # Register/get the subject
         if args.subject_id:
             subject = db.get(Subject, uuid.UUID(args.subject_id))
             if subject is None:
@@ -131,13 +131,13 @@ def main() -> None:
         else:
             subject = Subject(name=args.name)
             db.add(subject)
-            db.flush()  # para obtener el id
+            db.flush()  # to get the id
 
-        # Limpiar chunks previos si se pide
+        # Clear previous chunks if requested
         if args.clear:
             db.query(MaterialChunk).filter(MaterialChunk.subject_id == subject.id).delete()
 
-        # Insertar chunks
+        # Insert chunks
         for (src, idx, content), vec in zip(all_chunks, vectors):
             db.add(MaterialChunk(
                 subject_id=subject.id,
@@ -147,7 +147,7 @@ def main() -> None:
                 embedding=vec,
             ))
         db.commit()
-        print(f"\n💾 Guardados {len(all_chunks)} chunks para la materia '{subject.name}' (id={subject.id})")
+        print(f"\n💾 Saved {len(all_chunks)} chunks for the subject '{subject.name}' (id={subject.id})")
     finally:
         db.close()
 
