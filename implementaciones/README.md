@@ -10,7 +10,7 @@
 
 | Etapa | Archivo | Descripción | Estado |
 |---|---|---|---|
-| 0 | [00-reestructuracion-monorepo.md](./00-reestructuracion-monorepo.md) | Reestructurar el repo a monorepo por apps (`apps/` + `libs/`) con arquitectura limpia | ⬜ Pendiente |
+| 0 | [00-reestructuracion-monorepo.md](./00-reestructuracion-monorepo.md) | Reestructurar el repo a monorepo por apps (`apps/` + `libs/`) con arquitectura limpia | ✅ Completada |
 | 1 | [01-repos-submodulos.md](./01-repos-submodulos.md) | Convertir cada app/lib en repo propio + meta-repo con submódulos git | ⬜ Pendiente |
 | 2 | [02-backend-reactivo.md](./02-backend-reactivo.md) | SSE real con `astream_events`, WebSocket bus, adjuntos propios, eventos tipados | ⬜ Pendiente |
 | 2b | [02b-arquitectura-limpia-exam-app.md](./02b-arquitectura-limpia-exam-app.md) | Detalle de capas y puertos en exam-app (arquitectura limpia + FastAPI) | ⬜ Pendiente |
@@ -43,7 +43,7 @@
 
 ## 📊 Progreso global
 
-- **Etapa actual:** 0 (Reestructuración del monorepo)
+- **Etapa actual:** 1 (Repos múltiples + submódulos git) — *etapa 0 completada el 2026-10-04*
 - **Sesiones estimadas totales:** 10-14
 - **MVP usable (etapas 0-3):** 6-8 sesiones
 - **Última actualización:** 2026-10-04
