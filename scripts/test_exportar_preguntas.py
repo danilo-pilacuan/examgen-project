@@ -19,8 +19,8 @@ if str(ROOT) not in sys.path:
 os.environ.setdefault("DATABASE_URL", "postgresql://x:x@localhost:1/xdb")
 os.environ.setdefault("LATEX_COMPILER_URL", "http://localhost:1/compile")
 
-from src.schemas.tools import ExportarPreguntasInput, TableColumn, COLUMN_LABELS  # noqa: E402
-from src.agents.conversational import tools as tools_mod  # noqa: E402
+from core.domain.schemas.tools import ExportarPreguntasInput, TableColumn, COLUMN_LABELS  # noqa: E402
+from agents_backend.conversational import tools as tools_mod  # noqa: E402
 
 
 class FakeQ:
@@ -52,7 +52,7 @@ def main():
     ok = True
 
     # 1) Tool registrada en el grafo.
-    from src.agents.conversational.graph import TOOL_BY_NAME
+    from agents_backend.conversational.graph import TOOL_BY_NAME
     assert "exportar_preguntas" in TOOL_BY_NAME, "exportar_preguntas NO está en TOOLS"
     print("1. Tool registrada en el grafo: OK")
 
@@ -68,8 +68,8 @@ def main():
     # 3) Generación real de CSV y XLSX con mock del banco y de la subida.
     out_dir = ROOT / "data" / "agent_outputs"
     with patch.object(tools_mod.bank, "list_questions", return_value=[FakeQ(i) for i in range(3)]), \
-         patch("main.OUTPUT_DIR", out_dir), \
-         patch("src.api.openwebui.upload_file_to_openwebui",
+         patch("core.infrastructure.files.output_paths.get_output_dir", lambda: out_dir), \
+         patch("exam_app.infrastructure.openwebui_bridge.upload_file_to_openwebui",
                side_effect=RuntimeError("sin red (fallback)")):
         res_csv = tools_mod.exportar_preguntas.func(subject_id="x", formato="csv")
         res_xlsx = tools_mod.exportar_preguntas.func(subject_id="x", formato="xlsx")
@@ -104,8 +104,8 @@ def main():
 
     # 4) Subida exitosa a OpenWebUI (mock) -> markdown de adjunto nativo.
     with patch.object(tools_mod.bank, "list_questions", return_value=[FakeQ(1)]), \
-         patch("main.OUTPUT_DIR", out_dir), \
-         patch("src.api.openwebui.upload_file_to_openwebui",
+         patch("core.infrastructure.files.output_paths.get_output_dir", lambda: out_dir), \
+         patch("exam_app.infrastructure.openwebui_bridge.upload_file_to_openwebui",
                return_value={"id": "abc-123", "filename": "preguntas.xlsx"}):
         res_up = tools_mod.exportar_preguntas.func(subject_id="x", formato="xlsx")
     assert "http://localhost:3000/api/v1/files/abc-123/content" in res_up, res_up
@@ -114,8 +114,8 @@ def main():
 
     # 5) Formato inválido cae a csv (no crashea).
     with patch.object(tools_mod.bank, "list_questions", return_value=[FakeQ(1)]), \
-         patch("main.OUTPUT_DIR", out_dir), \
-         patch("src.api.openwebui.upload_file_to_openwebui",
+         patch("core.infrastructure.files.output_paths.get_output_dir", lambda: out_dir), \
+         patch("exam_app.infrastructure.openwebui_bridge.upload_file_to_openwebui",
                side_effect=RuntimeError("sin red")):
         res_inv = tools_mod.exportar_preguntas.func(subject_id="x", formato="pdf")
     assert "CSV" in res_inv, res_inv

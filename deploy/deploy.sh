@@ -37,9 +37,10 @@ copy_tar() {
 
 cmd_up() {
   echo "🚀 Creando directorio remoto..."
-  remote "mkdir -p ${REMOTE_BASE}/docker/latex-compiler \
-                 ${REMOTE_BASE}/docker/embedding-service \
-                 ${REMOTE_BASE}/docker/openwebui-custom \
+  remote "mkdir -p ${REMOTE_BASE}/apps/latex-compiler \
+                 ${REMOTE_BASE}/apps/embedding-service \
+                 ${REMOTE_BASE}/apps/exam-app \
+                 ${REMOTE_BASE}/docker/openwebui \
                  ${REMOTE_BASE}/data/agent_outputs \
                  ${REMOTE_BASE}/data/inputs \
                  ${REMOTE_BASE}/data/postgres \
@@ -47,12 +48,12 @@ cmd_up() {
 
   echo "📦 Copiando código fuente al servidor..."
   copy_tar "${REMOTE_BASE}" \
-    main.py alembic.ini requirements.txt src scripts
+    alembic.ini requirements.txt src scripts apps libs
 
-  echo "🐳 Copiando docker/ (Dockerfiles, css, entrypoint)..."
+  echo "🐳 Copiando docker/ (compose, css)..."
   remote "mkdir -p ${REMOTE_BASE}/docker"
   copy_tar "${REMOTE_BASE}" \
-    docker/latex-compiler docker/embedding-service docker/openwebui-custom docker/app
+    docker/openwebui
 
   # Copiar el docker-compose.yml remoto
   scp -q "$(dirname "${BASH_SOURCE[0]}")/docker-compose.yml" \

@@ -20,13 +20,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.agents.graph import run_exam_pipeline  # noqa: E402
-from src.schemas.exam import (  # noqa: E402
+from agents_backend.exam_pipeline.graph import run_exam_pipeline  # noqa: E402
+from core.domain.schemas.exam import (  # noqa: E402
     BloomLevel,
     Difficulty,
     ExamBlueprint,
 )
-from src.templates.registry import TemplateId  # noqa: E402
+from core.infrastructure.latex.templates.registry import TemplateId  # noqa: E402
 
 BASE_DIR = Path("data/inputs/Economia_Aplicada")
 
@@ -81,8 +81,8 @@ def main() -> None:
         print(f"   - {Path(m).name}")
 
     # Registrar/obtener la materia en la BD (para persistencia y RAG)
-    from src.database.connection import SessionLocal
-    from src.database.models import Subject
+    from core.infrastructure.db.connection import SessionLocal
+    from core.domain.models import Subject
 
     db = SessionLocal()
     try:

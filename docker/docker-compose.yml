@@ -16,7 +16,7 @@ services:
   # Compilador latex
   latex-compiler:
     build:
-      context: ./latex-compiler
+      context: ../apps/latex-compiler
       dockerfile: Dockerfile
     container_name: exam_latex_compiler
     restart: always
@@ -28,7 +28,7 @@ services:
   # Servicio de embeddings (OpenAI-compatible)
   embedding-service:
     build:
-      context: ./embedding-service
+      context: ../apps/embedding-service
       dockerfile: Dockerfile
     container_name: exam_embedding_service
     restart: always
@@ -43,7 +43,7 @@ services:
   exam-app:
     build:
       context: ..
-      dockerfile: docker/app/Dockerfile
+      dockerfile: apps/exam-app/Dockerfile
     container_name: exam_app
     restart: always
     env_file:
@@ -135,7 +135,7 @@ services:
     volumes:
       - open_webui_data:/app/backend/data
       # Inyectar CSS personalizado (ocultar opciones de adjuntos y selector de modelo)
-      - ./openwebui-custom/custom.css:/app/backend/open_webui/static/custom.css:ro
+      - ./openwebui/custom.css:/app/backend/open_webui/static/custom.css:ro
     depends_on:
       - exam-app
 
