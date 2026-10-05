@@ -2,7 +2,7 @@
 
 > **Objetivo:** Convertir cada app/lib en un **repositorio Git independiente**, orquestados por un **repo raíz (meta-repo)** mediante **submódulos git**. El meta-repo fija qué commit de cada app compone una versión coherente del sistema.
 >
-> **Estado:** ⬜ Pendiente
+> **Estado:** 🟨 En progreso (repos locales listos, remotos GitHub pendientes del usuario)
 > **Sesiones estimadas:** 1
 > **Fecha de última actualización:** 2026-10-04
 
@@ -12,8 +12,8 @@
 ## 📋 Tareas
 
 ### 1.1 — Preparación
-- [ ] Verificar que la Etapa 0 (reestructuración) está completa y validada
-- [ ] Crear los 7 repos remotos en GitHub:
+- [x] Verificar que la Etapa 0 (reestructuración) está completa y validada
+- [ ] Crear los 7 repos remotos en GitHub (el usuario los sincronizará; los locales ya existen):
   - [ ] `mvp-frontend`
   - [ ] `mvp-exam-app`
   - [ ] `mvp-agents-backend`
@@ -30,10 +30,10 @@
   - [ ] Push al remoto
 
 ### 1.3 — Convertir el repo actual en meta-repo
-- [ ] Eliminar las carpetas de apps/libs del índice del repo raíz
+- [x] Eliminar las carpetas de apps/libs del índice del repo raíz
 - [ ] Agregar cada app/lib como `git submodule add`
 - [ ] Verificar que `.gitmodules` queda bien formado
-- [ ] Push del meta-repo
+- [ ] Push del meta-repo (pendiente: remoto GitHub)
 
 ### 1.4 — Configuración de workflows
 - [ ] CI por repo (tests/lint/build) — pipeline básico en cada app
@@ -43,7 +43,7 @@
 ### 1.5 — Validación
 - [ ] Clon limpio con `--recurse-submodules` funciona
 - [ ] `docker compose up` funcional desde el clon limpio
-- [ ] Push/pull de submódulos funciona correctamente
+- [ ] Push/pull de submódulos funciona correctamente (pendiente de remotos)
 - [ ] `git status` en submódulos no muestra cambios pendientes
 
 ---
@@ -76,7 +76,7 @@ Lo que **queda solo en el meta-repo** (no es código de ninguna app): `data/`, `
 
 ## ✅ Criterios de aceptación
 
-- [ ] Clon limpio con `--recurse-submodules` funciona
+- [x] Clon limpio con `--recurse-submodules` funciona
 - [ ] `docker compose up` funcional desde el clon limpio
 - [ ] Push/pull de submódulos funciona
 - [ ] CI por repo configurado
@@ -88,4 +88,11 @@ Lo que **queda solo en el meta-repo** (no es código de ninguna app): `data/`, `
 
 > Registrar aquí cualquier decisión, problema o hallazgo durante la ejecución de esta etapa.
 
-- (vacío)
+### Sesión 2026-10-04
+
+- **Repos locales, sin remotos**: por indicación del usuario, los 6 repos se crearon en local (`git init` + commit inicial); él los sincronizará con GitHub después. Las URLs en `.gitmodules` son relativas (`./apps/exam-app`) — al crear los remotos conviene actualizarlas a las URLs de GitHub (`git remote set-url` en cada submódulo + editar `.gitmodules`).
+- **Historial nuevo, sin filter-repo**: el commit inicial de cada repo es un snapshot del código extraído en la etapa 0 (el historial completo queda en el meta-repo, rama backup/pre-monorepo y feat/monorepo-reestructuracion).
+- **egg-info excluidos**: los artefactos de `pip install -e` se eliminaron y se excluyeron vía `.gitignore` por repo.
+- **Clon limpio validado**: `git clone --recurse-submodules` desde el repo local funciona (se necesitó `protocol.file.allow always`, propio de URLs locales; con remotos HTTPS/SSH de GitHub no aplica).
+- **frontend placeholder**: apps/frontend se creó solo con README; el scaffold real llega en la etapa 3.
+- **Pendiente**: push a GitHub de los 7 repos, CI por repo (1.4) y validar compose desde el clon limpio.

@@ -11,7 +11,7 @@
 | Etapa | Archivo | Descripción | Estado |
 |---|---|---|---|
 | 0 | [00-reestructuracion-monorepo.md](./00-reestructuracion-monorepo.md) | Reestructurar el repo a monorepo por apps (`apps/` + `libs/`) con arquitectura limpia | ✅ Completada |
-| 1 | [01-repos-submodulos.md](./01-repos-submodulos.md) | Convertir cada app/lib en repo propio + meta-repo con submódulos git | ⬜ Pendiente |
+| 1 | [01-repos-submodulos.md](./01-repos-submodulos.md) | Convertir cada app/lib en repo propio + meta-repo con submódulos git | 🟨 En progreso (repos locales listos, remotos GitHub pendientes) |
 | 2 | [02-backend-reactivo.md](./02-backend-reactivo.md) | SSE real con `astream_events`, WebSocket bus, adjuntos propios, eventos tipados | ⬜ Pendiente |
 | 2b | [02b-arquitectura-limpia-exam-app.md](./02b-arquitectura-limpia-exam-app.md) | Detalle de capas y puertos en exam-app (arquitectura limpia + FastAPI) | ⬜ Pendiente |
 | 2c | [02c-arquitectura-limpia-agents-backend-core.md](./02c-arquitectura-limpia-agents-backend-core.md) | Detalle de agents-backend (eventos tipados) y libs/core (shared kernel) | ⬜ Pendiente |
@@ -43,10 +43,35 @@
 
 ## 📊 Progreso global
 
-- **Etapa actual:** 1 (Repos múltiples + submódulos git) — *etapa 0 completada el 2026-10-04*
+- **Etapa actual:** 1 (Repos múltiples + submódulos git) — *repos locales creados; falta push a GitHub y CI*
 - **Sesiones estimadas totales:** 10-14
 - **MVP usable (etapas 0-3):** 6-8 sesiones
 - **Última actualización:** 2026-10-04
+
+---
+
+## 🏷 Repos del meta-repo (etapa 1)
+
+| Submódulo | Ruta | Remoto (por crear) |
+|---|---|---|
+| apps/frontend | `apps/frontend/` | `mvp-frontend` |
+| apps/exam-app | `apps/exam-app/` | `mvp-exam-app` |
+| apps/agents-backend | `apps/agents-backend/` | `mvp-agents-backend` |
+| apps/latex-compiler | `apps/latex-compiler/` | `mvp-latex-compiler` |
+| apps/embedding-service | `apps/embedding-service/` | `mvp-embedding-service` |
+| libs/core | `libs/core/` | `mvp-core` |
+
+**Al crear los remotos en GitHub** (desde el meta-repo):
+
+```bash
+# 1. Crear los 7 repos en GitHub (6 apps + MVP_LatexExam meta-repo)
+# 2. En cada submódulo:
+git -C apps/exam-app remote add origin git@github.com:danilo-pilacuan/mvp-exam-app.git
+git -C apps/exam-app push -u origin master
+# 3. Actualizar .gitmodules con las URLs definitivas y:
+git submodule sync --recursive
+# 4. Commit + push del meta-repo (fija los SHAs)
+```
 
 ---
 
