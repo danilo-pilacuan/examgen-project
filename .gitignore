@@ -148,3 +148,5 @@ coverage/
 .tmp/
 
 data/inputs/**
+data/agent_outputs/**
+!data/agent_outputs/.gitkeep
