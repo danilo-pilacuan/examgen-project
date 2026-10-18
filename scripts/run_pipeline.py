@@ -16,7 +16,7 @@ import os
 import sys
 from pathlib import Path
 
-# Asegura que el módulo `src` sea importable desde la raíz del proyecto.
+# Ensures the `src` module is importable from the project root.
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
@@ -32,7 +32,11 @@ BASE_DIR = Path("data/inputs/Economia_Aplicada")
 
 
 def load_materials() -> list[str]:
-    """Returns the paths of the subject's materials (all formats)."""
+    """Returns the paths of the subject's materials (all formats).
+
+    The subfolder names (Apuntes/Filminas/Practica) are real directory
+    names of the course material on disk (data), not code strings.
+    """
     patterns = [
         "Apuntes/*.pdf",
         "Apuntes/*.docx",
@@ -65,11 +69,16 @@ def build_blueprint(total_questions: int = 8) -> ExamBlueprint:
             Difficulty.HARD: 0.2,
         },
         topics_weight={
+            # Topic names match the real course material content (Spanish
+            # study material on disk); they are data, not code strings.
             "Estudio de Mercado": 0.3,
             "Flujos Financieros": 0.3,
             "Análisis Económico-Financiero": 0.25,
             "Fijación de Precios": 0.15,
         },
+        # NOTE: the topic names above intentionally contain Spanish accents:
+        # they must match the actual text of the indexed course material
+        # (data/inputs/Economia_Aplicada) for RAG retrieval to work.
         estimated_duration_minutes=90,
     )
 

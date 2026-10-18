@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-# Evitar conectar a la BD al importar el grafo (checkpointer Postgres).
+# Avoid connecting to the DB when importing the graph (Postgres checkpointer).
 os.environ.setdefault("DATABASE_URL", "postgresql://x:x@localhost:1/xdb")
 os.environ.setdefault("LATEX_COMPILER_URL", "http://localhost:1/compile")
 

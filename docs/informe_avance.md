@@ -20,8 +20,8 @@ Este informe resume **qué está implementado**, **qué falta** y **cómo funcio
 | 2 | Evolucionar el MVP a interfaz conversacional (chat, sin frontend tradicional) | ✅ **Completo** | **Frontend propio (Vue 3)** con chat embebido (SSE + WS + widgets) en `projects/frontend/`; OpenWebUI queda como legado opcional (`/v1/chat/completions`) |
 | 3 | Campos de verificación humana y verificación por IA en la BD | ✅ **Completo** | `verified_by_human`, `verified_by_ai`, `ai_review_notes`, `ai_review_priority` en `generated_questions` (migración `c3d4e5f6a7b8`) |
 | 4 | Restricciones de seguridad del agente sobre la BD | ✅ **Completo** | Service layer (`projects/core/src/core/domain/bank/service.py`): preguntas verificadas por humano **inmutables** (`SecurityError` en update/delete) |
-| 5 | Investigar métricas de evaluación (agente + RAG) | 🟡 **Documentado, no implementado** | `docs/metrics.md` define las métricas; falta instrumentar y medir |
-| 6 | Analizar costos comparativos local vs. nube | 🟡 **Documentado, por actualizar** | `docs/cost_analysis.md` con comparativa; falta medir tokens reales del pipeline |
+| 5 | Investigar métricas de evaluación (agente + RAG) | ⛔ **Fuera de alcance actual** | Descartado por decisión del proyecto (2026-10-18): el análisis de métricas no se desarrolla por ahora |
+| 6 | Analizar costos comparativos local vs. nube | ⛔ **Fuera de alcance actual** | Descartado por decisión del proyecto (2026-10-18): el despliegue es local (GPU interna) y el análisis de costos no se desarrolla por ahora |
 | 7 | Compartir repositorio (privado) con Felipe | ✅ Hecho | Fuera del código |
 | 8 | Seguimiento con Felipe cada 2 semanas | ✅ En curso | Este informe es parte del seguimiento |
 
@@ -65,15 +65,14 @@ Este informe resume **qué está implementado**, **qué falta** y **cómo funcio
 | Prioridad | Pendiente | Detalle | Cuándo |
 |---|---|---|---|
 | 🔴 Alta | **Prueba end-to-end de las últimas features** | ✅ Validado: E2E en Docker (chat con tools, examen vía proxy del frontend, PDF descargable) + validación funcional 2026-10-18 | Completado |
-| 🔴 Alta | **Instrumentación para métricas** | Registrar por ítem: tokens usados, latencia, `quality_score`, motivo de rechazo (el `rejection_log` ya existe; falta conteo de tokens) | Octubre |
-| 🔴 Alta | **Ejecutar la evaluación formal** | Dataset ground truth (muestra revisada por humano), correr RAGAS sobre el RAG, tasa de alucinación con evaluador LLM, precisión de `verified_by_ai` vs humano | Octubre–Noviembre |
+| 🔴 Alta | **Publicar los 7 repos en GitHub** | Remotos + `.gitmodules` definitivo + CI por repo + pipeline de integración del meta-repo (etapa 1 del plan) | Inmediato |
 | 🟡 Media | **Deduplicación con embeddings reales** | Hoy usa solapamiento de tokens (placeholder); migrar a similitud coseno con pgvector | Octubre |
-| 🟡 Media | **Actualizar `docs/cost_analysis.md`** con tokens medidos | Reemplazar la estimación (~20.8k tokens/examen) por consumo real | Tras instrumentar |
 | 🟡 Media | **Escrito de la tesis** | Capítulos de implementación + experimentación (usar `ARCHITECTURE.md` y este informe como base) | Noviembre |
 | 🟢 Baja | Tests automatizados (`tests/` está vacío) | Al menos tests de schemas, service layer (seguridad) y render LaTeX | Noviembre |
 | 🟢 Baja | Trazabilidad/monitoreo en producción | **Descartado por alcance** (decisión con Felipe) | — |
+| — | Análisis de métricas y costos | **Descartado por alcance** (decisión del proyecto, 2026-10-18) | — |
 
-> **Riesgo de calendario:** la defensa es 14–21 de diciembre; todo el desarrollo debe cerrarse en noviembre para dejar noviembre–diciembre al escrito. La evaluación formal (métricas) es el bloque más grande pendiente y depende de la instrumentación.
+> **Riesgo de calendario:** la defensa es 14–21 de diciembre; todo el desarrollo debe cerrarse en noviembre para dejar noviembre–diciembre al escrito.
 
 ---
 
@@ -144,7 +143,7 @@ graph LR
     end
 ```
 
-Esto reduce alucinaciones (las preguntas se anclan al material real), ahorra tokens y es la base de las métricas RAG de la tesis (recall@k, fidelidad, etc.).
+Esto reduce alucinaciones (las preguntas se anclan al material real) y ahorra tokens.
 
 ### 2.4 Flujo de usuario conversacional (ejemplo real)
 
@@ -220,7 +219,7 @@ graph TD
 1. El **Planificador** convierte el blueprint en ranuras concretas (`ItemSpec`): "ranura #1: tema X, nivel recordar, dificultad fácil, tipo opción múltiple". Es **programático y determinista** (no gasta LLM): más barato y fácil de defender como metodología.
 2. El **Generador** toma una ranura, recupera contexto RAG del tema y pide al LLM **UNA pregunta** con `with_structured_output(GeneratedItem)` — JSON estricto validado con Pydantic. El LLM **nunca escribe LaTeX**.
 3. El **Evaluador** juzga calidad (LLM, temperatura baja), coincidencia de dificultad y duplicación contra lo ya aprobado.
-4. Si se aprueba → se acumula y se pasa a la siguiente ranura. Si se rechaza → se reintenta (hasta 3 veces) o se abandona la ranura. Todo queda en `rejection_log` (auditoría para las métricas de la tesis).
+4. Si se aprueba → se acumula y se pasa a la siguiente ranura. Si se rechaza → se reintenta (hasta 3 veces) o se abandona la ranura. Todo queda en `rejection_log` (auditoría del pipeline).
 5. Al agotarse las ranuras → **Ensamblador** (LaTeX con Jinja, N versiones barajadas) → **Compilador** (PDF).
 
 **Guardrails anti-alucinación del loop:** una pregunta por llamada, JSON estructurado obligatorio, evaluador independiente, reintentos acotados, cap duro de llamadas al LLM (`max_total_llm_calls=200`).
@@ -421,8 +420,5 @@ graph LR
 ## 5. Próximos pasos inmediatos
 
 1. **Publicar los 7 repos en GitHub** (etapa 1 del plan: remotos + `.gitmodules` definitivo + CI por repo + pipeline de integración del meta-repo).
-2. **Instrumentar tokens/latencia** por llamada al LLM (base de las métricas de costo).
-3. **Diseñar el dataset de evaluación** (muestra de preguntas con verificación humana como ground truth).
-4. **Correr RAGAS** sobre el RAG y calcular tasa de alucinación + acuerdo IA/humano.
-5. **Actualizar `docs/cost_analysis.md`** con consumo real y cerrar la comparativa local vs. nube.
-6. **Empezar el escrito** (capítulo de implementación) en paralelo — objetivo: todo el desarrollo cerrado en noviembre.
+2. **Deduplicación con embeddings reales** (migrar el solapamiento de tokens a similitud coseno con pgvector).
+3. **Empezar el escrito** (capítulo de implementación) en paralelo — objetivo: todo el desarrollo cerrado en noviembre.

@@ -149,8 +149,8 @@
 - [x] `scripts/test_exportar_preguntas.py` — actualizar asserts que dependen de `COLUMN_LABELS` y mensajes ("Exporté **3 pregunta(s)**", headers "Tema/Pregunta/Opciones/Solución/Verif. humano") — sincronizar con 7.1/7.3
 
 ### 7.8 — Documentación (último pase)
-- [x] `readme.md`, `ARCHITECTURE.md`, `projects/frontend/README.md`, `docs/metrics.md`, `docs/cost_analysis.md`, `docs/arquitectura-objetivo.md`, `docs/informe_avance.md`
-  - readme.md + frontend/README.md: 2026-10-05. ARCHITECTURE.md (estado, tools, esquemas, monorepo aplicado), informe_avance.md (tools 11 en inglés, frontend propio, diagramas), arquitectura-objetivo.md (marcada como aplicada), metrics.md y cost_analysis.md (notas de vigencia): 2026-10-18.
+- [x] `readme.md`, `ARCHITECTURE.md`, `projects/frontend/README.md`, `docs/arquitectura-objetivo.md`, `docs/informe_avance.md`
+  - readme.md + frontend/README.md: 2026-10-05. ARCHITECTURE.md (estado, tools, esquemas, monorepo aplicado), informe_avance.md (tools 11 en inglés, frontend propio, diagramas), arquitectura-objetivo.md (marcada como aplicada): 2026-10-18. `docs/metrics.md` y `docs/cost_analysis.md` se eliminaron del repo por decisión del proyecto (2026-10-18).
 - [x] `implementaciones/*.md` — quedan en español por ahora (caché de progreso interno); decidir al final si se traducen
 - [x] NO traducir: `Requisitos/`, `plan-frontendChatEmbebido.prompt.md` (fuentes históricas)
 
@@ -196,5 +196,5 @@
   - `scripts/test_exportar_preguntas.py`: 9/9 checks OK.
   - Hallazgo operativo (no bloqueante): con la BD recién arrancada, exam-app pudo arrancar antes de que Postgres terminara de inicializar (race en `depends_on` sin healthcheck de postgres); la reintentación del lifespan lo resuelve, pero conviene añadir healthcheck a postgres-db en una etapa futura.
   - Hallazgo operativo (no bloqueante): nginx del frontend solo define `proxy_read_timeout 3600s` en `/ws`; `POST /exams/generate` de larga duración (>60s con LLM lento) puede cortar por el timeout por defecto de 60s en las otras locations. Añadir el timeout a `/exams` y `/api/` en una etapa futura.
-- **7.8 completado**: `ARCHITECTURE.md` (estado 0-7, tools en inglés, esquemas con enums del contrato, monorepo aplicado, agente conversacional con frontend propio, cómo ejecutar), `docs/informe_avance.md` (nota de actualización, 11 tools, diagrama con frontend propio, próximos pasos), `docs/arquitectura-objetivo.md` (marcada como aplicada, `projects/`), `docs/metrics.md` y `docs/cost_analysis.md` (notas de vigencia).
+- **7.8 completado**: `ARCHITECTURE.md` (estado 0-7, tools en inglés, esquemas con enums del contrato, monorepo aplicado, agente conversacional con frontend propio, cómo ejecutar), `docs/informe_avance.md` (nota de actualización, 11 tools, diagrama con frontend propio, próximos pasos), `docs/arquitectura-objetivo.md` (marcada como aplicada, `projects/`).
 - **DGX intacta**: cero SSH, `deploy/` solo editado como texto (nunca ejecutado).

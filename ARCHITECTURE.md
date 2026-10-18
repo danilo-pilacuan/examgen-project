@@ -39,7 +39,7 @@ Este proyecto construye un **pipeline multi-agente** que genera exámenes univer
 5. **Ensambla** los ítems aprobados en un documento LaTeX.
 6. **Compila** el LaTeX a PDF mediante un microservicio.
 
-Todo orquestado por **LangGraph**, con un estado compartido que viaja entre nodos y registros de auditoría para las métricas de la tesis.
+Todo orquestado por **LangGraph**, con un estado compartido que viaja entre nodos y registros de auditoría (`rejection_log`, `compilation_log`, `total_llm_calls`).
 
 Sobre el pipeline batch vive una **capa conversacional**: un agente asistente de cátedra con tools (listar/recuperar/generar/guardar preguntas, armar exámenes, indexar material) con **human-in-the-loop**, expuesto por `exam-app` (FastAPI) vía SSE/WS/REST y consumido por un **frontend propio (Vue 3)** con widgets reactivos y i18n en/es. El contrato del sistema (enums, tools, prompts, API) está en **inglés**; la UI es bilingüe.
 
@@ -607,7 +607,6 @@ erDiagram
 
 ### ⏳ Pendiente
 - Push a GitHub de los 7 repos (etapa 1: remotos + CI + pipeline de integración del meta-repo)
-- Métricas de tesis instrumentadas (tasa de rechazo, % de dificultad, etc. — definidas en `docs/metrics.md`)
 - Deduplicación con embeddings reales (hoy usa solapamiento de tokens)
 - Deploy en servidor remoto (DGX) — bloqueado por decisión del proyecto hasta integrar los cambios
 

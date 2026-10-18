@@ -1,26 +1,26 @@
-"""Verificación del Excel exportado (corre dentro del contenedor)."""
+"""Verification of the exported Excel (runs inside the container)."""
 import sys
 sys.path.insert(0, "/app")
 from openpyxl import load_workbook
 
 wb = load_workbook("/app/output/preguntas_20260917_071733.xlsx")
 ws = wb.active
-print("Filas:", ws.max_row, "Columnas:", ws.max_column)
+print("Rows:", ws.max_row, "Columns:", ws.max_column)
 
-# Buscar una fila con opciones (opcion_multiple)
+# Find a row with options (multiple_choice)
 found = False
 for row in ws.iter_rows(min_row=2, values_only=True):
-    if row[6] == "opcion_multiple":
-        print("Pregunta:", str(row[7])[:60])
-        print("Opciones:", row[8])
-        print("Respuesta:", row[9])
-        print("Verif humano:", row[12])
+    if row[6] == "multiple_choice":
+        print("Question:", str(row[7])[:60])
+        print("Options:", row[8])
+        print("Answer:", row[9])
+        print("Human verif.:", row[12])
         found = True
         break
 if not found:
-    print("No hay filas con opcion_multiple")
+    print("No rows with multiple_choice")
 
-# Contar tipos de pregunta
+# Count question types
 from collections import Counter
-tipos = Counter(row[6] for row in ws.iter_rows(min_row=2, values_only=True))
-print("Tipos:", dict(tipos))
+types = Counter(row[6] for row in ws.iter_rows(min_row=2, values_only=True))
+print("Types:", dict(types))

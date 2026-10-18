@@ -33,9 +33,7 @@ MVP_v1/
 │   ├── index_material.py
 │   └── run_pipeline.py
 │
-├── docs/                     # métricas y análisis de costos (tesis)
-│   ├── metrics.md
-│   └── cost_analysis.md
+├── docs/                     # informe de avance y arquitectura objetivo (tesis)
 │
 └── implementaciones/         # planes de etapa y progreso
 ```

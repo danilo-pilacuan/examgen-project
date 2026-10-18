@@ -1,18 +1,18 @@
 # ============================================================
-# docker-compose.yml â€” Despliegue remoto en 172.28.230.10
-# (DGX H200 USFQ, usuario dpilacuan)
+# docker-compose.yml — Remote deployment on 172.28.230.10
+# (DGX H200 USFQ, user dpilacuan)
 #
-# PRINCIPIOS DE DISEÃ‘O (para no daÃ±ar el servidor de la instituciÃ³n):
-#   1. TODO vive en ~/my_containers/exam/ (directorio del usuario).
-#   2. Red AISLADA propia (no usa la red del host).
-#   3. LÃMITES de CPU/memoria estrictos (nunca satura el host).
-#   4. restart: "no" â€” NO auto-arranca al iniciar el servidor.
-#   5. Sin montar rutas del sistema; solo volÃºmenes nombrados y
-#      directorios bajo el home del usuario.
-#   6. FÃ¡cil de eliminar: `down.sh` quita contenedores+volÃºmenes
-#      conservando los datos en el home.
+# DESIGN PRINCIPLES (to avoid damaging the institution's server):
+#   1. EVERYTHING lives in ~/my_containers/exam/ (user directory).
+#   2. Own ISOLATED network (does not use the host network).
+#   3. STRICT CPU/memory LIMITS (never saturates the host).
+#   4. restart: "no" — does NOT auto-start when the server boots.
+#   5. No system paths mounted; only named volumes and directories
+#      under the user's home.
+#   6. Easy to remove: `down.sh` removes containers+volumes while
+#      keeping the data in the home directory.
 #
-# PUERTOS (rango alto 39000+, para no chocar con otros servicios):
+# PORTS (high range 39000+, to avoid clashing with other services):
 #   - 39000 -> postgres (5432)
 #   - 39001 -> open-webui (8080)
 #   - 39002 -> exam-app / API (8000)
@@ -20,15 +20,15 @@
 #   - 39004 -> embedding-service (8081)
 #   - 39005 -> frontend (80)
 #
-# Levantar:   docker compose up -d --build
-# Derribar:   docker compose down            (borra contenedores+red)
-# Limpiar:    docker compose down -v         (borra tambiÃ©n volÃºmenes)
+# Start:    docker compose up -d --build
+# Stop:     docker compose down            (removes containers+network)
+# Cleanup:  docker compose down -v         (also removes volumes)
 # ============================================================
 
 x-exam-root: &exam_root /home/dpilacuan/my_containers/exam
 
 services:
-  # BDD
+  # DB
   postgres-db:
     image: pgvector/pgvector:pg16
     container_name: exam_postgres_db
@@ -42,7 +42,7 @@ services:
     volumes:
       - /home/dpilacuan/my_containers/exam/data/postgres:/var/lib/postgresql/data
 
-  # Compilador latex
+  # LaTeX compiler
   latex-compiler:
     build:
       context: /home/dpilacuan/my_containers/exam/projects/latex-compiler
@@ -54,7 +54,7 @@ services:
     volumes:
       - /home/dpilacuan/my_containers/exam/data/agent_outputs:/app/output
 
-  # Servicio de embeddings (OpenAI-compatible)
+  # Embeddings service (OpenAI-compatible)
   embedding-service:
     build:
       context: /home/dpilacuan/my_containers/exam/projects/embedding-service
@@ -67,7 +67,7 @@ services:
     ports:
       - "39004:8081"
 
-  # AplicaciÃ³n orquestadora (FastAPI) â€” expone la API REST + el agente
+  # Orchestrator app (FastAPI) — exposes the REST API + the agent
   exam-app:
     build:
       context: /home/dpilacuan/my_containers/exam
@@ -82,10 +82,10 @@ services:
       OPENWEBUI_PUBLIC_URL: http://172.28.230.10:39001
       OPENWEBUI_ADMIN_EMAIL: admin@localhost
       OPENWEBUI_ADMIN_PASSWORD: admin
-      # LLM remoto vLLM (ya corre en el host)
+      # Remote LLM vLLM (already running on the host)
       LLM_BASE_URL: http://172.28.230.10:12555/v1
       LLM_MODEL: zai-org/GLM-5.3-Flash
-      # Directorio raÃ­z del material de las materias
+      # Root directory of the subjects' material
       MATERIAL_ROOT: /app/inputs
     ports:
       - "39002:8000"
@@ -97,7 +97,7 @@ services:
       - latex-compiler
       - embedding-service
 
-  # Frontend propio (Vue 3 + nginx). Proxy de /api, /ws y /output hacia exam-app.
+  # Own frontend (Vue 3 + nginx). Proxies /api, /ws and /output to exam-app.
   frontend:
     build:
       context: ../projects/frontend
@@ -105,7 +105,7 @@ services:
     container_name: exam_frontend
     restart: "no"
     environment:
-      # Mismo origen: el nginx del frontend proxifica /api, /ws y /output.
+      # Same origin: the frontend nginx proxies /api, /ws and /output.
       VITE_API_URL: ""
       VITE_WS_URL: ""
     ports:
@@ -113,7 +113,7 @@ services:
     depends_on:
       - exam-app
 
-  # OpenWebUI: interfaz conversacional legada (opcional).
+  # OpenWebUI: legacy conversational interface (optional).
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
     container_name: exam_open_webui

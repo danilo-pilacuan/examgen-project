@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 # ============================================================
-# deploy.sh â€” Despliega la infraestructura del "Generador de
-# ExÃ¡menes" en el servidor remoto 172.28.230.10 (DGX H200 USFQ)
+# deploy.sh — Deploys the "Exam Generator" infrastructure to
+# the remote server 172.28.230.10 (DGX H200 USFQ)
 #
-# Uso:
-#   ./deploy.sh              # Despliega (copia cÃ³digo + levanta)
-#   ./deploy.sh --no-build   # Solo copia y levanta sin rebuild
-#   ./deploy.sh --down       # Derriba la infraestructura
-#   ./deploy.sh --status     # Muestra el estado de los contenedores
+# Usage:
+#   ./deploy.sh              # Deploy (copy code + start)
+#   ./deploy.sh --no-build   # Copy and start without rebuild
+#   ./deploy.sh --down       # Tear down the infrastructure
+#   ./deploy.sh --status     # Show container status
 #
-# Requisitos:
-#   - Clave SSH configurada para 172.28.230.10 (usuario dpilacuan)
-#   - tar disponible en la mÃ¡quina local (Git Bash lo incluye)
+# Requirements:
+#   - SSH key configured for 172.28.230.10 (user dpilacuan)
+#   - tar available on the local machine (Git Bash includes it)
 # ============================================================
 set -euo pipefail
 
@@ -19,24 +19,24 @@ REMOTE_HOST="172.28.230.10"
 REMOTE_USER="dpilacuan"
 REMOTE_BASE="/home/${REMOTE_USER}/my_containers/exam"
 
-# Directorio raÃ­z del proyecto (sube 1 nivel desde deploy/)
+# Project root directory (goes up 1 level from deploy/)
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # ============================================================
-# Funciones
+# Functions
 # ============================================================
 remote() { ssh "${REMOTE_HOST}" "$@"; }
 
-# Copia un conjunto de archivos/directorios al remoto usando tar+ssh
-# (mÃ¡s fiable que rsync en entornos Windows/Git Bash).
-# Uso: copy_tar <destino_remoto> <archivo1> <dir1> ...
+# Copies a set of files/directories to the remote using tar+ssh
+# (more reliable than rsync on Windows/Git Bash environments).
+# Usage: copy_tar <remote_dest> <file1> <dir1> ...
 copy_tar() {
   local dest="$1"; shift
   tar -C "${PROJECT_ROOT}" -cf - "$@" | ssh "${REMOTE_HOST}" "tar -xf - -C ${dest}"
 }
 
 cmd_up() {
-  echo "ðŸš€ Creando directorio remoto..."
+  echo "🚀 Creating remote directory..."
   remote "mkdir -p ${REMOTE_BASE}/projects/latex-compiler \
                  ${REMOTE_BASE}/projects/embedding-service \
                  ${REMOTE_BASE}/projects/exam-app \
@@ -47,41 +47,41 @@ cmd_up() {
                  ${REMOTE_BASE}/data/postgres \
                  ${REMOTE_BASE}/data/openwebui"
 
-  echo "ðŸ“¦ Copiando cÃ³digo fuente al servidor..."
+  echo "📦 Copying source code to the server..."
   copy_tar "${REMOTE_BASE}" \
     alembic.ini requirements.txt src scripts projects
 
-  echo "ðŸ³ Copiando docker/ (compose, css)..."
+  echo "🐳 Copying docker/ (compose, css)..."
   remote "mkdir -p ${REMOTE_BASE}/docker"
   copy_tar "${REMOTE_BASE}" \
     docker/openwebui
 
-  # Copiar el docker-compose.yml remoto
+  # Copy the remote docker-compose.yml
   scp -q "$(dirname "${BASH_SOURCE[0]}")/docker-compose.yml" \
     "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_BASE}/docker-compose.yml"
 
-  # Crear el .env remoto (las variables `environment` del compose tienen
-  # prioridad sobre el .env en pydantic-settings).
+  # Create the remote .env (the compose `environment` variables take
+  # priority over the .env in pydantic-settings).
   remote "cat > ${REMOTE_BASE}/.env << 'EOF'
 LATEX_COMPILER_URL=http://latex-compiler:8080/compile
 EOF"
 
-  echo "â¬†ï¸  Levantando la infraestructura..."
+  echo "⬆️  Starting the infrastructure..."
   if [ "${1:-}" = "--no-build" ]; then
     remote "cd ${REMOTE_BASE} && docker compose up -d"
   else
     remote "cd ${REMOTE_BASE} && docker compose up -d --build"
   fi
 
-  echo "â³ Esperando a que postgres estÃ© listo..."
+  echo "⏳ Waiting for postgres to be ready..."
   remote "for i in \$(seq 1 30); do docker exec exam_postgres_db pg_isready -U exam_user >/dev/null 2>&1 && break; sleep 2; done"
 
-  echo "ðŸ” Verificando que exam-app estÃ© corriendo (reintenta si fallÃ³ por timing)..."
+  echo "🔁 Verifying exam-app is running (retries if it failed on timing)..."
   remote "cd ${REMOTE_BASE} && docker compose up -d exam-app 2>/dev/null || true"
   sleep 5
 
   echo ""
-  echo "âœ… Infraestructura desplegada en ${REMOTE_HOST}"
+  echo "✅ Infrastructure deployed on ${REMOTE_HOST}"
   echo "   - Frontend:   http://${REMOTE_HOST}:39005"
   echo "   - OpenWebUI:  http://${REMOTE_HOST}:39001"
   echo "   - API:        http://${REMOTE_HOST}:39002"
@@ -91,15 +91,15 @@ EOF"
 }
 
 cmd_down() {
-  echo "ðŸ›‘ Derribando la infraestructura..."
+  echo "🛑 Tearing down the infrastructure..."
   remote "cd ${REMOTE_BASE} && docker compose down 2>/dev/null || true"
-  echo "âœ… Contenedores derribados. Los datos (volÃºmenes) se conservan."
-  echo "   Para borrar tambiÃ©n los datos: docker compose down -v"
+  echo "✅ Containers removed. Data (volumes) is preserved."
+  echo "   To also delete the data: docker compose down -v"
 }
 
 cmd_status() {
-  echo "ðŸ“Š Estado de la infraestructura en ${REMOTE_HOST}:"
-  remote "cd ${REMOTE_BASE} && docker compose ps 2>/dev/null || echo 'No hay infraestructura desplegada'"
+  echo "📊 Infrastructure status on ${REMOTE_HOST}:"
+  remote "cd ${REMOTE_BASE} && docker compose ps 2>/dev/null || echo 'No infrastructure deployed'"
 }
 
 # ============================================================
@@ -113,7 +113,7 @@ case "${1:-up}" in
   status)     cmd_status ;;
   --status)   cmd_status ;;
   *)
-    echo "Uso: $0 [up|down|status|--no-build]"
+    echo "Usage: $0 [up|down|status|--no-build]"
     exit 1
     ;;
 esac
