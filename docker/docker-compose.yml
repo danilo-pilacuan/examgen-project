@@ -113,14 +113,14 @@ services:
       # Clave secreta estable: mantiene sesiones vÃ¡lidas entre reinicios
       WEBUI_SECRET_KEY: "ee95d3be2fee38ba92098420869c00ff4c15e457dbbf18518db9e0542f9b7724"
 
-      # ===== Modo "chat de producciÃ³n" =====
-      # Forzar que las variables de entorno manden (no valores persistidos en DB)
+      # ===== "Production chat" mode =====
+      # Force environment variables to win (not values persisted in DB)
       ENABLE_PERSISTENT_CONFIG: "false"
-      # Marca/identidad de la interfaz
-      WEBUI_NAME: "Generador de ExÃ¡menes"
-      # Pre-seleccionar el agente exam-agent en cada chat nuevo
+      # UI brand/identity
+      WEBUI_NAME: "Exam Generator"
+      # Pre-select the exam-agent on every new chat
       DEFAULT_MODELS: "exam-agent"
-      # Ocultar el botÃ³n "Controls" (agente, system prompt, parÃ¡metros, valves)
+      # Hide the "Controls" button (agent, system prompt, parameters, valves)
       USER_PERMISSIONS_CHAT_CONTROLS: "false"
       USER_PERMISSIONS_CHAT_VALVES: "false"
       USER_PERMISSIONS_CHAT_SYSTEM_PROMPT: "false"
@@ -132,7 +132,7 @@ services:
       # Ocultar chat temporal y otras acciones no deseadas en producciÃ³n
       USER_PERMISSIONS_CHAT_TEMPORARY: "false"
       USER_PERMISSIONS_CHAT_TEMPORARY_ENFORCED: "false"
-      # Permitir SOLO subir archivos en el chat (ocultar "Adjuntar pÃ¡gina web")
+      # Allow ONLY file uploads in the chat (hide "Attach web page")
       USER_PERMISSIONS_CHAT_FILE_UPLOAD: "true"
       USER_PERMISSIONS_CHAT_WEB_UPLOAD: "false"
       # Ocultar funcionalidades no necesarias en producciÃ³n
@@ -157,8 +157,8 @@ services:
       USER_PERMISSIONS_WORKSPACE_PROMPTS_ACCESS: "false"
       USER_PERMISSIONS_WORKSPACE_TOOLS_ACCESS: "false"
       USER_PERMISSIONS_WORKSPACE_SKILLS_ACCESS: "false"
-      # Sugerencias de inicio relevantes para el generador de exÃ¡menes
-      DEFAULT_PROMPT_SUGGESTIONS: '[{"title":["Â¿QuÃ© materias","hay registradas?"],"content":"Â¿QuÃ© materias hay registradas?"},{"title":["Genera un examen","de EconomÃ­a Aplicada"],"content":"Genera un examen de EconomÃ­a Aplicada"},{"title":["Preguntas de repaso","de InglÃ©s TÃ©cnico"],"content":"Hazme preguntas de repaso de InglÃ©s TÃ©cnico"},{"title":["Registra una pregunta","sobre elasticidad"],"content":"Registra una pregunta sobre elasticidad en EconomÃ­a Aplicada"}]'
+      # Startup suggestions relevant to the exam generator
+      DEFAULT_PROMPT_SUGGESTIONS: '[{"title":["What subjects","are registered?"],"content":"What subjects are registered?"},{"title":["Generate an exam","for Applied Economics"],"content":"Generate an exam for Applied Economics"},{"title":["Review questions","for Technical English"],"content":"Give me review questions for Technical English"},{"title":["Register a question","about elasticity"],"content":"Register a question about elasticity in Applied Economics"}]'
     volumes:
       - open_webui_data:/app/backend/data
       # Inyectar CSS personalizado (ocultar opciones de adjuntos y selector de modelo)

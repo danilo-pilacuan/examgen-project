@@ -2,7 +2,7 @@
 
 > **Proyecto:** MVP_v1 — Generador de exámenes en LaTeX propulsado por agentes de IA
 > **Tesis:** USFQ
-> **Fecha de documentación:** 2026-08-11
+> **Fecha de documentación:** 2026-08-11 · **Última actualización:** 2026-10-18 (etapas 0-7)
 
 Repo de referencia con material de estudio: https://github.com/tobiager/UNNE-LSI/tree/main
 
@@ -22,7 +22,9 @@ Repo de referencia con material de estudio: https://github.com/tobiager/UNNE-LSI
 10. [Base de datos y migraciones](#-base-de-datos-y-migraciones)
 11. [Renderizado LaTeX](#-renderizado-latex)
 12. [Estado del proyecto](#-estado-del-proyecto)
-13. [Arquitectura objetivo del monorepo (próxima reestructuración)](#-arquitectura-objetivo-del-monorepo-próxima-reestructuración)
+13. [Arquitectura del monorepo (aplicada)](#-arquitectura-del-monorepo-aplicada)
+14. [Agente conversacional (frontend propio + human-in-the-loop)](#-agente-conversacional-frontend-propio--human-in-the-loop)
+15. [Cómo ejecutar](#-cómo-ejecutar)
 
 ---
 
@@ -39,6 +41,8 @@ Este proyecto construye un **pipeline multi-agente** que genera exámenes univer
 
 Todo orquestado por **LangGraph**, con un estado compartido que viaja entre nodos y registros de auditoría para las métricas de la tesis.
 
+Sobre el pipeline batch vive una **capa conversacional**: un agente asistente de cátedra con tools (listar/recuperar/generar/guardar preguntas, armar exámenes, indexar material) con **human-in-the-loop**, expuesto por `exam-app` (FastAPI) vía SSE/WS/REST y consumido por un **frontend propio (Vue 3)** con widgets reactivos y i18n en/es. El contrato del sistema (enums, tools, prompts, API) está en **inglés**; la UI es bilingüe.
+
 ---
 
 ## 📖 Glosario (términos técnicos)
@@ -53,19 +57,19 @@ Del inglés "blueprint" = **plano o diseño**. En este proyecto, un `ExamBluepri
 ### 🌱 Niveles de Bloom (taxonomía de Bloom)
 La **Taxonomía de Bloom** es una clasificación de los **niveles de pensamiento** que una pregunta puede exigir al estudiante. Va de lo más simple (memorizar) a lo más complejo (crear):
 
-| Nivel | Qué exige al estudiante | Ejemplo de pregunta |
+| Nivel (contrato) | Qué exige al estudiante | Ejemplo de pregunta |
 |---|---|---|
-| 🧠 **Recordar** | Memorizar y recordar datos | "¿Qué es el estudio de mercado?" |
-| 📖 **Comprender** | Explicar con sus palabras | "Explica por qué es importante el estudio de mercado" |
-| 🛠 **Aplicar** | Usar el conocimiento en una situación | "Calcula el punto de equilibrio con estos datos" |
-| 🔍 **Analizar** | Descomponer y relacionar | "Compara los flujos financieros de dos proyectos" |
-| ⚖️ **Evaluar** | Juzgar y argumentar | "Evalúa si el proyecto es viable y justifica" |
-| 💡 **Crear** | Diseñar algo nuevo | "Diseña un plan de negocios para un emprendimiento" |
+| 🧠 **Recordar** (`remember`) | Memorizar y recordar datos | "¿Qué es el estudio de mercado?" |
+| 📖 **Comprender** (`understand`) | Explicar con sus palabras | "Explica por qué es importante el estudio de mercado" |
+| 🛠 **Aplicar** (`apply`) | Usar el conocimiento en una situación | "Calcula el punto de equilibrio con estos datos" |
+| 🔍 **Analizar** (`analyze`) | Descomponer y relacionar | "Compara los flujos financieros de dos proyectos" |
+| ⚖️ **Evaluar** (`evaluate`) | Juzgar y argumentar | "Evalúa si el proyecto es viable y justifica" |
+| 💡 **Crear** (`create`) | Diseñar algo nuevo | "Diseña un plan de negocios para un emprendimiento" |
 
 El pipeline usa estos niveles para **asegurar que el examen tenga un balance cognitivo** (no solo memorización).
 
 ### 🎚 Dificultad (`Difficulty`)
-Nivel de complejidad percibida de la pregunta: `facil`, `medio`, `dificil`. Se distribuye según el blueprint.
+Nivel de complejidad percibida de la pregunta: `easy`, `medium`, `hard` (contrato en inglés desde la etapa 7). Se distribuye según el blueprint.
 
 ### 📝 Ítem / pregunta (`ItemSpec` y `GeneratedItem`)
 - **`ItemSpec`** ("spec" = especificación): la **ranura** que el Planificador asigna. Dice exactamente *qué* hay que generar: tema, nivel de Bloom, dificultad y tipo de pregunta.
@@ -216,12 +220,12 @@ El **Ingestor** lee todos esos archivos (PDF, DOCX, PPTX, XLSX, texto) y extrae 
 
 ### Paso 3 — Planificador: diseñar el examen (blueprint)
 Definimos el **blueprint**: 8 preguntas, repartidas así:
-- **Bloom**: 25% recordar, 25% comprender, 25% aplicar, 25% analizar → 2 de cada.
-- **Dificultad**: 40% fácil, 40% medio, 20% difícil.
+- **Bloom**: 25% remember, 25% understand, 25% apply, 25% analyze → 2 de cada.
+- **Dificultad**: 40% easy, 40% medium, 20% hard.
 - **Temas**: 30% estudio de mercado, 30% flujos financieros, 25% análisis económico, 15% precios.
 
 El Planificador convierte esta "receta" en **8 ranuras concretas** (`ItemSpec`), cada una especificando exactamente qué generar. Por ejemplo:
-> "Ranura #1: tema 'Estudio de Mercado', nivel 'recordar', dificultad 'fácil', tipo 'opción múltiple'."
+> "Ranura #1: tema 'Estudio de Mercado', nivel 'remember', dificultad 'easy', tipo 'multiple_choice'."
 
 Este paso es **programático** (no usa el LLM): es determinista y barato.
 
@@ -431,13 +435,13 @@ Los campos marcados con `+` usan el patrón estándar de LangGraph: cuando un no
 
 ## 🧩 Esquemas de datos
 
-Definidos en `src/schemas/exam.py`:
+Definidos en `projects/core/src/core/domain/schemas/exam.py`:
 
 | Esquema | Descripción | Campos clave |
 |---|---|---|
-| `BloomLevel` | Enum de niveles de Bloom | `recordar`…`crear` |
-| `Difficulty` | Enum de dificultad | `facil`, `medio`, `dificil` |
-| `QuestionType` | Enum de tipos de pregunta | `opcion_multiple`, `verdadero_falso`, `respuesta_corta`, `desarrollo` |
+| `BloomLevel` | Enum de niveles de Bloom | `remember`, `understand`, `apply`, `analyze`, `evaluate`, `create` |
+| `Difficulty` | Enum de dificultad | `easy`, `medium`, `hard` |
+| `QuestionType` | Enum de tipos de pregunta | `multiple_choice`, `true_false`, `short_answer`, `essay`, `fill_in_blank`, `select_all` |
 | `AnswerOption` | Opción de respuesta | `text`, `is_correct` |
 | `GeneratedItem` | Contrato del LLM Generador | `topic`, `bloom_level`, `difficulty`, `question_type`, `statement`, `options`, `expected_answer`, `solution_explanation`, `points` |
 | `EvaluationResult` | Salida del Evaluador | `approved`, `quality_score`, `difficulty_match`, `is_duplicate`, `similarity_score`, `rejection_reason` |
@@ -447,11 +451,13 @@ Definidos en `src/schemas/exam.py`:
 
 > **Clave de diseño:** el LLM Generador **nunca genera LaTeX directamente** — solo produce la estructura `GeneratedItem`. El LaTeX se genera programáticamente en el ensamblador. Esto evita errores de sintaxis LaTeX del modelo.
 
+> **Contrato en inglés (etapa 7):** los valores de los enums viajan en inglés en toda la cadena core ↔ BD ↔ agents-backend ↔ exam-app ↔ frontend. La migración `d4e5f6a7b8c9` tradujo los valores ya persistidos. El frontend los muestra vía vue-i18n (etiquetas por idioma).
+
 ---
 
 ## ⚙️ Configuración del LLM local
 
-Definida en `src/config.py` y `src/agents/llm.py`:
+Definida en `projects/core/src/core/config.py` y `projects/agents-backend/src/agents_backend/shared/llm.py`:
 
 | Parámetro | Valor | Descripción |
 |---|---|---|
@@ -486,7 +492,7 @@ Los embeddings se generan en un **microservicio Docker** (`embedding-service`, p
 
 ## 🗄 Base de datos y migraciones
 
-Modelos en `src/database/models.py` (SQLAlchemy + pgvector):
+Modelos en `projects/core/src/core/infrastructure/db/` (SQLAlchemy + pgvector):
 
 ```mermaid
 erDiagram
@@ -525,52 +531,68 @@ erDiagram
     }
 ```
 
-- **`Connection`**: `src/database/connection.py` (engine + `SessionLocal`).
-- **Migraciones**: Alembic en `src/database/migrations/`. `env.py` inyecta la URL real desde `.env`.
+- **`Connection`**: `projects/core/src/core/infrastructure/db/connection.py` (engine + `SessionLocal`).
+- **Migraciones**: Alembic en `projects/core/src/core/infrastructure/db/migrations/` (orquestadas por `alembic.ini` en la raíz). `env.py` inyecta la URL real desde `.env`.
 - **pgvector**: las columnas `embedding` están tipadas como `vector(1024)` (modelo bge-m3).
+- **Migración de contrato en inglés**: `d4e5f6a7b8c9` traduce los valores de enums ya persistidos (Bloom, dificultad, tipo, prioridad IA).
 
 ---
 
 ## 📄 Renderizado LaTeX
 
-- **Templates**: `src/templates/base_exam.tex.jinja` (Jinja2).
-- **Utilidades**: `src/utils/latex_templates.py` — `escape_latex()`, `render_item()`, `render_exam()`.
-- **Registry**: `src/templates/registry.py` — mapea `TemplateId` → archivo de template.
+- **Templates**: `projects/core/src/core/infrastructure/latex/templates/base_exam.tex.jinja` (Jinja2) + `quiz_short.tex.jinja`.
+- **Utilidades**: `projects/core/src/core/infrastructure/latex/utils.py` — `escape_latex()`, `render_item()`, `render_exam()`, `build_exam_versions()`.
+- **Registry**: `projects/core/src/core/infrastructure/latex/templates/registry.py` — mapea `TemplateId` → archivo de template.
 - **Nota técnica**: el entorno Jinja usa delimitadores de comentario `<#`/`#>` para evitar colisión con las macros LaTeX `{#1}`.
+- **PDFs en inglés** (etapa 7): `\usepackage[english]{babel}`, "Page X of Y", "Name:", "Answer all questions in the space provided.", "Solution:".
 
 ---
 
 ## 🚦 Estado del proyecto
 
-### ✅ Implementado y validado
-- Infraestructura Docker (Postgres + pgvector + latex-compiler + embedding-service)
-- Configuración Pydantic + LLM local
-- Todos los esquemas Pydantic
-- Estado del grafo (`state.py`)
-- Los 6 nodos (`nodes.py`)
-- El grafo compilado (`graph.py`)
-- Render LaTeX (validado end-to-end → PDF real)
-- Compilación LaTeX → PDF (validado contra el microservicio)
-- **Ingestor multi-formato** (PDF, DOCX, PPTX, XLSX, texto)
-- **Pipeline end-to-end** con materia real (Economía Aplicada): 7/8 ítems aprobados, PDF generado
-- **`scripts/run_pipeline.py`** — punto de entrada ejecutable
-- **RAG completo**: indexación + recuperación por similitud (pgvector)
-- **Persistencia** de ítems generados en `generated_questions`
-- **API** (`main.py`): registrar materia, indexar material, generar exámenes
-- **Blueprint enriquecido**: `retrieval` config y `metadata` para experimentación
+> **Etapas 0-7 completadas** (ver [implementaciones/](implementaciones/README.md) para el detalle por etapa).
 
-### 🆕 Implementado (agente conversacional — Fase 2 del plan)
-- **Campos de verificación** humano/IA en `generated_questions` (migración `c3d4e5f6a7b8`)
-- **Estructura completa** de la pregunta persistida (antes solo el texto)
-- **Service layer de escritura segura** (`src/bank/service.py`): preguntas verificadas por humano inmutables para el agente
-- **Agente conversacional** (`src/agents/conversational/`) con human-in-the-loop
-- **Endpoint OpenAI-compatible** `/v1/chat/completions` (streaming con `delta.content`) para conectar OpenWebUI
-- **OpenWebUI** en Docker Compose como interfaz conversacional
-- **Verificación por IA** (`src/agents/verifier.py`) con prioridad de revisión
-- **Checkpointer persistente** con `PostgresSaver` (PostgreSQL) para retomar conversaciones
-- **Tools**: `listar_materias`, `buscar_preguntas`, `generar_pregunta`, `guardar_pregunta`, `confirmar_verificacion_humana`, `generar_examen_pdf`
-- **Generación de examen en PDF** y subida como adjunto nativo a OpenWebUI (`src/api/openwebui.py`)
-- **Docs**: `docs/metrics.md` y `docs/cost_analysis.md`
+### ✅ Implementado y validado
+
+**Infraestructura y pipeline batch:**
+- Infraestructura Docker (Postgres + pgvector + latex-compiler + embedding-service + exam-app + frontend)
+- Configuración Pydantic + LLM local (vLLM + GLM-5.3-Flash)
+- Pipeline end-to-end con materia real (Economía Aplicada): ingestor → planner → generator → evaluator → assembler → compiler
+- **RAG completo**: indexación multi-formato (PDF, DOCX, PPTX, XLSX, TXT) + recuperación por similitud (pgvector)
+- **Persistencia** de ítems generados en `generated_questions` (estructura completa + embeddings)
+- **Blueprint enriquecido**: `retrieval` config y `metadata` para experimentación
+- **Versiones anti-copia** (estilo AMC) con barajado de preguntas y opciones
+- **PDFs en inglés**: templates LaTeX con `babel/english`, encabezados/pies/instrucciones en inglés
+
+**Backend reactivo (etapa 2):**
+- **SSE** `POST /api/chat/stream` con eventos versionados (`v:1`): `token`, `tool_start`, `tool_end`, `question_generated`, `questions_listed`, `artifact_ready`, `material_indexed`, `done`, `error`, `cancelled`
+- **WebSocket** `/ws` como bus de eventos y cancelación
+- **Adjuntos propios** `POST /api/files` (extraer → guardar → indexar)
+- `PendingItemStore` por thread (reemplaza la global de módulo) sincronizado con el checkpointer
+- `/v1/chat/completions` intacto (OpenWebUI legado)
+
+**Arquitectura limpia (etapas 2b/2c):**
+- `projects/` como monorepo de submódulos git: `core`, `agents-backend`, `exam-app`, `frontend`, `latex-compiler`, `embedding-service`
+- Grafo acíclico `frontend → exam-app → agents-backend → core`; routers de exam-app sin imports de agents-backend/core
+- Eventos tipados en `agents_backend/shared/events.py` (EventBus por thread) espejados en `exam_app/schemas/events.py` y `frontend/src/types/events.ts`
+
+**Frontend propio (etapas 3-5):**
+- Vue 3 + Vite + TS + Pinia, cliente SSE/WS con reconexión, gestión de `thread_id` (historial en localStorage)
+- Widgets reactivos: `QuestionCard` (HITL), `QuestionsTable` (ordenar/filtrar/detalle), `ArtifactCard` (descarga PDF/CSV/XLSX), `MaterialToast`, `FileDrop`
+- Pantallas: Materias, Banco de preguntas (verificación humana), Exámenes (blueprint + versiones), Material
+- Guardrails respetados desde la UI: verificación humana vía `core.domain.bank.service`, `delete_question` bloqueado (HTTP 403) si está verificada
+
+**Docker (etapa 6):**
+- Frontend dockerizado (multi-stage node → nginx) con proxy único de `/api`, `/ws`, `/output`, `/v1` y rutas REST hacia exam-app (sin CORS)
+- `env.js` generado en runtime por el entrypoint (`VITE_API_URL`/`VITE_WS_URL`)
+- Healthchecks en compose; OpenWebUI movido al perfil `legacy` (puerto 3001)
+- E2E validado en Docker: chat con tools, generación de examen vía proxy, PDF descargable
+
+**Traducción e i18n (etapa 7):**
+- **Contrato en inglés**: enums (`remember/understand/apply/analyze/evaluate/create`, `easy/medium/hard`, `multiple_choice/true_false/short_answer/essay/fill_in_blank/select_all`), 11 tools renombradas (`list_subjects`, `search_questions`, `generate_question`, `save_question`, `save_pending_question`, `confirm_human_verification`, `generate_exam_pdf`, `add_material_file`, `list_subject_material`, `export_questions`, `register_subject`), prompts (`SYSTEM_PROMPT` y pipeline) y mensajes de API
+- **Migración Alembic** `d4e5f6a7b8c9` traduce los valores ya persistidos (BD local verificada)
+- **vue-i18n** con catálogos `en`/`es`, locale persistido en `localStorage`, selector EN/ES en la sidebar; enums mostrados con valores del contrato
+- LaTeX (babel english), compose, `.env.example` y scripts en inglés
 
 ### 🔬 Validado empíricamente (endpoint LLM)
 - `max_tokens=100000` aceptado
@@ -583,78 +605,87 @@ erDiagram
 - **Compilación de doble pasada**: `pdflatex` necesita 2 pasadas; el microservicio ahora ejecuta `pdflatex` dos veces y considera éxito si el PDF existe.
 - **Embeddings**: `sentence-transformers` arrastra torch con CUDA → se instala `torch` CPU primero, luego `sentence-transformers` normal.
 
-### ⏳ Pendiente / por validar
-- Métricas de tesis (tasa de rechazo, % de dificultad, etc.)
+### ⏳ Pendiente
+- Push a GitHub de los 7 repos (etapa 1: remotos + CI + pipeline de integración del meta-repo)
+- Métricas de tesis instrumentadas (tasa de rechazo, % de dificultad, etc. — definidas en `docs/metrics.md`)
 - Deduplicación con embeddings reales (hoy usa solapamiento de tokens)
-- Frontend/UI para subir archivos y generar exámenes
+- Deploy en servidor remoto (DGX) — bloqueado por decisión del proyecto hasta integrar los cambios
 
 ---
 
-## 💬 Agente Conversacional (OpenWebUI + human-in-the-loop)
+## 💬 Agente conversacional (frontend propio + human-in-the-loop)
 
 ### Arquitectura
 
 ```mermaid
 graph LR
-    OWU[OpenWebUI<br/>puerto 3000] -->|"OpenAI-compatible<br/>/v1/chat/completions"| API[FastAPI<br/>src/api/chat.py]
-    API --> GR[Grafo conversacional<br/>src/agents/conversational/graph.py]
+    FE[Frontend Vue 3<br/>puerto 3000] -->|"SSE /api/chat/stream<br/>WS /ws · REST"| API[exam-app FastAPI]
+    API --> GR[Grafo conversacional<br/>agents_backend/conversational/graph.py]
     GR --> AS[assistant<br/>LLM + tools]
     AS -->|"tool_calls"| TOOLS[nodo tools<br/>con human-in-the-loop]
-    TOOLS -->|"interrupt (confirmación)"| HUMANO((Profesor))
-    TOOLS -->|"escritura segura"| BANK[src/bank/service.py]
+    TOOLS -->|eventos tipados| EV[EventBus<br/>shared/events.py]
+    EV --> API
+    TOOLS -->|"escritura segura"| BANK[core/domain/bank/service.py]
     BANK --> PG[(PostgreSQL)]
-    TOOLS -->|"RAG"| RETRIEVE[src/agents/retrieval.py]
+    TOOLS -->|"RAG"| RETRIEVE[shared/retrieval.py]
     RETRIEVE --> PG
 ```
+
+El frontend consume SSE (tokens + eventos tipados), WS (cancelación) y REST (materias, banco, exámenes, material). Los eventos tipados se renderizan como **widgets** en el chat (tarjeta de pregunta HITL, tabla interactiva, card de artefacto, toast de material). OpenWebUI queda como **interfaz legada opcional** (perfil `legacy`, `/v1/chat/completions`).
 
 ### Herramientas del agente (tools)
 
 | Tool | Tipo | Descripción |
 |---|---|---|
-| `listar_materias` | Lectura | Lista las materias registradas (id + nombre) |
-| `buscar_preguntas` | Lectura | Recupera preguntas del banco (no genera) |
-| `generar_pregunta` | Lectura | Genera UNA pregunta con RAG (no guarda) |
-| `guardar_pregunta` | **Escritura** | Guarda en el banco + verificación por IA |
-| `confirmar_verificacion_humana` | **Escritura** | Marca `verified_by_human=True` |
-| `generar_examen_pdf` | **Escritura** | Genera examen, compila a PDF y lo adjunta a OpenWebUI |
+| `list_subjects` | Lectura | Lista las materias registradas (id + nombre) |
+| `search_questions` | Lectura | Recupera preguntas del banco (no genera) |
+| `generate_question` | Generación | Genera UNA pregunta con RAG (no guarda; deja el ítem pendiente) |
+| `save_question` | **Escritura** | Guarda en el banco + verificación por IA |
+| `save_pending_question` | **Escritura** | Persiste el ítem pendiente de `generate_question` |
+| `confirm_human_verification` | **Escritura** | Marca `verified_by_human=True` |
+| `generate_exam_pdf` | **Escritura** | Genera examen, compila a PDF y lo adjunta al chat |
+| `add_material_file` | **Escritura** | Indexa un archivo adjunto en la materia (RAG) |
+| `list_subject_material` | Lectura | Lista los archivos y chunks indexados de una materia |
+| `export_questions` | Lectura | Exporta el banco a CSV/XLSX y lo adjunta al chat |
+| `register_subject` | **Escritura** | Registra una nueva materia |
 
 ### Flujo con human-in-the-loop
 
 ```mermaid
 graph TD
-    U[Profesor: "dame 20 preguntas de estos temas"] --> A[assistant]
-    A -->|buscar_preguntas| B[Recupera del banco]
-    A -->|generar_pregunta| C[Genera UNA pregunta]
+    U[Profesor: "give me 20 questions on these topics"] --> A[assistant]
+    A -->|search_questions| B[Recupera del banco]
+    A -->|generate_question| C[Genera UNA pregunta]
     C -->|muestra al profesor| D{¿Confirmas guardar?}
-    D -->|sí| E[guardar_pregunta<br/>+ verificación IA]
+    D -->|sí| E[save_pending_question<br/>+ verificación IA]
     D -->|no| A
     E --> F{¿Confirmas verificación humana?}
-    F -->|sí| G[confirmar_verificacion_humana<br/>verified_by_human=True]
+    F -->|sí| G[confirm_human_verification<br/>verified_by_human=True]
     F -->|no| A
 ```
 
-**Puntos de decisión humana:**
-1. Antes de **guardar** una pregunta (`guardar_pregunta`).
-2. Antes de marcar **verificación humana** (`confirmar_verificacion_humana`).
+**Puntos de decisión humana** (a nivel de prompt, con `WRITE_TOOLS = {save_question, save_pending_question, confirm_human_verification}`):
+1. Antes de **guardar** una pregunta.
+2. Antes de marcar **verificación humana**.
 
-Estos puntos usan `interrupt` de LangGraph: el grafo **pausa** y espera la aprobación del profesor. Si no se aprueba, la acción no se ejecuta.
+El HITL se implementa **por prompt** (el agente pregunta y solo ejecuta las tools de escritura tras la confirmación explícita), no con `interrupt` nativo de LangGraph, porque el transporte SSE/WS no reanuda interrupciones.
 
 ### Restricciones de seguridad de escritura
 
-- Toda escritura pasa por `src/bank/service.py`.
+- Toda escritura pasa por `core/domain/bank/service.py`.
 - `update_question` / `delete_question` lanzan `SecurityError` si `verified_by_human=True`.
-- `set_human_verification()` solo lo invoca la confirmación humana explícita del chat.
+- `set_human_verification()` solo lo invoca la confirmación humana explícita del chat (o la vista Banco del frontend).
 
 ### Persistencia del contexto de conversación
 
-El grafo usa un **checkpointer persistente** con `PostgresSaver` (PostgreSQL). Las conversaciones se retoman entre reinicios usando el `thread_id`. Si no hay BD disponible, cae a `InMemorySaver` (efímero).
+El grafo usa un **checkpointer persistente** con `PostgresSaver` (PostgreSQL). Las conversaciones se retoman entre reinicios usando el `thread_id` (el frontend lo persiste en `localStorage` por conversación). Si no hay BD disponible, cae a `InMemorySaver` (efímero).
 
-### Entrega de PDFs (adjunto nativo a OpenWebUI)
+### Entrega de PDFs (adjunto en el chat)
 
-Cuando el agente genera un examen (`generar_examen_pdf`):
+Cuando el agente genera un examen (`generate_exam_pdf`):
 1. Compila el LaTeX a PDF vía el microservicio `latex-compiler`.
-2. Sube el PDF a OpenWebUI con `src/api/openwebui.py` (`POST /api/v1/files/`).
-3. Devuelve un enlace markdown `[Descargar el PDF](http://localhost:3000/api/v1/files/{id}/content)` que OpenWebUI renderiza como enlace clicable en el chat.
+2. Devuelve un enlace markdown `[Download PDF vN](http://<host>/output/{file}.pdf)` servido por exam-app y proxificado por el frontend (mismo origen).
+3. Emite el evento tipado `artifact_ready` para que el frontend renderice la card de descarga.
 
 ---
 
@@ -711,32 +742,30 @@ alembic upgrade head
 
 ---
 
-## 🏛 Arquitectura objetivo del monorepo (próxima reestructuración)
+## 🏛 Arquitectura del monorepo (aplicada)
 
-> **Nota:** esta sección describe el diseño aprobado pero **aún no aplicado**. El código actual sigue en la estructura monolítica documentada arriba. El diseño completo está en [docs/arquitectura-objetivo.md](docs/arquitectura-objetivo.md).
+> La reestructuración descrita en [docs/arquitectura-objetivo.md](docs/arquitectura-objetivo.md) ya está **aplicada** (etapas 0-2c). El diseño completo sigue vigente como referencia.
 
-Con la introducción del frontend propio (ver [plan-frontendChatEmbebido.prompt.md](plan-frontendChatEmbebido.prompt.md)), el repositorio migrará de un proyecto Python único (`src/` + `main.py` en la raíz) a un **monorepo por apps**, donde la raíz es la raíz de proyectos y cada aplicación tiene su propio `src`, tests, Dockerfile y dependencias, siguiendo arquitectura limpia y las convenciones de cada framework (create-vue/Vite para el frontend, estructura routers/schemas/services de FastAPI para las APIs).
+El repositorio es un **monorepo de submódulos git**: cada app/lib vive en su propio repo (local; remotos GitHub pendientes) y el meta-repo fija qué commit de cada una compone cada versión del sistema.
 
 ```
 MVP_v1/
-├── apps/
-│   ├── frontend/            # Vue 3 + Vite + TS + Pinia (create-vue) — chat embebido + pantallas
+├── projects/                # submódulos git (un repo por app/lib)
+│   ├── frontend/            # Vue 3 + Vite + TS + Pinia + vue-i18n — chat embebido + pantallas
 │   ├── exam-app/            # FastAPI — API pública/BFF: SSE chat, adjuntos, REST, WS bus
 │   ├── agents-backend/      # LangGraph — exam_pipeline + conversational + shared (llm, RAG, events)
 │   ├── latex-compiler/      # microservicio FastAPI + TeXLive
-│   └── embedding-service/   # microservicio FastAPI + sentence-transformers
-├── libs/
+│   ├── embedding-service/   # microservicio FastAPI + sentence-transformers
 │   └── core/                # shared kernel: modelos SQLAlchemy, banco (escritura segura),
 │                            # schemas, migraciones Alembic, clientes de microservicios, config
 ├── data/ · docker/ · deploy/ · docs/ · scripts/
 └── alembic.ini
 ```
 
-Reglas clave:
+Reglas clave (vigentes):
 
-- **Dependencias hacia adentro**: `frontend → exam-app → agents-backend → libs/core`. Ninguna capa importa "hacia arriba".
+- **Dependencias hacia adentro**: `frontend → exam-app → agents-backend → core`. Ninguna capa importa "hacia arriba" (única excepción: el puente `openwebui_bridge`, reexportación sin lógica).
 - **Arquitectura limpia por app**: dominio → aplicación → interface adapters → infraestructura. Los routers de exam-app nunca tocan LangGraph ni la BD directamente; pasan por `services/` y puertos en `domain/`.
 - **Eventos tipados**: las tools del agente emiten eventos versionados (`question_generated`, `artifact_ready`, …) que exam-app reenvía por SSE y el frontend renderiza como widgets.
-- **Control de versiones**: cada app/lib vivirá en su **propio repositorio Git**, encapsulados por un repo raíz (meta-repo) mediante **submódulos git** — el meta-repo fija qué commit de cada app compone cada release del sistema. Detalle completo en [docs/arquitectura-objetivo.md](docs/arquitectura-objetivo.md), §8.
-- La migración se ejecutará como **Fase 0** del plan de frontend, con `git mv` para conservar historial y criterio de aceptación: tests verdes + pipeline end-to-end generando PDF.
+- **Control de versiones**: cada app/lib tiene su repo Git; el meta-repo fija los SHAs. Los remotos en GitHub y la CI por repo están pendientes (etapa 1).
 

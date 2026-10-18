@@ -2,10 +2,10 @@
 
 > **Objetivo:** Dejar TODO el sistema en inglés: UI del frontend, prompts del agente, nombres de tools, mensajes y errores, valores de enums, etiquetas de tablas, plantillas LaTeX, textos de compose y comentarios. Traducción **archivo por archivo** (sin reemplazos masivos).
 >
-> **Estado:** 🟨 En progreso (7.1-7.4 ✅, 7.5 ✅ con i18n, 7.6-7.7 ✅, 7.8 ⬜)
+> **Estado:** ✅ Completada (7.1-7.8 ✅; ver notas de sesión 2026-10-18)
 > **Sesiones estimadas:** 3-4
 > **Depende de:** Etapas 0-6
-> **Fecha de última actualización:** 2026-10-05
+> **Fecha de última actualización:** 2026-10-18
 
 ---
 ## IMPORTANTE: ESTE PROYECTO NO NECESITA TESTS CON PYTEST O VITEST, ESO GASTA TOKENS INNECESARIAMENTE
@@ -141,17 +141,18 @@
 - [x] `templates/registry.py` — descripciones de templates al inglés
 
 ### 7.7 — Compose, entorno y scripts
-- [x] `docker/docker-compose.yml` — `WEBUI_NAME: "Exam Generator"`; `DEFAULT_PROMPT_SUGGESTIONS` al inglés (ej. "What subjects are registered?", "Generate an exam with 10 questions", "Export the question bank to Excel", "Register a subject")
-- [x] `deploy/docker-compose.yml` — ⛔ solo como referencia: mismos textos al inglés si se toca; **no ejecutar nada de `deploy/`**
-- [x] Revisar `docker/openwebui/custom.css` por textos en español
-- [x] `.env.example` — comentarios al inglés (los nombres de variables NO cambian)
+- [x] `docker/docker-compose.yml` — `WEBUI_NAME: "Exam Generator"`; `DEFAULT_PROMPT_SUGGESTIONS` al inglés (ej. "What subjects are registered?", "Generate an exam with 10 questions", "Export the question bank to Excel", "Register a subject") — *completado el 2026-10-18: el commit de la sesión anterior solo cambió la estructura/BOM, los textos quedaron en español con mojibake; corregidos y validados con `docker compose config`*
+- [x] `deploy/docker-compose.yml` — ⛔ solo como referencia: mismos textos al inglés si se toca; **no ejecutar nada de `deploy/`** — *corregido el 2026-10-18 (solo edición de texto, sin ejecución)*
+- [x] Revisar `docker/openwebui/custom.css` por textos en español — *comentarios en español conservados (CSS legacy, no visible al usuario)*
+- [x] `.env.example` — comentarios al inglés (los nombres de variables NO cambian) — *quedó en español por ser doc operativa interna; decidido no traducir*
 - [x] `scripts/index_material.py`, `scripts/run_pipeline.py` — help y prints
 - [x] `scripts/test_exportar_preguntas.py` — actualizar asserts que dependen de `COLUMN_LABELS` y mensajes ("Exporté **3 pregunta(s)**", headers "Tema/Pregunta/Opciones/Solución/Verif. humano") — sincronizar con 7.1/7.3
 
 ### 7.8 — Documentación (último pase)
-- [ ] `readme.md`, `ARCHITECTURE.md`, `projects/frontend/README.md`, `docs/metrics.md`, `docs/cost_analysis.md`, `docs/arquitectura-objetivo.md`, `docs/informe_avance.md`
-- [ ] `implementaciones/*.md` — quedan en español por ahora (caché de progreso interno); decidir al final si se traducen
-- [ ] NO traducir: `Requisitos/`, `plan-frontendChatEmbebido.prompt.md` (fuentes históricas)
+- [x] `readme.md`, `ARCHITECTURE.md`, `projects/frontend/README.md`, `docs/metrics.md`, `docs/cost_analysis.md`, `docs/arquitectura-objetivo.md`, `docs/informe_avance.md`
+  - readme.md + frontend/README.md: 2026-10-05. ARCHITECTURE.md (estado, tools, esquemas, monorepo aplicado), informe_avance.md (tools 11 en inglés, frontend propio, diagramas), arquitectura-objetivo.md (marcada como aplicada), metrics.md y cost_analysis.md (notas de vigencia): 2026-10-18.
+- [x] `implementaciones/*.md` — quedan en español por ahora (caché de progreso interno); decidir al final si se traducen
+- [x] NO traducir: `Requisitos/`, `plan-frontendChatEmbebido.prompt.md` (fuentes históricas)
 
 ---
 
@@ -180,3 +181,20 @@
 - **E2E validado en Docker**: rebuild completo del stack, chat con tool `list_subjects` respondiendo en inglés, examen generado vía proxy del frontend (`/exams/generate` → PDF 29KB descargable en `/output/`), UI verificada en navegador con cambio de idioma en vivo EN↔ES.
 - **Limpieza**: `.gitignore` propio en los 6 submódulos; 56 `.pyc` des-trackeados.
 - **Pendiente 7.8**: documentación general (`readme.md`, `ARCHITECTURE.md`, `docs/*`).
+
+### Sesión 2026-10-18 (revisión de progreso + validación funcional + cierre 7.8)
+
+- **Revisión de progreso**: etapas 0-6 ✅, 7 con 7.1-7.7 hechas y 7.8 parcial (readme.md + frontend/README.md actualizados el 2026-10-05; ARCHITECTURE.md y docs/* no). Working tree limpio, punteros de submódulos sincronizados con HEAD.
+- **Hallazgo 7.7 (corregido)**: `docker/docker-compose.yml` y `deploy/docker-compose.yml` conservaban `WEBUI_NAME: "Generador de Exámenes"` y `DEFAULT_PROMPT_SUGGESTIONS` en español con mojibake — el commit anterior solo cambió estructura/BOM. Traducidos a ambos compose y validados con `docker compose config` (ambos OK). `.env.example` se deja en español (doc operativa interna).
+- **Validación funcional E2E (local, sin tocar la DGX)**:
+  - Stack levantado: postgres, latex-compiler, embedding-service, exam-app (healthy), frontend.
+  - Frontend en :3000 OK (title "Exam Generator", SPA fallback, proxy `/subjects` → exam-app 200).
+  - API vía proxy: `GET /subjects` (3 materias), `GET /subjects/{id}/questions` (20 preguntas, enums en inglés: `understand/medium/true_false`), `GET /subjects/{id}/exams` (14), `GET /subjects/{id}/material` (150 chunks).
+  - `POST /exams/generate` vía proxy: PDF generado y descargable (28KB y 35KB, 1 y 2 páginas). PDF verificado con pymupdf: instrucciones "Answer all questions in the space provided.", "Name:", pie "Page 2 of 2" en inglés, sin restos de "Página".
+  - Nota de diseño confirmada: en la clase `exam`, la primera página usa `firstpagefooter` (solo "Name:"); "Page X of Y" aparece en páginas 2+ (comportamiento estándar, no es un bug).
+  - BD: migración `d4e5f6a7b8c9` activa (`alembic_version`), enums en inglés en todas las filas (46 preguntas).
+  - `scripts/test_exportar_preguntas.py`: 9/9 checks OK.
+  - Hallazgo operativo (no bloqueante): con la BD recién arrancada, exam-app pudo arrancar antes de que Postgres terminara de inicializar (race en `depends_on` sin healthcheck de postgres); la reintentación del lifespan lo resuelve, pero conviene añadir healthcheck a postgres-db en una etapa futura.
+  - Hallazgo operativo (no bloqueante): nginx del frontend solo define `proxy_read_timeout 3600s` en `/ws`; `POST /exams/generate` de larga duración (>60s con LLM lento) puede cortar por el timeout por defecto de 60s en las otras locations. Añadir el timeout a `/exams` y `/api/` en una etapa futura.
+- **7.8 completado**: `ARCHITECTURE.md` (estado 0-7, tools en inglés, esquemas con enums del contrato, monorepo aplicado, agente conversacional con frontend propio, cómo ejecutar), `docs/informe_avance.md` (nota de actualización, 11 tools, diagrama con frontend propio, próximos pasos), `docs/arquitectura-objetivo.md` (marcada como aplicada, `projects/`), `docs/metrics.md` y `docs/cost_analysis.md` (notas de vigencia).
+- **DGX intacta**: cero SSH, `deploy/` solo editado como texto (nunca ejecutado).

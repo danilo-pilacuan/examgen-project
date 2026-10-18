@@ -1,7 +1,7 @@
 # 🏛 Arquitectura objetivo — Monorepo por apps (arquitectura limpia) + repos múltiples vía submódulos
 
-> **Estado:** diseño aprobado, pendiente de migración. Fecha: 2026-10-04.
-> **Origen:** nueva directriz — `src/` deja de ser el paquete único de Python y la raíz del repo pasa a ser la raíz de proyectos (`apps/`), donde cada aplicación tiene su propio `src`, sus tests y su tooling.
+> **Estado:** ✅ **APLICADA** (etapas 0-2c completadas el 2026-10-04/05). La estructura `projects/` reemplazó al monolito `src/`; la reestructuración usó `projects/` en lugar de `apps/`+`libs/` por decisión del usuario. Los repos son locales; los remotos GitHub y la CI siguen pendientes (etapa 1). Este documento se conserva como referencia de diseño.
+> **Origen:** nueva directriz — `src/` deja de ser el paquete único de Python y la raíz del repo pasa a ser la raíz de proyectos (`projects/`), donde cada aplicación tiene su propio `src`, sus tests y su tooling.
 > **Control de versiones:** cada app/lib vive en **su propio repositorio Git**, orquestados por un repo raíz ("meta-repo") mediante **submódulos git** (ver §8).
 > **Complementa:** [ARCHITECTURE.md](../ARCHITECTURE.md) (documentación técnica vigente) y [plan-frontendChatEmbebido.prompt.md](../plan-frontendChatEmbebido.prompt.md) (plan del frontend con chat embebido).
 
@@ -12,7 +12,7 @@
 1. **Un proyecto por carpeta**: cada app es autocontenida (código, tests, Dockerfile, dependencias). Nada de un `src/` global que mezcle dominios.
 2. **Arquitectura limpia por app**: capas `domain → application → interface adapters → infrastructure`, con la regla de dependencias apuntando siempre hacia adentro (el dominio no conoce FastAPI, Vue ni Docker).
 3. **Convenciones del framework**: se respeta el scaffold recomendado de cada herramienta — Vite/create-vue para el frontend, la estructura oficial de FastAPI (routers/schemas/services/core) para las APIs Python.
-4. **Shared kernel explícito**: lo que comparten varias apps (modelos de BD, banco de preguntas, esquemas, clientes de infraestructura) vive en `libs/core`, no se duplica.
+4. **Shared kernel explícito**: lo que comparten varias apps (modelos de BD, banco de preguntas, esquemas, clientes de infraestructura) vive en `core` (`projects/core`, originalmente `libs/core`), no se duplica.
 5. **Grafo de dependencias acíclico**:
 
 ```
@@ -26,6 +26,8 @@ Ninguna capa puede importar "hacia arriba" (libs/core no conoce agents-backend; 
 ---
 
 ## 2. Estructura de directorios objetivo
+
+> La estructura final aplicada usa `projects/` (unificación de `apps/` + `libs/` decidida durante la etapa 0). Se conserva el diseño original como referencia.
 
 ```
 MVP_v1/
@@ -222,13 +224,13 @@ Resuelve las decisiones abiertas del plan de frontend sobre el formato de evento
 ```jsonc
 // SSE: event: <tipo> · data: <payload JSON>
 { "v": 1, "type": "token",       "thread_id": "…", "delta": "…" }
-{ "v": 1, "type": "tool_start",  "thread_id": "…", "name": "buscar_preguntas", "call_id": "…" }
-{ "v": 1, "type": "tool_end",    "thread_id": "…", "name": "buscar_preguntas", "call_id": "…", "result": "…" }
+{ "v": 1, "type": "tool_start",  "thread_id": "…", "name": "search_questions", "call_id": "…" }
+{ "v": 1, "type": "tool_end",    "thread_id": "…", "name": "search_questions", "call_id": "…", "result": "…" }
 { "v": 1, "type": "question_generated", "thread_id": "…", "question": { /* GeneratedItem */ } }
 { "v": 1, "type": "artifact_ready",     "thread_id": "…", "kind": "pdf|csv|xlsx", "url": "/output/…", "filename": "…" }
 { "v": 1, "type": "material_indexed",   "thread_id": "…", "chunks": 42 }
 { "v": 1, "type": "done",        "thread_id": "…" }
-{ "v": 1, "type": "error",       "thread_id": "…", "message": "…" }
+{ "v": 1, "type": "error",        "thread_id": "…", "message": "…" }
 ```
 
 - Campo `v` para versionado del schema; los tipos viven en `apps/exam-app/.../schemas/events.py` y se espejan en `apps/frontend/src/types/events.ts`.
@@ -251,10 +253,10 @@ Resuelve las decisiones abiertas del plan de frontend sobre el formato de evento
 
 ## 7. Impacto en el plan de fases
 
-El plan de [plan-frontendChatEmbebido.prompt.md](../plan-frontendChatEmbebido.prompt.md) se amplía con una **Fase 0** previa:
+El plan de [plan-frontendChatEmbebido.prompt.md](../plan-frontendChatEmbebido.prompt.md) se amplió con una **Fase 0** previa (ya ejecutada):
 
-- **F0 — Reestructuración del monorepo** (1-2 sesiones): ejecutar el mapa de migración de §4, actualizar imports, Dockerfiles, compose, alembic y tests. Criterio de aceptación: suite de tests verde + pipeline end-to-end genera PDF + exam-app responde en el mismo puerto 8000.
-- F1-F5 del plan se ejecutan **sobre la nueva estructura** (los archivos nuevos ya nacen en `apps/exam-app` y `apps/frontend`).
+- **F0 — Reestructuración del monorepo** ✅ (etapa 0): mapa de migración de §4 ejecutado (a `projects/`), imports/Dockerfiles/compose/alembic actualizados. Criterio de aceptación cumplido: pipeline end-to-end genera PDF + exam-app responde en el puerto 8000.
+- F1-F5 del plan se ejecutaron **sobre la nueva estructura** (etapas 3-5 del plan de implementaciones).
 
 ---
 
@@ -280,40 +282,39 @@ Lo que **queda solo en el meta-repo** (no es código de ninguna app): `data/`, `
 
 ```
 MVP_v1/                              # repo raíz (meta-repo)
-├── apps/
+├── projects/                        # (aplicado: projects/ en lugar de apps/ + libs/)
 │   ├── frontend/                    # → submodule mvp-frontend
 │   ├── exam-app/                    # → submodule mvp-exam-app
 │   ├── agents-backend/              # → submodule mvp-agents-backend
 │   ├── latex-compiler/              # → submodule mvp-latex-compiler
-│   └── embedding-service/           # → submodule mvp-embedding-service
-├── libs/
+│   ├── embedding-service/           # → submodule mvp-embedding-service
 │   └── core/                        # → submodule mvp-core
 ├── data/ · docker/ · deploy/ · docs/ · scripts/
 ├── alembic.ini · readme.md · ARCHITECTURE.md
 └── .gitmodules
 ```
 
-`.gitmodules` resultante:
+`.gitmodules` resultante (URLs relativas hoy; se actualizarán a GitHub al crear los remotos):
 
 ```ini
-[submodule "apps/frontend"]
-	path = apps/frontend
-	url = git@github.com:danilo-pilacuan/mvp-frontend.git
-[submodule "apps/exam-app"]
-	path = apps/exam-app
-	url = git@github.com:danilo-pilacuan/mvp-exam-app.git
-[submodule "apps/agents-backend"]
-	path = apps/agents-backend
-	url = git@github.com:danilo-pilacuan/mvp-agents-backend.git
-[submodule "apps/latex-compiler"]
-	path = apps/latex-compiler
-	url = git@github.com:danilo-pilacuan/mvp-latex-compiler.git
-[submodule "apps/embedding-service"]
-	path = apps/embedding-service
-	url = git@github.com:danilo-pilacuan/mvp-embedding-service.git
-[submodule "libs/core"]
-	path = libs/core
-	url = git@github.com:danilo-pilacuan/mvp-core.git
+[submodule "projects/frontend"]
+	path = projects/frontend
+	url = ./projects/frontend
+[submodule "projects/exam-app"]
+	path = projects/exam-app
+	url = ./projects/exam-app
+[submodule "projects/agents-backend"]
+	path = projects/agents-backend
+	url = ./projects/agents-backend
+[submodule "projects/latex-compiler"]
+	path = projects/latex-compiler
+	url = ./projects/latex-compiler
+[submodule "projects/embedding-service"]
+	path = projects/embedding-service
+	url = ./projects/embedding-service
+[submodule "projects/core"]
+	path = projects/core
+	url = ./projects/core
 ```
 
 ### 8.3 Flujo de trabajo diario
@@ -328,14 +329,14 @@ git submodule update --init --recursive        # si se olvidó --recurse
 git submodule update --remote --merge
 
 # Trabajar DENTRO de un submódulo (es un repo git normal)
-cd apps/exam-app
+cd projects/exam-app
 git checkout -b feat/sse-chat
 # ... cambios, commit ...
 git push origin feat/sse-chat                  # push al repo de la app
 
 # Volver al meta-repo y fijar el nuevo commit de exam-app
 cd ../..
-git add apps/exam-app                          # registra el nuevo SHA del submódulo
+git add projects/exam-app                      # registra el nuevo SHA del submódulo
 git commit -m "chore: bump exam-app a feat/sse-chat"
 ```
 

@@ -126,7 +126,7 @@ services:
       WEBUI_AUTH: "false"
       WEBUI_SECRET_KEY: "ee95d3be2fee38ba92098420869c00ff4c15e457dbbf18518db9e0542f9b7724"
       ENABLE_PERSISTENT_CONFIG: "false"
-      WEBUI_NAME: "Generador de ExÃ¡menes"
+      WEBUI_NAME: "Exam Generator"
       DEFAULT_MODELS: "exam-agent"
       USER_PERMISSIONS_CHAT_CONTROLS: "false"
       USER_PERMISSIONS_CHAT_VALVES: "false"
@@ -158,7 +158,7 @@ services:
       USER_PERMISSIONS_WORKSPACE_PROMPTS_ACCESS: "false"
       USER_PERMISSIONS_WORKSPACE_TOOLS_ACCESS: "false"
       USER_PERMISSIONS_WORKSPACE_SKILLS_ACCESS: "false"
-      DEFAULT_PROMPT_SUGGESTIONS: '[{"title":["Â¿QuÃ© materias","hay registradas?"],"content":"Â¿QuÃ© materias hay registradas?"},{"title":["Genera un examen","de EconomÃ­a Aplicada"],"content":"Genera un examen de EconomÃ­a Aplicada"},{"title":["Preguntas de repaso","de InglÃ©s TÃ©cnico"],"content":"Hazme preguntas de repaso de InglÃ©s TÃ©cnico"},{"title":["Registra una pregunta","sobre elasticidad"],"content":"Registra una pregunta sobre elasticidad en EconomÃ­a Aplicada"}]'
+      DEFAULT_PROMPT_SUGGESTIONS: '[{"title":["What subjects","are registered?"],"content":"What subjects are registered?"},{"title":["Generate an exam","for Applied Economics"],"content":"Generate an exam for Applied Economics"},{"title":["Review questions","for Technical English"],"content":"Give me review questions for Technical English"},{"title":["Register a question","about elasticity"],"content":"Register a question about elasticity in Applied Economics"}]'
     volumes:
       - /home/dpilacuan/my_containers/exam/data/openwebui:/app/backend/data
       - /home/dpilacuan/my_containers/exam/docker/openwebui/custom.css:/app/backend/open_webui/static/custom.css:ro

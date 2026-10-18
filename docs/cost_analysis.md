@@ -1,6 +1,7 @@
 # Análisis de Costos: Modelo Local vs. Nube
 
 > **Elemento de acción 6** — Comparativa de costos entre el modelo local (vLLM + GLM-5.3-Flash) y modelos en la nube (OpenAI/Claude), para decidir el despliegue final y justificar la elección en la tesis.
+> **Nota (2026-10-18):** estimaciones vigentes; el consumo real sigue pendiente de instrumentación (§6). El pipeline es agnóstico al proveedor (`llm_base_url` en `.env`); el despliegue sigue siendo local (GPU interna) y la DGX remota queda fuera de alcance por decisión del proyecto.
 
 ---
 

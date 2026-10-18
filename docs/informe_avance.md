@@ -1,10 +1,12 @@
 # 📊 Informe de Avance — Generador Conversacional con Agente IA para Exámenes
 
 > **Tesis:** USFQ — Cohorte 3 (2da corte) · **Proponente:** Felipe Grijalva · **Estudiante:** Danilo Pilacuán
-> **Fecha del informe:** 2026-09-17
+> **Fecha del informe:** 2026-09-17 · **Actualizado:** 2026-10-18 (etapas 0-7 del plan de implementación)
 > **Fechas clave:** implementación completa en **noviembre** · defensa **14–21 de diciembre**
 
 Este informe resume **qué está implementado**, **qué falta** y **cómo funciona** el sistema (arquitectura + loop de agentes). Sirve como base para el seguimiento quincenal con el tutor y para el capítulo de implementación del escrito.
+
+> **Nota de actualización (2026-10-18):** desde la versión original de este informe el sistema evolucionó: OpenWebUI fue reemplazado como interfaz principal por un **frontend propio (Vue 3)** con chat embebido, widgets reactivos y pantallas de gestión; el backend se reestructuró a un **monorepo de submódulos** (`projects/`) con arquitectura limpia; se añadió streaming SSE real, WebSocket, adjuntos propios e **i18n en/es**; y todo el contrato (enums, tools, prompts, API) se tradujo al **inglés**. Las secciones siguientes reflejan el estado actual; los nombres de tools y enums citados corresponden al contrato vigente.
 
 ---
 
@@ -15,9 +17,9 @@ Este informe resume **qué está implementado**, **qué falta** y **cómo funcio
 | # | Elemento de acción | Estado | Evidencia |
 |---|---|---|---|
 | 1 | Documentar el flujo del agente con diagrama (decisiones, entradas, salidas, intervención humana) | ✅ **Completo** | `ARCHITECTURE.md`: 13 diagramas mermaid (pipeline, RAG, estado, conversacional) |
-| 2 | Evolucionar el MVP a interfaz conversacional (chat, sin frontend tradicional) | ✅ **Completo** | OpenWebUI + endpoint OpenAI-compatible `/v1/chat/completions` (`src/api/chat.py`) |
+| 2 | Evolucionar el MVP a interfaz conversacional (chat, sin frontend tradicional) | ✅ **Completo** | **Frontend propio (Vue 3)** con chat embebido (SSE + WS + widgets) en `projects/frontend/`; OpenWebUI queda como legado opcional (`/v1/chat/completions`) |
 | 3 | Campos de verificación humana y verificación por IA en la BD | ✅ **Completo** | `verified_by_human`, `verified_by_ai`, `ai_review_notes`, `ai_review_priority` en `generated_questions` (migración `c3d4e5f6a7b8`) |
-| 4 | Restricciones de seguridad del agente sobre la BD | ✅ **Completo** | Service layer (`src/bank/service.py`): preguntas verificadas por humano **inmutables** (`SecurityError` en update/delete) |
+| 4 | Restricciones de seguridad del agente sobre la BD | ✅ **Completo** | Service layer (`projects/core/src/core/domain/bank/service.py`): preguntas verificadas por humano **inmutables** (`SecurityError` en update/delete) |
 | 5 | Investigar métricas de evaluación (agente + RAG) | 🟡 **Documentado, no implementado** | `docs/metrics.md` define las métricas; falta instrumentar y medir |
 | 6 | Analizar costos comparativos local vs. nube | 🟡 **Documentado, por actualizar** | `docs/cost_analysis.md` con comparativa; falta medir tokens reales del pipeline |
 | 7 | Compartir repositorio (privado) con Felipe | ✅ Hecho | Fuera del código |
@@ -25,12 +27,13 @@ Este informe resume **qué está implementado**, **qué falta** y **cómo funcio
 
 ### 1.2 Lo que está implementado y validado
 
-**Infraestructura (Docker Compose, 5 servicios):**
+**Infraestructura (Docker Compose, 6 servicios):**
 - PostgreSQL 16 + pgvector (banco de preguntas + chunks RAG + checkpoints de conversaciones)
 - Servicio de embeddings (bge-m3, 1024 dims, endpoint OpenAI-compatible)
 - Compilador LaTeX (FastAPI + TeXLive, doble pasada `pdflatex`)
 - `exam-app` (FastAPI + LangGraph, aplica migraciones al arrancar)
-- Open WebUI (interfaz conversacional, modo "producción" con agente fijo)
+- `frontend` propio (Vue 3 + nginx, puerto 3000, proxy único hacia exam-app)
+- Open WebUI (interfaz legada opcional, perfil `legacy`, puerto 3001)
 
 **Pipeline batch de generación de exámenes (LangGraph):**
 - 6 nodos: ingestor → planner → generator → evaluator → assembler → compiler
@@ -39,14 +42,18 @@ Este informe resume **qué está implementado**, **qué falta** y **cómo funcio
 - Múltiples versiones del examen con barajado anti-copia (estilo AMC) + hoja de respuestas
 
 **Agente conversacional (asistente de cátedra):**
-- 10 tools con validación Pydantic de entrada (`args_schema`) y salida (`with_structured_output`) — detalle completo de cada tool en §4
+- 11 tools con validación Pydantic de entrada (`args_schema`) y salida (`with_structured_output`) — detalle completo de cada tool en §4
 - Human-in-the-loop: el agente pregunta antes de guardar y antes de marcar verificación humana
 - Verificación por IA previa al guardado (ambigüedad, corrección, relevancia → prioridad de revisión)
 - Hiperespecialización (rechaza temas fuera del ámbito), generación de a UNA pregunta por vez
 - Checkpointer persistente (PostgresSaver): las conversaciones sobreviven reinicios
-- Entrega de PDFs como adjunto nativo clicable en el chat
+- Entrega de PDFs como adjunto clicable en el chat (enlace `/output/` + evento `artifact_ready`)
 - Agregar material por adjunto del chat (descarga, guarda físicamente en `data/inputs/<Materia>/`, chunk-ea e indexa)
 - Formato tabla para listar preguntas con columnas a pedido del profesor (15 columnas disponibles)
+- **Frontend propio con widgets reactivos**: tarjeta de pregunta con acciones HITL (guardar/verificar/descartar), tabla interactiva del banco, cards de descarga de artefactos, toasts de material indexado
+- **Pantallas de gestión**: Materias (registro/activación), Banco (filtros + verificación humana), Exámenes (blueprint + versiones), Material (chunks por archivo)
+- **i18n en/es**: UI bilingüe con vue-i18n, selector de idioma persistido; contrato del sistema en inglés
+- **Streaming y eventos**: SSE con eventos tipados (`question_generated`, `artifact_ready`, `material_indexed`, …) y cancelación vía WebSocket
 
 **Calidad y robustez (última iteración, 2026-09-17):**
 - Validación Pydantic en **ambas direcciones**: outputs del LLM (`with_structured_output`) y args de tool-calling (`args_schema` + catch de `ValidationError` con mensaje accionable para que el LLM corrija y reintente)
@@ -57,7 +64,7 @@ Este informe resume **qué está implementado**, **qué falta** y **cómo funcio
 
 | Prioridad | Pendiente | Detalle | Cuándo |
 |---|---|---|---|
-| 🔴 Alta | **Prueba end-to-end de las últimas features** | Validar en OpenWebUI: validación Pydantic de tools + formato tabla (requiere reconstruir `exam_app`) | Inmediato |
+| 🔴 Alta | **Prueba end-to-end de las últimas features** | ✅ Validado: E2E en Docker (chat con tools, examen vía proxy del frontend, PDF descargable) + validación funcional 2026-10-18 | Completado |
 | 🔴 Alta | **Instrumentación para métricas** | Registrar por ítem: tokens usados, latencia, `quality_score`, motivo de rechazo (el `rejection_log` ya existe; falta conteo de tokens) | Octubre |
 | 🔴 Alta | **Ejecutar la evaluación formal** | Dataset ground truth (muestra revisada por humano), correr RAGAS sobre el RAG, tasa de alucinación con evaluador LLM, precisión de `verified_by_ai` vs humano | Octubre–Noviembre |
 | 🟡 Media | **Deduplicación con embeddings reales** | Hoy usa solapamiento de tokens (placeholder); migrar a similitud coseno con pgvector | Octubre |
@@ -76,7 +83,7 @@ Este informe resume **qué está implementado**, **qué falta** y **cómo funcio
 
 El sistema es un **asistente de cátedra IA** que ayuda a un profesor a crear, catalogar y reutilizar preguntas de examen a partir de su material de clase. Tiene **dos modos de uso** sobre la misma base de conocimiento:
 
-1. **Modo conversacional (principal):** el profesor conversa con el agente vía OpenWebUI (chat). Le pide preguntas existentes del banco, genera nuevas una por una con confirmación humana, arma exámenes y recibe el PDF en el chat.
+1. **Modo conversacional (principal):** el profesor conversa con el agente en el **frontend propio** (chat embebido en http://localhost:3000). Le pide preguntas existentes del banco, genera nuevas una por una con confirmación humana, arma exámenes y recibe el PDF en el chat. También gestiona materias, banco, exámenes y material desde pantallas dedicadas.
 2. **Modo batch (API):** un pipeline LangGraph genera un examen completo de una vez a partir de un blueprint (distribución por Bloom, dificultad y temas). Útil para experimentación y para la evaluación formal.
 
 ### 2.2 Arquitectura de infraestructura
@@ -84,11 +91,11 @@ El sistema es un **asistente de cátedra IA** que ayuda a un profesor a crear, c
 ```mermaid
 graph TB
     subgraph "Navegador del profesor"
-        OWU["Open WebUI<br/>puerto 3000<br/>(agente fijo 'exam-agent')"]
+        FE["Frontend propio (Vue 3)<br/>puerto 3000<br/>chat + widgets + pantallas"]
     end
 
-    subgraph "exam-app (FastAPI + LangGraph)"
-        API["/v1/chat/completions<br/>(OpenAI-compatible)"]
+    subgraph "exam-app (FastAPI)"
+        API["SSE /api/chat/stream<br/>WS /ws · REST /subjects /exams<br/>+ /v1/chat/completions (legado)"]
         GRAF["Grafo conversacional<br/>+ tools"]
         PIPE["Pipeline batch<br/>(LangGraph)"]
     end
@@ -103,7 +110,7 @@ graph TB
         VLLM["vLLM · GLM-5.3-Flash<br/>contexto 1M tokens"]
     end
 
-    OWU -->|"streaming SSE"| API
+    FE -->|"SSE + WS + REST<br/>(proxy nginx mismo origen)"| API
     API --> GRAF
     GRAF -->|"tool-calling"| PIPE
     GRAF -->|"LLM"| VLLM
@@ -112,7 +119,7 @@ graph TB
     EMB --> PG
     PIPE -->|"LaTeX"| LC
     LC -->|"PDF"| OUT["data/agent_outputs/*.pdf"]
-    PIPE -->|"adjunto"| OWU
+    GRAF -->|"eventos tipados"| FE
 ```
 
 ### 2.3 El RAG (Retrieval-Augmented Generation)
@@ -153,7 +160,7 @@ sequenceDiagram
     LLM-->>A: GeneratedItem (JSON validado con Pydantic)
     A-->>P: Muestra la pregunta + verificación IA
     P->>A: "Sí, guárdala y verifícala"
-    A->>BD: guardar_pregunta_pendiente(verificar_humano=True)
+    A->>BD: save_pending_question(verify_human=True)
     Note over BD: Verificación IA previa +<br/>verified_by_human=True
     BD-->>A: Pregunta guardada (id)
     A-->>P: "✅ Guardada y verificada. Ya no puede ser modificada por el agente."
@@ -235,7 +242,7 @@ graph TD
     TL -->|"resultado"| AS
 
     subgraph "Tools de escritura (protegidas)"
-        W["guardar_pregunta_pendiente<br/>confirmar_verificacion_humana<br/>generar_examen_pdf"]
+        W["save_pending_question<br/>confirm_human_verification<br/>generate_exam_pdf"]
         SEC["Service layer<br/>preguntas verificadas = inmutables"]
         W --> SEC --> PG[("PostgreSQL")]
     end
@@ -247,8 +254,8 @@ graph TD
 
 - **Ciclo assistant → tools → assistant**: el LLM decide qué tool invocar (o ninguna); el resultado de cada tool vuelve como `ToolMessage` y el LLM continúa. El ciclo se repite hasta que el LLM responde sin tools.
 - **Validación en el borde**: los args de cada tool se validan contra schemas Pydantic (`args_schema` con enums del dominio). Si el LLM pasa un valor inválido (ej. `difficulty="imposible"`), no crashea: recibe un mensaje con el detalle y **corrige y reintenta** solo.
-- **Human-in-the-loop a nivel de prompt**: el agente pregunta "¿La guardo? ¿La confirmas como verificada?" antes de ejecutar tools de escritura. (El `interrupt` nativo de LangGraph se descartó porque OpenWebUI no puede reanudarlo.)
-- **Puente del ítem pendiente**: `generar_pregunta` deja el ítem en un pendiente de módulo; `guardar_pregunta_pendiente` lo persiste con un clic del LLM (evita que el modelo re-especifique todos los campos y se equivoque).
+- **Human-in-the-loop a nivel de prompt**: el agente pregunta "¿La guardo? ¿La confirmas como verificada?" antes de ejecutar tools de escritura. (El `interrupt` nativo de LangGraph se descartó porque el transporte SSE/WS no reanuda interrupciones.)
+- **Puente del ítem pendiente**: `generate_question` deja el ítem en un `PendingItemStore` por thread (sincronizado con el checkpointer); `save_pending_question` lo persiste (evita que el modelo re-especifique todos los campos y se equivoque).
 - **Memoria persistente**: el checkpointer (PostgresSaver) guarda el estado por `thread_id`; la conversación sobrevive reinicios del contenedor.
 - **Confirmación humana explícita** antes de: guardar una pregunta y marcarla como verificada por humano.
 
@@ -267,89 +274,95 @@ graph TD
 
 ## 4. Las tools del agente conversacional (detalle)
 
-El agente expone **10 tools** al LLM, vinculadas con `bind_tools` en `src/agents/conversational/graph.py`. Cada tool encapsula **una acción acotada** y comparte cuatro invariantes:
+El agente expone **11 tools** al LLM, vinculadas con `bind_tools` en `agents_backend/conversational/graph.py`. Cada tool encapsula **una acción acotada** y comparte cuatro invariantes:
 
-1. **Entrada validada con Pydantic** (`args_schema` en `src/schemas/tools.py`): el JSON schema del modelo viaja al LLM (guía el tool-calling) y los args se validan en cada invocación; `extra="forbid"` rechaza campos que el LLM invente.
-2. **Escritura solo vía service layer** (`src/bank/service.py`): nunca SQL directo; las preguntas verificadas por humano son inmutables.
+1. **Entrada validada con Pydantic** (`args_schema` en `core/domain/schemas/tools.py`): el JSON schema del modelo viaja al LLM (guía el tool-calling) y los args se validan en cada invocación; `extra="forbid"` rechaza campos que el LLM invente.
+2. **Escritura solo vía service layer** (`core/domain/bank/service.py`): nunca SQL directo; las preguntas verificadas por humano son inmutables.
 3. **Salida en texto amigable** para el chat (markdown, tablas, emojis), con errores truncados y accionables para que el LLM pueda corregir.
 4. **Hiperespecialización**: las tools de generación/busqueda rechazan temas fuera del ámbito académico (lista de keywords off-topic en `tools.py`).
 
-### 4.1 Resumen de las 10 tools
+### 4.1 Resumen de las 11 tools
 
 | # | Tool | Categoría | Acción | Escribe en BD |
 |---|---|---|---|---|
-| 1 | `listar_materias` | Lectura | Lista materias registradas (id + nombre) | No |
-| 2 | `buscar_preguntas` | Lectura | Recupera preguntas existentes del banco en tabla markdown | No |
-| 3 | `generar_pregunta` | Generación | Genera UNA pregunta con RAG (no guarda) | No (deja ítem pendiente) |
-| 4 | `guardar_pregunta` | Escritura | Guarda una pregunta con verificación IA previa | Sí |
-| 5 | `guardar_pregunta_pendiente` | Escritura | Persiste la última pregunta generada (pendiente) | Sí |
-| 6 | `confirmar_verificacion_humana` | Escritura | Marca `verified_by_human=True` (inmutabiliza) | Sí |
-| 7 | `generar_examen_pdf` | Examen | Arma examen del banco → LaTeX → PDF → adjunto | No (reutiliza banco) |
-| 8 | `agregar_material_archivo` | RAG | Indexa un adjunto del chat como material | Sí (chunks) |
-| 9 | `listar_material_materia` | Lectura | Lista material indexado por archivo fuente | No |
-| 10 | `registrar_materia` | Escritura | Registra una materia nueva (anti-duplicado) | Sí |
+| 1 | `list_subjects` | Lectura | Lista materias registradas (id + nombre) | No |
+| 2 | `search_questions` | Lectura | Recupera preguntas existentes del banco en tabla markdown | No |
+| 3 | `generate_question` | Generación | Genera UNA pregunta con RAG (no guarda) | No (deja ítem pendiente) |
+| 4 | `save_question` | Escritura | Guarda una pregunta con verificación IA previa | Sí |
+| 5 | `save_pending_question` | Escritura | Persiste la última pregunta generada (pendiente) | Sí |
+| 6 | `confirm_human_verification` | Escritura | Marca `verified_by_human=True` (inmutabiliza) | Sí |
+| 7 | `generate_exam_pdf` | Examen | Arma examen del banco → LaTeX → PDF → adjunto | No (reutiliza banco) |
+| 8 | `add_material_file` | RAG | Indexa un adjunto del chat como material | Sí (chunks) |
+| 9 | `list_subject_material` | Lectura | Lista material indexado por archivo fuente | No |
+| 10 | `register_subject` | Escritura | Registra una materia nueva (anti-duplicado) | Sí |
+| 11 | `export_questions` | Lectura | Exporta el banco a CSV/XLSX y lo adjunta al chat | No |
 
-Las tools de escritura están declaradas en el set `WRITE_TOOLS` (`guardar_pregunta`, `guardar_pregunta_pendiente`, `confirmar_verificacion_humana`) y exigen confirmación humana explícita a nivel de prompt antes de ejecutarse.
+Las tools de escritura están declaradas en el set `WRITE_TOOLS` (`save_question`, `save_pending_question`, `confirm_human_verification`) y exigen confirmación humana explícita a nivel de prompt antes de ejecutarse.
 
 ### 4.2 Detalle de cada tool
 
-#### 1. `listar_materias` — lectura
-- **Entrada** (`ListarMateriasInput`): sin argumentos.
+#### 1. `list_subjects` — lectura
+- **Entrada** (`ListSubjectsInput`): sin argumentos.
 - **Proceso**: consulta los `Subject` registrados y formatea id + nombre.
 - **Salida**: lista markdown; si no hay materias, sugiere registrar una.
 - **Rol**: el id devuelto es el que el LLM debe usar como `subject_id` en las demás tools.
 
-#### 2. `buscar_preguntas` — lectura con formato tabla
-- **Entrada** (`BuscarPreguntasInput`): `subject_id` (UUID, requerido), `topic` (filtro exacto opcional), `limit` (1–100, default 20), `columns` (lista del enum `TableColumn`, opcional).
+#### 2. `search_questions` — lectura con formato tabla
+- **Entrada** (`SearchQuestionsInput`): `subject_id` (UUID, requerido), `topic` (filtro exacto opcional), `limit` (1–100, default 20), `columns` (lista del enum `TableColumn`, opcional).
 - **Proceso**: `bank.list_questions` → render de tabla markdown con `_render_questions_table`. Hay **15 columnas disponibles** a pedido del profesor: `n`, `id`, `topic`, `subtopic`, `bloom_level`, `difficulty`, `question_type`, `question_text`, `expected_answer`, `points`, `verified_by_human`, `verified_by_ai`, `ai_review_priority`, `source`, `created_at`. Si no se piden columnas se usa el set por defecto (6). Enunciados truncados a 80 caracteres, respuestas a 60, y escape de `|` para no romper la tabla.
 - **Salida**: tabla markdown con encabezados legibles (`COLUMN_LABELS`) y verificación humano/IA con iconos (✅/⏳/—).
 - **Guardrails**: rechazo off-topic; `limit` acotado para no volcar el banco completo en el contexto del LLM.
 
-#### 3. `generar_pregunta` — generación con RAG (HITL)
-- **Entrada** (`GenerarPreguntaInput`): `subject_id`, `subject_name`, `topic`, `difficulty` (enum `facil|medio|dificil`, default `medio`).
-- **Proceso**: (1) **RAG**: recupera los top-3 chunks relevantes al tema (score mínimo 0.15) del material indexado; (2) prompt de generador con ese contexto; (3) `generator_llm.with_structured_output(GeneratedItem)` — JSON estricto validado con Pydantic; (4) deja el ítem en el **pendiente de módulo** (`_PENDING_ITEM`), puente necesario porque las tools de LangGraph no reciben el estado del grafo.
+#### 3. `generate_question` — generación con RAG (HITL)
+- **Entrada** (`GenerateQuestionInput`): `subject_id`, `subject_name`, `topic`, `difficulty` (enum `easy|medium|hard`, default `medium`).
+- **Proceso**: (1) **RAG**: recupera los top-3 chunks relevantes al tema (score mínimo 0.15) del material indexado; (2) prompt de generador con ese contexto; (3) `generator_llm.with_structured_output(GeneratedItem)` — JSON estricto validado con Pydantic; (4) deja el ítem en el **PendingItemStore por thread** (sincronizado con el estado del grafo para que el checkpointer lo persista).
 - **Salida**: la pregunta formateada para chat (sin LaTeX) + pregunta de confirmación. **NO guarda todavía**.
 - **Guardrails**: UNA pregunta por llamada; off-topic; human-in-the-loop (no persiste sin confirmación); si falla el LLM devuelve el error truncado sin crashear.
 
-#### 4. `guardar_pregunta` — escritura con verificación IA previa
-- **Entrada** (`GuardarPreguntaInput`): los 11 campos completos de la pregunta — `subject_id`, `topic`, `bloom_level` (6 niveles de Bloom), `difficulty`, `question_text` (mínimo 5 caracteres), `question_type` (6 tipos), `options` (lista de `AnswerOptionIn`: `text` + `is_correct`; para `opcion_multiple` exactamente una correcta), `expected_answer`, `solution_explanation`, `subtopic`, `points` (0 < p ≤ 100).
+#### 4. `save_question` — escritura con verificación IA previa
+- **Entrada** (`SaveQuestionInput`): los 11 campos completos de la pregunta — `subject_id`, `topic`, `bloom_level` (6 niveles de Bloom), `difficulty`, `question_text` (mínimo 5 caracteres), `question_type` (6 tipos), `options` (lista de `AnswerOptionIn`: `text` + `is_correct`; para `multiple_choice` exactamente una correcta), `expected_answer`, `solution_explanation`, `subtopic`, `points` (0 < p ≤ 100).
 - **Proceso**: (1) **embedding del enunciado** (bge-m3, para el RAG de preguntas); (2) **verificación por IA previa** (`review_question`): ambigüedad, corrección y relevancia → `verified_by_ai`, `ai_review_notes`, `ai_review_priority`; (3) `bank.create_question` con `source="chat"`, `created_by="agent"`.
 - **Salida**: confirmación con id + resultado de la verificación IA.
 - **Guardrails**: mismas reglas de dominio que `GeneratedItem` (enums del dominio, una sola opción correcta); **NO marca `verified_by_human`** (eso es una tool separada tras confirmación del profesor).
 
-#### 5. `guardar_pregunta_pendiente` — persiste el ítem generado
-- **Entrada** (`GuardarPreguntaPendienteInput`): `verificar_humano` (bool, default False — True solo si el profesor confirmó explícitamente).
-- **Proceso**: consume el ítem pendiente de `generar_pregunta`; **re-valida** contra `GeneratedItem` (el dict vivió en memoria de módulo y debe cumplir el mismo esquema estricto); embedding; verificación IA; persiste; limpia el pendiente; si `verificar_humano=True` además marca la verificación humana en el mismo paso.
+#### 5. `save_pending_question` — persiste el ítem generado
+- **Entrada** (`SavePendingQuestionInput`): `verify_human` (bool, default False — True solo si el profesor confirmó explícitamente).
+- **Proceso**: consume el ítem pendiente de `generate_question`; **re-valida** contra `GeneratedItem` (el dict vivió en el PendingItemStore y debe cumplir el mismo esquema estricto); embedding; verificación IA; persiste; limpia el pendiente; si `verify_human=True` además marca la verificación humana en el mismo paso.
 - **Salida**: confirmación con id, verificación IA y (si aplica) verificación humana.
 - **Guardrails**: evita que el LLM re-especifique los 11 campos (fuente típica de errores de tool-calling); si el pendiente no cumple el esquema, no guarda y pide regenerar.
 
-#### 6. `confirmar_verificacion_humana` — inmutabiliza una pregunta
-- **Entrada** (`ConfirmarVerificacionInput`): `question_id` (UUID).
+#### 6. `confirm_human_verification` — inmutabiliza una pregunta
+- **Entrada** (`ConfirmHumanVerificationInput`): `question_id` (UUID).
 - **Proceso**: `bank.set_human_verification(id, verified=True)` vía service layer.
 - **Salida**: confirmación de que la pregunta quedó protegida.
 - **Guardrails**: solo tras confirmación explícita del profesor en el chat; una vez verificada, la pregunta es **inmutable para el agente** (`SecurityError` en update/delete desde el service layer).
 
-#### 7. `generar_examen_pdf` — examen del banco a PDF adjunto
-- **Entrada** (`GenerarExamenPdfInput`): `subject_id`, `subject_name`, `total_questions` (1–30, default 5), `use_bank` (default True), `num_versions` (1–10, default 1).
-- **Proceso**: (1) recupera preguntas del banco de la materia; (2) construye un `ExamBlueprint` con distribuciones fijas de Bloom (25% × 4 niveles) y dificultad (40/40/20); (3) invoca el **pipeline batch** (`run_exam_pipeline` con `persist=False`, para no duplicar preguntas ya existentes); (4) el ensamblador genera N versiones barajadas (estilo AMC anti-copia) y el compilador LaTeX produce los PDFs; (5) sube cada PDF a OpenWebUI como **adjunto nativo clicable** (`upload_file_to_openwebui` + `build_attachment_markdown`), con fallback a enlaces HTTP directos si falla la subida.
-- **Salida**: confirmación con materia, nº de preguntas y versiones + adjuntos PDF en el chat.
+#### 7. `generate_exam_pdf` — examen del banco a PDF adjunto
+- **Entrada** (`GenerateExamPdfInput`): `subject_id`, `subject_name`, `total_questions` (1–30, default 5), `use_bank` (default True), `num_versions` (1–10, default 1).
+- **Proceso**: (1) recupera preguntas del banco de la materia; (2) construye un `ExamBlueprint` con distribuciones fijas de Bloom (25% × 4 niveles) y dificultad (40/40/20); (3) invoca el **pipeline batch** (`run_exam_pipeline` con `persist=False`, para no duplicar preguntas ya existentes); (4) el ensamblador genera N versiones barajadas (estilo AMC anti-copia) y el compilador LaTeX produce los PDFs; (5) devuelve enlaces de descarga `/output/{file}.pdf` y emite el evento `artifact_ready` para que el frontend renderice la card de descarga.
+- **Salida**: confirmación con materia, nº de preguntas y versiones + enlaces PDF en el chat.
 - **Guardrails**: si no hay preguntas en el banco, no genera (pide generar primero); errores de compilación reportados con status y mensaje.
 
-#### 8. `agregar_material_archivo` — ingesta RAG desde el chat
-- **Entrada** (`AgregarMaterialArchivoInput`): `file_id` (del tag `<file id="..."/>` del adjunto en OpenWebUI), `subject_id`, `subject_name`, `clear_previous` (default False).
-- **Proceso**: (1) metadata del archivo (OpenWebUI ya extrae el texto en `data.content`); (2) descarga el binario; (3) si no hay texto extraído, lo extrae del binario (`extract_file_text`); (4) guarda el archivo físicamente en `data/inputs/<Materia>/` (`save_file_to_subject_folder`); (5) chunk-ea e indexa los fragmentos en la materia (`index_text_for_subject`, `source_label="chat:<filename>"`).
-- **Salida**: confirmación con nº de fragmentos indexados y ruta física donde quedó guardado el archivo.
+#### 8. `add_material_file` — ingesta RAG desde el chat
+- **Entrada** (`AddMaterialFileInput`): `file_id` (del tag `<file id="..."/>` del adjunto en el chat), `subject_id`, `subject_name`, `clear_previous` (default False).
+- **Proceso**: (1) metadata del archivo (exam-app extrae el texto al subir el adjunto); (2) descarga el binario; (3) si no hay texto extraído, lo extrae del binario (`extract_file_text`); (4) guarda el archivo físicamente en `data/inputs/<Materia>/` (`save_file_to_subject_folder`); (5) chunk-ea e indexa los fragmentos en la materia (`index_text_for_subject`, `source_label="chat:<filename>"`).
+- **Salida**: confirmación con nº de fragmentos indexados (`chunks_saved`) y ruta física donde quedó guardado el archivo; emite el evento `material_indexed`.
 - **Guardrails**: avisa si el archivo no tiene texto extraíble (imagen escaneada / formato no soportado); el fallo del guardado físico no bloquea la indexación.
 
-#### 9. `listar_material_materia` — auditoría del material indexado
-- **Entrada** (`ListarMaterialInput`): `subject_id`.
+#### 9. `list_subject_material` — auditoría del material indexado
+- **Entrada** (`ListSubjectMaterialInput`): `subject_id`.
 - **Proceso**: agrupa los `MaterialChunk` de la materia por `source_file` con conteo de fragmentos.
 - **Salida**: lista de archivos fuente + fragmentos indexados de cada uno; útil para verificar que un adjunto quedó indexado.
 
-#### 10. `registrar_materia` — alta de materias
-- **Entrada** (`RegistrarMateriaInput`): `nombre` (1–120 caracteres).
+#### 10. `register_subject` — alta de materias
+- **Entrada** (`RegisterSubjectInput`): `name` (1–120 caracteres).
 - **Proceso**: chequeo anti-duplicado case-insensitive (`ilike`) → crea el `Subject` si no existe.
 - **Salida**: confirmación con el id de la materia nueva (o aviso de que ya estaba registrada, sin crear duplicado).
+
+#### 11. `export_questions` — exportación del banco a CSV/XLSX
+- **Entrada** (`ExportQuestionsInput`): `subject_id`, `formato` (`csv|xlsx`, default `xlsx`), `limit` (1–500, default 100).
+- **Proceso**: recupera preguntas del banco → genera el archivo con las 17 columnas del contrato (`COLUMN_LABELS`) → lo guarda en `/output/` → devuelve enlace de descarga + evento `artifact_ready`.
+- **Guardrails**: formato inválido cae a CSV; banco vacío devuelve mensaje claro sin generar archivo.
 
 ### 4.3 Validación Pydantic en ambas direcciones
 
@@ -375,18 +388,18 @@ graph LR
 - **Argumentos de tools**: cada tool declara su `args_schema`; en `_call_tools_node` un `ValidationError` se convierte en `ToolMessage` accionable ("argumentos inválidos para la tool X, corrígelos: campo: mensaje", máx. 5 errores) y el LLM **corrige y reintenta** sin crashear el grafo.
 - **Re-validación en puntos de consumo**: el ítem pendiente se re-valida contra `GeneratedItem` antes de persistir (tool 5) y el verificador IA re-valida su input antes de gastar una llamada al LLM.
 
-### 4.4 Verificación por IA (`src/agents/verifier.py`)
+### 4.4 Verificación por IA (`agents_backend/shared/verifier.py`)
 
 - Evalúa cada pregunta **antes de persistir** con el LLM evaluador y `with_structured_output(AIReviewResult)`.
 - **Criterios**: ambigüedad del enunciado, corrección de la respuesta esperada, relevancia al tema.
-- **Salida**: `verified_by_ai`, `is_ambiguous`, `answer_correct`, `priority` (`alta|media|baja`), `notes` (para el profesor).
-- **Reglas de consistencia**: ambigua o respuesta incorrecta ⇒ `verified_by_ai=False` y prioridad ≥ media; prioridad inválida se normaliza a `media`.
-- **Fail-safe**: si falla el LLM, marca `verified_by_ai=False` + prioridad alta (nunca bloquea el flujo, deriva a revisión humana).
+- **Salida**: `verified_by_ai`, `is_ambiguous`, `answer_correct`, `priority` (`high|medium|low`), `notes` (para el profesor).
+- **Reglas de consistencia**: ambigua o respuesta incorrecta ⇒ `verified_by_ai=False` y prioridad ≥ medium; prioridad inválida se normaliza a `medium`.
+- **Fail-safe**: si falla el LLM, marca `verified_by_ai=False` + prioridad high (nunca bloquea el flujo, deriva a revisión humana).
 - `apply_review_to_question` nunca toca los campos de verificación IA de preguntas ya verificadas por humano.
 
 ### 4.5 Seguridad de escritura
 
-- Toda escritura pasa por el service layer (`src/bank/service.py`); las tools nunca ejecutan SQL de escritura directo.
+- Toda escritura pasa por el service layer (`core/domain/bank/service.py`); las tools nunca ejecutan SQL de escritura directo.
 - `verified_by_human=True` ⇒ **inmutable**: `SecurityError` en update/delete desde el service layer.
 - La verificación humana solo se marca con confirmación explícita del profesor (tools 5 y 6).
 - `WRITE_TOOLS` identifica las tools de escritura para el human-in-the-loop a nivel de prompt.
@@ -400,14 +413,14 @@ graph LR
 | Verificador IA | 4, 5 | `review_question` antes de persistir |
 | Pipeline batch (LangGraph) | 7 | `run_exam_pipeline` con blueprint construido por la tool |
 | Compilador LaTeX | 7 | PDFs vía microservicio (pdflatex ×2) |
-| OpenWebUI | 7, 8 | Adjuntos nativos de PDF; descarga y metadata de archivos adjuntos |
+| Frontend (eventos tipados) | 7, 8 | `artifact_ready` (card de descarga) y `material_indexed` (toast) |
 | Service layer | 4, 5, 6 | Escritura segura + inmutabilidad de preguntas verificadas |
 
 ---
 
 ## 5. Próximos pasos inmediatos
 
-1. **Reconstruir `exam_app` y validar en OpenWebUI** las últimas features (validación Pydantic de tools, formato tabla): flujo generar → guardar → verificar + "dame 5 preguntas en tabla con id, tema y dificultad".
+1. **Publicar los 7 repos en GitHub** (etapa 1 del plan: remotos + `.gitmodules` definitivo + CI por repo + pipeline de integración del meta-repo).
 2. **Instrumentar tokens/latencia** por llamada al LLM (base de las métricas de costo).
 3. **Diseñar el dataset de evaluación** (muestra de preguntas con verificación humana como ground truth).
 4. **Correr RAGAS** sobre el RAG y calcular tasa de alucinación + acuerdo IA/humano.

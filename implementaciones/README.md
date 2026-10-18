@@ -19,7 +19,7 @@
 | 4 | [04-widgets-chat.md](./04-widgets-chat.md) | Widgets reactivos: tarjetas de pregunta, tablas, artefactos, HITL | ✅ Completada |
 | 5 | [05-pantallas.md](./05-pantallas.md) | Pantallas: Materias, Banco, Exámenes, Material | ✅ Completada |
 | 6 | [06-docker-pulido.md](./06-docker-pulido.md) | Dockerfile frontend, compose actualizado, variables de entorno, pulido | ✅ Completada (E2E en Docker validado) |
-| 7 | [07-traduccion-ingles.md](./07-traduccion-ingles.md) | Traducción completa al inglés: enums, tools, prompts, API, UI con i18n (en/es), LaTeX, scripts | 🟨 En progreso (7.1-7.7 ✅, 7.8 docs pendiente) |
+| 7 | [07-traduccion-ingles.md](./07-traduccion-ingles.md) | Traducción completa al inglés: enums, tools, prompts, API, UI con i18n (en/es), LaTeX, scripts | ✅ Completada (7.1-7.8 ✅) |
 | 7a | [07a-mapa-dependencias.md](./07a-mapa-dependencias.md) | Grafo de dependencias del contrato de traducción (frontend → exam-app → agents-backend → core) | ✅ Completada |
 
 ---
@@ -45,10 +45,10 @@
 
 ## 📊 Progreso global
 
-- **Etapa actual:** 7 (traducción al inglés) — 7.8 docs pendiente; etapa 1 (push a GitHub) sigue abierta
+- **Etapa actual:** 1 (push a GitHub de los 7 repos + CI) — etapas 0-7 completadas y validadas
 - **Sesiones estimadas totales:** 10-14
-- **MVP usable (etapas 0-6):** ✅ completado y validado E2E en Docker (pendiente: push a GitHub)
-- **Última actualización:** 2026-10-05
+- **MVP usable (etapas 0-7):** ✅ completado y validado E2E en Docker + validación funcional 2026-10-18 (pendiente: push a GitHub)
+- **Última actualización:** 2026-10-18
 
 ---
 

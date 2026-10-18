@@ -1,6 +1,7 @@
 # Métricas de Evaluación del Agente y del RAG
 
 > **Elemento de acción 5** — Definición de métricas para evaluar formalmente al agente y al componente RAG (requisito de Felipe: "no vender agentes sin métricas duras").
+> **Nota (2026-10-18):** definiciones vigentes; la instrumentación sigue pendiente (ver §4). El sistema ya registra `rejection_log`, `compilation_log`, `total_llm_calls` y los eventos tipados del agente (`shared/metrics.py`), que son la base de estas métricas.
 
 Este documento propone el conjunto de métricas para la tesis. Se dividen en tres bloques: **métricas del agente**, **métricas del RAG** y **métricas operativas**.
 
