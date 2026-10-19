@@ -22,6 +22,7 @@
 | 7 | [07-traduccion-ingles.md](./07-traduccion-ingles.md) | Traducción completa al inglés: enums, tools, prompts, API, UI con i18n (en/es), LaTeX, scripts | ✅ Completada (7.1-7.8 ✅) |
 | 7a | [07a-mapa-dependencias.md](./07a-mapa-dependencias.md) | Grafo de dependencias del contrato de traducción (frontend → exam-app → agents-backend → core) | ✅ Completada |
 | 8 | [08-auth-multitenant-navbar-reactivo.md](./08-auth-multitenant-navbar-reactivo.md) | Auth JWT multi-profesor (multi-tenant), navbar superior con selector reactivo bidireccional, CRUD completo del banco desde el chat | ✅ Completada (Tag V1.0.0) |
+| 9 | [09-raw-llm-audit-json-english.md](./09-raw-llm-audit-json-english.md) | Auditoría LLM (raw answer/thinking en `llm_responses`), tool eliminar archivos de material, descarga JSON (banco + examen), inglés forzado en el prompt | ✅ Completada |
 
 ---
 
@@ -46,9 +47,11 @@
 
 ## 📊 Progreso global
 
-- **Etapa actual:** 1 (push a GitHub de los 7 repos + CI) — etapas 0-8 completadas y validadas
+- **Etapa actual:** 1 (push a GitHub de los 7 repos + CI) — etapas 0-9 completadas y validadas
 - **Sesiones estimadas totales:** 10-14
 - **MVP usable (etapas 0-8):** ✅ completado y validado E2E en Docker + navegador; **release `Tag_V1.0.0`** (auth multi-profesor + navbar reactivo + CRUD completo)
+- **Etapa 9 (2.ª revisión):** ✅ auditoría LLM (raw answer/thinking), tool eliminar archivos, descarga JSON, inglés forzado
+- **Backlog (pospuesto, no bloquea):** endpoint de modelo en caliente (hoy configurable por `.env` + restart), repos GitHub + CI (etapa 1), deduplicación con embeddings reales, `owner_id` de materias legacy
 - **Última actualización:** 2026-10-19
 
 ---

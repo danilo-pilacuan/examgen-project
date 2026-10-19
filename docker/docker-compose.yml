@@ -57,6 +57,10 @@ services:
       OPENWEBUI_PUBLIC_URL: http://localhost:3000
       OPENWEBUI_ADMIN_EMAIL: admin@localhost
       OPENWEBUI_ADMIN_PASSWORD: admin
+      # LLM raw audit (llm_responses table): prompt+answer always,
+      # chain of thought only when enabled.
+      LLM_CAPTURE_RAW: ${LLM_CAPTURE_RAW:-true}
+      LLM_CAPTURE_THINKING: ${LLM_CAPTURE_THINKING:-false}
       # Root directory of the subjects' material (mounted at /app/inputs).
       MATERIAL_ROOT: /app/inputs
     ports:

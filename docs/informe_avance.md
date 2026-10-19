@@ -1,10 +1,12 @@
 # 📊 Informe de Avance — Generador Conversacional con Agente IA para Exámenes
 
 > **Tesis:** USFQ — Cohorte 3 (2da corte) · **Proponente:** Felipe Grijalva · **Estudiante:** Danilo Pilacuán
-> **Fecha del informe:** 2026-09-17 · **Actualizado:** 2026-10-19 (etapas 0-8 del plan de implementación, release `Tag_V1.0.0`)
+> **Fecha del informe:** 2026-09-17 · **Actualizado:** 2026-10-19 (etapas 0-9 del plan de implementación, release `Tag_V1.0.0` + etapa 9 de la 2.ª revisión)
 > **Fechas clave:** implementación completa en **noviembre** · defensa **14–21 de diciembre**
 
 Este informe resume **qué está implementado**, **qué falta** y **cómo funciona** el sistema (arquitectura + loop de agentes). Sirve como base para el seguimiento quincenal con el tutor y para el capítulo de implementación del escrito.
+
+> **Nota de actualización (2026-10-19, etapa 9 — 2.ª revisión):** se cerraron los ítems pendientes de la segunda revisión del proyecto: **auditoría cruda de LLM** (tabla `llm_responses` con prompt, raw answer y —opcional vía `LLM_CAPTURE_THINKING`— la cadena de pensamiento de cada llamada, chat y pipeline), **tool `delete_material_file`** (eliminar archivos del material desde el chat, con borrado de chunks y archivo físico), **descarga del JSON intermedio** (export del banco en JSON + JSON crudo blueprint+ítems adjunto junto al PDF del examen) y **regla LANGUAGE** en el prompt del sistema (el agente responde siempre en inglés). El endpoint de modelo en caliente quedó en backlog (el modelo ya es configurable por `.env` sin tocar código). Detalle en `implementaciones/09-raw-llm-audit-json-english.md`.
 
 > **Nota de actualización (2026-10-19, `Tag_V1.0.0`):** además de lo anterior (frontend propio, monorepo, SSE/WS, i18n), el sistema incorpora **autenticación multi-profesor** (JWT con scoping por profesor: cada docente ve solo sus materias y sesiones; las materias previas quedan compartidas), una **nueva UX con navbar superior** y selector de materia **reactivo bidireccional** (elegir materia en el chat actualiza el selector y viceversa), y el **CRUD completo del banco de preguntas desde el chat** (crear, listar, actualizar y eliminar, con el guardrail de inmutabilidad de preguntas verificadas por humano). Las secciones siguientes reflejan el estado actual.
 
@@ -70,12 +72,15 @@ Este informe resume **qué está implementado**, **qué falta** y **cómo funcio
 | Prioridad | Pendiente | Detalle | Cuándo |
 |---|---|---|---|
 | 🔴 Alta | **Publicar los 7 repos en GitHub** | Remotos + `.gitmodules` definitivo + CI por repo + pipeline de integración del meta-repo (etapa 1 del plan) | Inmediato |
-| 🟡 Media | **Deduplicación con embeddings reales** | Hoy usa solapamiento de tokens (placeholder); migrar a similitud coseno con pgvector | Octubre |
 | 🟡 Media | **Escrito de la tesis** | Capítulos de implementación + experimentación (usar `ARCHITECTURE.md` y este informe como base) | Noviembre |
 | 🟡 Media | **Asignar `owner_id` a materias legacy** | Las materias creadas antes de la auth quedan compartidas; asignación retroactiva con `UPDATE subjects SET owner_id=...` si se quiere privacidad | Opcional |
+| 🟢 Baja | **Endpoint de modelo en caliente** | El modelo ya es configurable por `.env`/compose (`LLM_MODEL` + `LLM_BASE_URL`, sin tocar código); el cambio sin reiniciar quedó en backlog (decisión con Felipe, 2026-10-19) | Backlog |
+| 🟢 Baja | **Deduplicación con embeddings reales** | Hoy usa solapamiento de tokens (placeholder); migrar a similitud coseno con pgvector | Backlog |
 | 🟢 Baja | Tests automatizados (`tests/` está vacío) | Al menos tests de schemas, service layer (seguridad) y render LaTeX | Noviembre |
 | 🟢 Baja | Trazabilidad/monitoreo en producción | **Descartado por alcance** (decisión con Felipe) | — |
 | — | Análisis de métricas y costos | **Descartado por alcance** (decisión del proyecto, 2026-10-18) | — |
+
+> **Ítems de la 2.ª revisión cerrados (etapa 9, 2026-10-19):** raw answer/thinking en BD (`llm_responses`), tool eliminar archivos (`delete_material_file`), descarga del JSON intermedio (banco + examen), inglés forzado en el prompt, aleatorización/versiones (ya existía), eliminar preguntas por ID (ya existía), visibilidad de tools (ya existía), dashboard (cubierto por las pantallas Materias/Banco).
 
 > **Riesgo de calendario:** la defensa es 14–21 de diciembre; todo el desarrollo debe cerrarse en noviembre para dejar noviembre–diciembre al escrito.
 
@@ -285,7 +290,7 @@ El agente expone **11 tools** al LLM, vinculadas con `bind_tools` en `agents_bac
 3. **Salida en texto amigable** para el chat (markdown, tablas, emojis), con errores truncados y accionables para que el LLM pueda corregir.
 4. **Hiperespecialización**: las tools de generación/busqueda rechazan temas fuera del ámbito académico (lista de keywords off-topic en `tools.py`).
 
-### 4.1 Resumen de las 14 tools
+### 4.1 Resumen de las 15 tools
 
 | # | Tool | Categoría | Acción | Escribe en BD |
 |---|---|---|---|---|
@@ -297,14 +302,15 @@ El agente expone **11 tools** al LLM, vinculadas con `bind_tools` en `agents_bac
 | 6 | `confirm_human_verification` | Escritura | Marca `verified_by_human=True` (inmutabiliza) | Sí |
 | 7 | `update_question_tool` | Escritura | Actualiza campos de una pregunta (parcial; guardrail: verificadas por humano inmutables) | Sí |
 | 8 | `delete_question_tool` | Escritura | Elimina una pregunta (guardrail: verificadas por humano no se borran) | Sí |
-| 9 | `generate_exam_pdf` | Examen | Arma examen del banco → LaTeX → PDF → adjunto | No (reutiliza banco) |
+| 9 | `generate_exam_pdf` | Examen | Arma examen del banco → LaTeX → PDF + JSON crudo adjuntos | No (reutiliza banco) |
 | 10 | `add_material_file` | RAG | Indexa un adjunto del chat como material | Sí (chunks) |
 | 11 | `list_subject_material` | Lectura | Lista material indexado por archivo fuente | No |
-| 12 | `register_subject` | Escritura | Registra una materia nueva (anti-duplicado) | Sí |
-| 13 | `select_subject` | Contexto | Marca la materia activa de la conversación (el selector del frontend reacciona) | No |
-| 14 | `export_questions` | Lectura | Exporta el banco a CSV/XLSX y lo adjunta al chat | No |
+| 12 | `delete_material_file_tool` | RAG | Elimina un archivo de material (chunks + archivo físico) | Sí (borra chunks) |
+| 13 | `register_subject` | Escritura | Registra una materia nueva (anti-duplicado) | Sí |
+| 14 | `select_subject` | Contexto | Marca la materia activa de la conversación (el selector del frontend reacciona) | No |
+| 15 | `export_questions` | Lectura | Exporta el banco a CSV/XLSX/JSON y lo adjunta al chat | No |
 
-Con las tools 4-8 el CRUD del banco queda completo desde el chat: **C**rear (generate+save), **R**ead (search), **U**pdate (`update_question_tool`), **D**elete (`delete_question_tool`).
+Con las tools 4-8 el CRUD del banco queda completo desde el chat: **C**rear (generate+save), **R**ead (search), **U**pdate (`update_question_tool`), **D**elete (`delete_question_tool`). Con las tools 10-12 el material también tiene ciclo completo: indexar (`add_material_file`), auditar (`list_subject_material`) y eliminar (`delete_material_file_tool`).
 
 Las tools de escritura están declaradas en el set `WRITE_TOOLS` (`save_question`, `save_pending_question`, `confirm_human_verification`) y exigen confirmación humana explícita a nivel de prompt antes de ejecutarse. `update_question_tool` y `delete_question_tool` exigen además que el profesor pida explícitamente la operación y que el agente obtenga el `question_id` real con `search_questions` (nunca inventarlo).
 
@@ -431,6 +437,6 @@ graph LR
 ## 5. Próximos pasos inmediatos
 
 1. **Publicar los 7 repos en GitHub** (etapa 1 del plan: remotos + `.gitmodules` definitivo + CI por repo + pipeline de integración del meta-repo).
-2. **Deduplicación con embeddings reales** (migrar el solapamiento de tokens a similitud coseno con pgvector).
-3. **Empezar el escrito** (capítulo de implementación) en paralelo — objetivo: todo el desarrollo cerrado en noviembre.
-4. **Asignar `owner_id` a las materias legacy** si se quiere privacidad retroactiva (hoy quedan compartidas entre profesores).
+2. **Empezar el escrito** (capítulo de implementación) en paralelo — objetivo: todo el desarrollo cerrado en noviembre.
+3. **Asignar `owner_id` a las materias legacy** si se quiere privacidad retroactiva (hoy quedan compartidas entre profesores).
+4. **Backlog (no bloquea):** endpoint de modelo en caliente (hoy configurable por `.env` + restart), deduplicación con embeddings reales (pgvector).
