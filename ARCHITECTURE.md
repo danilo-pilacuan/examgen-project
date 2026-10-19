@@ -2,7 +2,7 @@
 
 > **Proyecto:** MVP_v1 — Generador de exámenes en LaTeX propulsado por agentes de IA
 > **Tesis:** USFQ
-> **Fecha de documentación:** 2026-08-11 · **Última actualización:** 2026-10-18 (etapas 0-7)
+> **Fecha de documentación:** 2026-08-11 · **Última actualización:** 2026-10-19 (etapas 0-8, Tag V1.0.0)
 
 Repo de referencia con material de estudio: https://github.com/tobiager/UNNE-LSI/tree/main
 
@@ -550,7 +550,7 @@ erDiagram
 
 ## 🚦 Estado del proyecto
 
-> **Etapas 0-7 completadas** (ver [implementaciones/](implementaciones/README.md) para el detalle por etapa).
+> **Etapas 0-8 completadas** (ver [implementaciones/](implementaciones/README.md) para el detalle por etapa). Release actual: **`Tag_V1.0.0`**.
 
 ### ✅ Implementado y validado
 
@@ -589,10 +589,18 @@ erDiagram
 - E2E validado en Docker: chat con tools, generación de examen vía proxy, PDF descargable
 
 **Traducción e i18n (etapa 7):**
-- **Contrato en inglés**: enums (`remember/understand/apply/analyze/evaluate/create`, `easy/medium/hard`, `multiple_choice/true_false/short_answer/essay/fill_in_blank/select_all`), 11 tools renombradas (`list_subjects`, `search_questions`, `generate_question`, `save_question`, `save_pending_question`, `confirm_human_verification`, `generate_exam_pdf`, `add_material_file`, `list_subject_material`, `export_questions`, `register_subject`), prompts (`SYSTEM_PROMPT` y pipeline) y mensajes de API
+- **Contrato en inglés**: enums (`remember/understand/apply/analyze/evaluate/create`, `easy/medium/hard`, `multiple_choice/true_false/short_answer/essay/fill_in_blank/select_all`), tools renombradas, prompts (`SYSTEM_PROMPT` y pipeline) y mensajes de API
 - **Migración Alembic** `d4e5f6a7b8c9` traduce los valores ya persistidos (BD local verificada)
-- **vue-i18n** con catálogos `en`/`es`, locale persistido en `localStorage`, selector EN/ES en la sidebar; enums mostrados con valores del contrato
+- **vue-i18n** con catálogos `en`/`es`, locale persistido en `localStorage`; enums mostrados con valores del contrato
 - LaTeX (babel english), compose, `.env.example` y scripts en inglés
+
+**Auth multi-profesor + UX reactiva + CRUD completo (etapa 8, Tag V1.0.0):**
+- **Autenticación JWT**: `POST /auth/register`, `POST /auth/login`, `GET /auth/me` (HS256, 12h, PBKDF2-SHA256 para passwords, secret vía `AUTH_SECRET`)
+- **Multi-tenant**: tabla `users` + `subjects.owner_id` (migración `e5f6a7b8c9d0`); materias legacy (`owner_id NULL`) compartidas; scoping por profesor en materias, banco, material, exámenes y subida de archivos (403 si es ajena)
+- **Frontend**: login/registro con sesión persistente, router guard, navbar superior con selector de materia reactivo (sidebar retirada), barra de contexto con contadores, indicador de contexto en el chat
+- **Contexto bidireccional**: el selector actualiza chat/banco/material/exámenes; "selecciona la materia X" en el chat actualiza el selector (tool `select_subject` + evento `subject_selected`)
+- **CRUD completo desde el chat**: `update_question_tool` y `delete_question_tool` (guardrail: preguntas verificadas por humano inmutables); el agente obtiene el `question_id` con `search_questions`
+- **nginx**: `no-cache` en `index.html` (evita bundle obsoleto tras deploys)
 
 ### 🔬 Validado empíricamente (endpoint LLM)
 - `max_tokens=100000` aceptado
@@ -609,6 +617,8 @@ erDiagram
 - Push a GitHub de los 7 repos (etapa 1: remotos + CI + pipeline de integración del meta-repo)
 - Deduplicación con embeddings reales (hoy usa solapamiento de tokens)
 - Deploy en servidor remoto (DGX) — bloqueado por decisión del proyecto hasta integrar los cambios
+- Definir `AUTH_SECRET` en producción (el fallback de dev es inseguro por diseño)
+- Asignar `owner_id` a las materias legacy si se quiere privacidad retroactiva
 
 ---
 
@@ -642,11 +652,14 @@ El frontend consume SSE (tokens + eventos tipados), WS (cancelación) y REST (ma
 | `save_question` | **Escritura** | Guarda en el banco + verificación por IA |
 | `save_pending_question` | **Escritura** | Persiste el ítem pendiente de `generate_question` |
 | `confirm_human_verification` | **Escritura** | Marca `verified_by_human=True` |
+| `update_question_tool` | **Escritura** | Actualiza campos de una pregunta (parcial; guardrail: verificadas por humano inmutables) |
+| `delete_question_tool` | **Escritura** | Elimina una pregunta (guardrail: verificadas por humano no se borran) |
 | `generate_exam_pdf` | **Escritura** | Genera examen, compila a PDF y lo adjunta al chat |
 | `add_material_file` | **Escritura** | Indexa un archivo adjunto en la materia (RAG) |
 | `list_subject_material` | Lectura | Lista los archivos y chunks indexados de una materia |
 | `export_questions` | Lectura | Exporta el banco a CSV/XLSX y lo adjunta al chat |
 | `register_subject` | **Escritura** | Registra una nueva materia |
+| `select_subject` | Contexto | Marca la materia activa de la conversación (emite `subject_selected`; el selector del frontend reacciona) |
 
 ### Flujo con human-in-the-loop
 
@@ -672,8 +685,30 @@ El HITL se implementa **por prompt** (el agente pregunta y solo ejecuta las tool
 ### Restricciones de seguridad de escritura
 
 - Toda escritura pasa por `core/domain/bank/service.py`.
-- `update_question` / `delete_question` lanzan `SecurityError` si `verified_by_human=True`.
+- `update_question` / `delete_question` lanzan `SecurityError` si `verified_by_human=True` (aplica tanto a las tools del chat como a la API REST del Banco).
 - `set_human_verification()` solo lo invoca la confirmación humana explícita del chat (o la vista Banco del frontend).
+
+### Autenticación multi-profesor (etapa 8)
+
+```mermaid
+graph LR
+    U[Profesor] -->|"login/register"| AUTH["/auth/* (exam-app)"]
+    AUTH -->|"JWT HS256 12h"| FE[Frontend<br/>sesión en localStorage]
+    FE -->|"Authorization: Bearer (REST)<br/>token en body (SSE chat)"| API[Endpoints con get_current_user]
+    API -->|"owner_id scoping"| PG[(PostgreSQL<br/>users · subjects.owner_id)]
+```
+
+- **Modelo**: `users` (email único, name, password_hash PBKDF2-SHA256, role) y `subjects.owner_id` (nullable → NULL = materia legacy compartida, retrocompatible).
+- **Endpoints**: `POST /auth/register` (409 duplicado), `POST /auth/login` (401 inválidas), `GET /auth/me`.
+- **Scoping**: materias, banco, material, exámenes y `/api/files` filtran por `owner_id` (403 si la materia pertenece a otro profesor). El chat valida el token (en el **body**, porque el SSE POST del navegador no siempre puede mandar headers) y la propiedad de la materia del contexto.
+- **Frontend**: sesión persistente en `localStorage` (token restaurado sincrónicamente al crear el store), router guard (todo excepto `/login` exige sesión), logout limpia stores.
+- **Config**: `AUTH_SECRET` (obligatorio en producción; fallback de dev inseguro por diseño).
+
+### Contexto reactivo de materia (bidireccional)
+
+- **Selector → app**: cambiar la materia en el navbar actualiza los stores (`subjects`, `chat`) y refresca banco/material/exámenes; las vistas reaccionan por `watch(activeSubjectId)`.
+- **Chat → selector**: la tool `select_subject` emite `subject_selected`; el `ChatPanel` sincroniza el selector y los paneles (y registra la materia si el agente la acaba de crear con `register_subject`, que emite `subject_registered`).
+- **Contrato del evento en 3 capas** (deben cambiar juntas): `agents_backend/shared/events.py` → `exam_app/schemas/events.py` (Literal) → `frontend/src/types/events.ts`.
 
 ### Persistencia del contexto de conversación
 

@@ -2,9 +2,10 @@
 
 > **Objetivo:** Reemplazar el invoke-sync + re-chunk por streaming real (`astream_events`), añadir WebSocket como bus de eventos, endpoint propio de adjuntos, y eventos tipados de tools en paralelo al markdown.
 >
-> **Estado:** 🟨 En progreso (2.1-2.7 completados; streaming token-a-token con astream_events queda como mejora)
+> **Estado:** 🟨 En progreso (2.1-2.7 completados; streaming token-a-token con astream_events queda como mejora). Actualizada 2026-10-19: contrato de eventos ampliado con `subject_selected` (etapa 8).
 > **Sesiones estimadas:** 2-3
 > **Depende de:** Etapa 0 (reestructuración)
+> **Fecha de última actualización:** 2026-10-19
 
 ---
 ## IMPORTANTE: ESTE PROYECTO NO NECESITA TESTS CON PYTEST O VITEST, ESO GASTA TOKENS INNECESARIAMENTE
@@ -57,11 +58,12 @@
 ```jsonc
 // SSE: event: <tipo> · data: <payload JSON>
 { "v": 1, "type": "token",       "thread_id": "…", "delta": "…" }
-{ "v": 1, "type": "tool_start",  "thread_id": "…", "name": "buscar_preguntas", "call_id": "…" }
-{ "v": 1, "type": "tool_end",    "thread_id": "…", "name": "buscar_preguntas", "call_id": "…", "result": "…" }
+{ "v": 1, "type": "tool_start",  "thread_id": "…", "name": "search_questions", "call_id": "…" }
+{ "v": 1, "type": "tool_end",    "thread_id": "…", "name": "search_questions", "call_id": "…", "result": "…" }
 { "v": 1, "type": "question_generated", "thread_id": "…", "question": { /* GeneratedItem */ } }
 { "v": 1, "type": "artifact_ready",     "thread_id": "…", "kind": "pdf|csv|xlsx", "url": "/output/…", "filename": "…" }
 { "v": 1, "type": "material_indexed",   "thread_id": "…", "chunks": 42 }
+{ "v": 1, "type": "subject_selected",   "thread_id": "…", "subject_id": "…", "subject_name": "…" }
 { "v": 1, "type": "done",        "thread_id": "…" }
 { "v": 1, "type": "error",       "thread_id": "…", "message": "…" }
 ```

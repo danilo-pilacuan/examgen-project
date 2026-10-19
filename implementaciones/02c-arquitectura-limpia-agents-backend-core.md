@@ -2,9 +2,9 @@
 
 > **Objetivo:** Detallar la organización interna de `agents-backend` (dominio de agentes LangGraph) y `libs/core` (shared kernel), con las reglas de dependencia hacia adentro y los puntos de extensión para los eventos tipados.
 >
-> **Estado:** ⬜ Pendiente (se ejecuta junto con la Etapa 0/2)
+> **Estado:** ✅ Completada (implementada de facto). Actualizada 2026-10-19: `SelectSubjectInput`, `DeleteQuestionInput`, `UpdateQuestionInput` en `core/domain/schemas/tools.py`; `User` + `subjects.owner_id` en `core/domain/models.py`; `core/domain/auth.py` (JWT/PBKDF2).
 > **Sesiones estimadas:** (incluidas en etapas 0/2)
-> **Fecha de última actualización:** 2026-10-04
+> **Fecha de última actualización:** 2026-10-19
 
 ---
 ## IMPORTANTE: ESTE PROYECTO NO NECESITA TESTS CON PYTEST O VITEST, ESO GASTA TOKENS INNECESARIAMENTE

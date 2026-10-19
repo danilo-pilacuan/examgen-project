@@ -1,10 +1,12 @@
 # 📊 Informe de Avance — Generador Conversacional con Agente IA para Exámenes
 
 > **Tesis:** USFQ — Cohorte 3 (2da corte) · **Proponente:** Felipe Grijalva · **Estudiante:** Danilo Pilacuán
-> **Fecha del informe:** 2026-09-17 · **Actualizado:** 2026-10-18 (etapas 0-7 del plan de implementación)
+> **Fecha del informe:** 2026-09-17 · **Actualizado:** 2026-10-19 (etapas 0-8 del plan de implementación, release `Tag_V1.0.0`)
 > **Fechas clave:** implementación completa en **noviembre** · defensa **14–21 de diciembre**
 
 Este informe resume **qué está implementado**, **qué falta** y **cómo funciona** el sistema (arquitectura + loop de agentes). Sirve como base para el seguimiento quincenal con el tutor y para el capítulo de implementación del escrito.
+
+> **Nota de actualización (2026-10-19, `Tag_V1.0.0`):** además de lo anterior (frontend propio, monorepo, SSE/WS, i18n), el sistema incorpora **autenticación multi-profesor** (JWT con scoping por profesor: cada docente ve solo sus materias y sesiones; las materias previas quedan compartidas), una **nueva UX con navbar superior** y selector de materia **reactivo bidireccional** (elegir materia en el chat actualiza el selector y viceversa), y el **CRUD completo del banco de preguntas desde el chat** (crear, listar, actualizar y eliminar, con el guardrail de inmutabilidad de preguntas verificadas por humano). Las secciones siguientes reflejan el estado actual.
 
 > **Nota de actualización (2026-10-18):** desde la versión original de este informe el sistema evolucionó: OpenWebUI fue reemplazado como interfaz principal por un **frontend propio (Vue 3)** con chat embebido, widgets reactivos y pantallas de gestión; el backend se reestructuró a un **monorepo de submódulos** (`projects/`) con arquitectura limpia; se añadió streaming SSE real, WebSocket, adjuntos propios e **i18n en/es**; y todo el contrato (enums, tools, prompts, API) se tradujo al **inglés**. Las secciones siguientes reflejan el estado actual; los nombres de tools y enums citados corresponden al contrato vigente.
 
@@ -42,7 +44,7 @@ Este informe resume **qué está implementado**, **qué falta** y **cómo funcio
 - Múltiples versiones del examen con barajado anti-copia (estilo AMC) + hoja de respuestas
 
 **Agente conversacional (asistente de cátedra):**
-- 11 tools con validación Pydantic de entrada (`args_schema`) y salida (`with_structured_output`) — detalle completo de cada tool en §4
+- 14 tools con validación Pydantic de entrada (`args_schema`) y salida (`with_structured_output`) — detalle completo de cada tool en §4
 - Human-in-the-loop: el agente pregunta antes de guardar y antes de marcar verificación humana
 - Verificación por IA previa al guardado (ambigüedad, corrección, relevancia → prioridad de revisión)
 - Hiperespecialización (rechaza temas fuera del ámbito), generación de a UNA pregunta por vez
@@ -54,6 +56,9 @@ Este informe resume **qué está implementado**, **qué falta** y **cómo funcio
 - **Pantallas de gestión**: Materias (registro/activación), Banco (filtros + verificación humana), Exámenes (blueprint + versiones), Material (chunks por archivo)
 - **i18n en/es**: UI bilingüe con vue-i18n, selector de idioma persistido; contrato del sistema en inglés
 - **Streaming y eventos**: SSE con eventos tipados (`question_generated`, `artifact_ready`, `material_indexed`, …) y cancelación vía WebSocket
+- **Autenticación multi-profesor (etapa 8)**: registro/login JWT, cada profesor ve solo sus materias y sesiones (multi-tenant con `subjects.owner_id`); materias previas a la auth quedan compartidas (retrocompatible)
+- **UX reactiva (etapa 8)**: navbar superior con selector de materia; el selector actualiza chat/banco/material/exámenes en vivo y la selección de materia desde el chat actualiza el selector (evento `subject_selected`); barra de contexto con contadores de preguntas/chunks
+- **CRUD completo desde el chat (etapa 8)**: crear (generate+save), leer (search), actualizar (`update_question_tool`) y eliminar (`delete_question_tool`) preguntas conversando; preguntas verificadas por humano permanecen inmutables (guardrail en service layer)
 
 **Calidad y robustez (última iteración, 2026-09-17):**
 - Validación Pydantic en **ambas direcciones**: outputs del LLM (`with_structured_output`) y args de tool-calling (`args_schema` + catch de `ValidationError` con mensaje accionable para que el LLM corrija y reintente)
@@ -64,10 +69,10 @@ Este informe resume **qué está implementado**, **qué falta** y **cómo funcio
 
 | Prioridad | Pendiente | Detalle | Cuándo |
 |---|---|---|---|
-| 🔴 Alta | **Prueba end-to-end de las últimas features** | ✅ Validado: E2E en Docker (chat con tools, examen vía proxy del frontend, PDF descargable) + validación funcional 2026-10-18 | Completado |
 | 🔴 Alta | **Publicar los 7 repos en GitHub** | Remotos + `.gitmodules` definitivo + CI por repo + pipeline de integración del meta-repo (etapa 1 del plan) | Inmediato |
 | 🟡 Media | **Deduplicación con embeddings reales** | Hoy usa solapamiento de tokens (placeholder); migrar a similitud coseno con pgvector | Octubre |
 | 🟡 Media | **Escrito de la tesis** | Capítulos de implementación + experimentación (usar `ARCHITECTURE.md` y este informe como base) | Noviembre |
+| 🟡 Media | **Asignar `owner_id` a materias legacy** | Las materias creadas antes de la auth quedan compartidas; asignación retroactiva con `UPDATE subjects SET owner_id=...` si se quiere privacidad | Opcional |
 | 🟢 Baja | Tests automatizados (`tests/` está vacío) | Al menos tests de schemas, service layer (seguridad) y render LaTeX | Noviembre |
 | 🟢 Baja | Trazabilidad/monitoreo en producción | **Descartado por alcance** (decisión con Felipe) | — |
 | — | Análisis de métricas y costos | **Descartado por alcance** (decisión del proyecto, 2026-10-18) | — |
@@ -280,7 +285,7 @@ El agente expone **11 tools** al LLM, vinculadas con `bind_tools` en `agents_bac
 3. **Salida en texto amigable** para el chat (markdown, tablas, emojis), con errores truncados y accionables para que el LLM pueda corregir.
 4. **Hiperespecialización**: las tools de generación/busqueda rechazan temas fuera del ámbito académico (lista de keywords off-topic en `tools.py`).
 
-### 4.1 Resumen de las 11 tools
+### 4.1 Resumen de las 14 tools
 
 | # | Tool | Categoría | Acción | Escribe en BD |
 |---|---|---|---|---|
@@ -290,13 +295,18 @@ El agente expone **11 tools** al LLM, vinculadas con `bind_tools` en `agents_bac
 | 4 | `save_question` | Escritura | Guarda una pregunta con verificación IA previa | Sí |
 | 5 | `save_pending_question` | Escritura | Persiste la última pregunta generada (pendiente) | Sí |
 | 6 | `confirm_human_verification` | Escritura | Marca `verified_by_human=True` (inmutabiliza) | Sí |
-| 7 | `generate_exam_pdf` | Examen | Arma examen del banco → LaTeX → PDF → adjunto | No (reutiliza banco) |
-| 8 | `add_material_file` | RAG | Indexa un adjunto del chat como material | Sí (chunks) |
-| 9 | `list_subject_material` | Lectura | Lista material indexado por archivo fuente | No |
-| 10 | `register_subject` | Escritura | Registra una materia nueva (anti-duplicado) | Sí |
-| 11 | `export_questions` | Lectura | Exporta el banco a CSV/XLSX y lo adjunta al chat | No |
+| 7 | `update_question_tool` | Escritura | Actualiza campos de una pregunta (parcial; guardrail: verificadas por humano inmutables) | Sí |
+| 8 | `delete_question_tool` | Escritura | Elimina una pregunta (guardrail: verificadas por humano no se borran) | Sí |
+| 9 | `generate_exam_pdf` | Examen | Arma examen del banco → LaTeX → PDF → adjunto | No (reutiliza banco) |
+| 10 | `add_material_file` | RAG | Indexa un adjunto del chat como material | Sí (chunks) |
+| 11 | `list_subject_material` | Lectura | Lista material indexado por archivo fuente | No |
+| 12 | `register_subject` | Escritura | Registra una materia nueva (anti-duplicado) | Sí |
+| 13 | `select_subject` | Contexto | Marca la materia activa de la conversación (el selector del frontend reacciona) | No |
+| 14 | `export_questions` | Lectura | Exporta el banco a CSV/XLSX y lo adjunta al chat | No |
 
-Las tools de escritura están declaradas en el set `WRITE_TOOLS` (`save_question`, `save_pending_question`, `confirm_human_verification`) y exigen confirmación humana explícita a nivel de prompt antes de ejecutarse.
+Con las tools 4-8 el CRUD del banco queda completo desde el chat: **C**rear (generate+save), **R**ead (search), **U**pdate (`update_question_tool`), **D**elete (`delete_question_tool`).
+
+Las tools de escritura están declaradas en el set `WRITE_TOOLS` (`save_question`, `save_pending_question`, `confirm_human_verification`) y exigen confirmación humana explícita a nivel de prompt antes de ejecutarse. `update_question_tool` y `delete_question_tool` exigen además que el profesor pida explícitamente la operación y que el agente obtenga el `question_id` real con `search_questions` (nunca inventarlo).
 
 ### 4.2 Detalle de cada tool
 
@@ -399,21 +409,22 @@ graph LR
 ### 4.5 Seguridad de escritura
 
 - Toda escritura pasa por el service layer (`core/domain/bank/service.py`); las tools nunca ejecutan SQL de escritura directo.
-- `verified_by_human=True` ⇒ **inmutable**: `SecurityError` en update/delete desde el service layer.
+- `verified_by_human=True` ⇒ **inmutable**: `SecurityError` en update/delete desde el service layer (aplica a las tools 7 y 8 del chat y a la API REST de la vista Banco).
 - La verificación humana solo se marca con confirmación explícita del profesor (tools 5 y 6).
 - `WRITE_TOOLS` identifica las tools de escritura para el human-in-the-loop a nivel de prompt.
+- **Multi-tenant (etapa 8)**: toda la API (materias, banco, material, exámenes, archivos y chat) exige JWT y filtra por `owner_id`; un profesor no puede leer ni escribir en materias ajenas (403).
 
 ### 4.6 Integraciones que usan las tools
 
 | Integración | Tools | Detalle |
 |---|---|---|
-| RAG (pgvector) | 3, 8 | Recuperación top_k=3 / min_score=0.15; indexación de chunks del material |
-| Embeddings (bge-m3) | 4, 5, 8 | Embedding del enunciado al guardar; indexación del material |
+| RAG (pgvector) | 3, 10 | Recuperación top_k=3 / min_score=0.15; indexación de chunks del material |
+| Embeddings (bge-m3) | 4, 5, 10 | Embedding del enunciado al guardar; indexación del material |
 | Verificador IA | 4, 5 | `review_question` antes de persistir |
-| Pipeline batch (LangGraph) | 7 | `run_exam_pipeline` con blueprint construido por la tool |
-| Compilador LaTeX | 7 | PDFs vía microservicio (pdflatex ×2) |
-| Frontend (eventos tipados) | 7, 8 | `artifact_ready` (card de descarga) y `material_indexed` (toast) |
-| Service layer | 4, 5, 6 | Escritura segura + inmutabilidad de preguntas verificadas |
+| Pipeline batch (LangGraph) | 9 | `run_exam_pipeline` con blueprint construido por la tool |
+| Compilador LaTeX | 9 | PDFs vía microservicio (pdflatex ×2) |
+| Frontend (eventos tipados) | 9, 10, 13 | `artifact_ready` (card de descarga), `material_indexed` (toast), `subject_selected` (selector reactivo) |
+| Service layer | 4, 5, 6, 7, 8 | Escritura segura + inmutabilidad de preguntas verificadas |
 
 ---
 
@@ -422,3 +433,4 @@ graph LR
 1. **Publicar los 7 repos en GitHub** (etapa 1 del plan: remotos + `.gitmodules` definitivo + CI por repo + pipeline de integración del meta-repo).
 2. **Deduplicación con embeddings reales** (migrar el solapamiento de tokens a similitud coseno con pgvector).
 3. **Empezar el escrito** (capítulo de implementación) en paralelo — objetivo: todo el desarrollo cerrado en noviembre.
+4. **Asignar `owner_id` a las materias legacy** si se quiere privacidad retroactiva (hoy quedan compartidas entre profesores).

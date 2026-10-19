@@ -2,9 +2,9 @@
 
 > **Objetivo:** Detallar cómo se organiza `apps/exam-app` siguiendo arquitectura limpia, respetando la estructura recomendada de FastAPI (routers/schemas/services/core), y cómo exam-app se comunica con agents-backend y libs/core.
 >
-> **Estado:** ⬜ Pendiente (se ejecuta junto con la Etapa 2)
+> **Estado:** ✅ Completada (implementada de facto; routers no importan de agents-backend/core). Actualizada 2026-10-19: `api/v1/auth.py` (JWT) y scoping por profesor en los routers.
 > **Sesiones estimadas:** (incluidas en etapa 2)
-> **Fecha de última actualización:** 2026-10-04
+> **Fecha de última actualización:** 2026-10-19
 
 ---
 ## IMPORTANTE: ESTE PROYECTO NO NECESITA TESTS CON PYTEST O VITEST, ESO GASTA TOKENS INNECESARIAMENTE

@@ -229,6 +229,7 @@ Resuelve las decisiones abiertas del plan de frontend sobre el formato de evento
 { "v": 1, "type": "question_generated", "thread_id": "…", "question": { /* GeneratedItem */ } }
 { "v": 1, "type": "artifact_ready",     "thread_id": "…", "kind": "pdf|csv|xlsx", "url": "/output/…", "filename": "…" }
 { "v": 1, "type": "material_indexed",   "thread_id": "…", "chunks": 42 }
+{ "v": 1, "type": "subject_selected",   "thread_id": "…", "subject_id": "…", "subject_name": "…" }
 { "v": 1, "type": "done",        "thread_id": "…" }
 { "v": 1, "type": "error",        "thread_id": "…", "message": "…" }
 ```
@@ -247,7 +248,7 @@ Resuelve las decisiones abiertas del plan de frontend sobre el formato de evento
 | ¿Formato de eventos SSE? | Schema versionado de §5, definido en exam-app y espejado en el frontend |
 | ¿Historial de chats? | MVP: `localStorage` en el frontend; endpoint de listado de threads queda como mejora posterior en `api/v1/chat.py` |
 | ¿Cancelar generación? | WS `cancel` → exam-app marca el thread como cancelado en el `event_bus` y descarta la respuesta; abortar el thread del grafo queda como mejora |
-| ¿Auth mínima? | Sin auth en el MVP; `api/deps.py` queda preparado para inyectarla después |
+| ¿Auth mínima? | ~~Sin auth en el MVP~~ → **Implementada en la etapa 8 (Tag V1.0.0)**: JWT HS256 (`/auth/register|login|me`), tabla `users`, `subjects.owner_id` (multi-tenant; NULL = materia legacy compartida), scoping por profesor en toda la API, token del chat en el body (SSE POST). `AUTH_SECRET` obligatorio en producción. |
 
 ---
 
