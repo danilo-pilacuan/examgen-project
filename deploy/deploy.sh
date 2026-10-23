@@ -61,10 +61,18 @@ cmd_up() {
     "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_BASE}/docker-compose.yml"
 
   # Create the remote .env (the compose `environment` variables take
-  # priority over the .env in pydantic-settings).
+  # priority over the .env in pydantic-settings). OPENAI_API_KEY is
+  # required by the USFQ LLM gateway and is read from the local .env.
+  local api_key
+  api_key="$(grep -E '^OPENAI_API_KEY=' "${PROJECT_ROOT}/.env" | head -n1 | cut -d= -f2-)"
+  if [ -z "${api_key}" ]; then
+    echo "❌ OPENAI_API_KEY not found in ${PROJECT_ROOT}/.env" >&2
+    exit 1
+  fi
   remote "cat > ${REMOTE_BASE}/.env << 'EOF'
 LATEX_COMPILER_URL=http://latex-compiler:8080/compile
 EOF"
+  remote "echo \"OPENAI_API_KEY=${api_key}\" >> ${REMOTE_BASE}/.env"
 
   echo "⬆️  Starting the infrastructure..."
   if [ "${1:-}" = "--no-build" ]; then

@@ -103,7 +103,7 @@ graph TB
     end
 
     subgraph "Servidor GPU (H200 - infra interna)"
-        VLLM["vLLM 0.25.1<br/>GLM-5.3-Flash<br/>contexto 1M tokens"]
+        VLLM["USFQ LLM Gateway<br/>GLM-5.3-Flash<br/>contexto 1M tokens"]
     end
 
     subgraph "Docker Compose (MVP_v1/docker)"
@@ -112,7 +112,7 @@ graph TB
     end
 
     RUN -->|"ejecuta"| APP
-    APP -->|"chat/completions<br/>http://172.28.230.10:12555"| VLLM
+    APP -->|"chat/completions<br/>https://ai.usfq.edu.ec/api/agents/llm/main/v1"| VLLM
     APP -->|"SQLAlchemy<br/>postgresql://:5432"| PG
     APP -->|"POST /compile<br/>http://localhost:8080"| LC
     LC -->|"genera PDF"| OUT["data/agent_outputs/*.pdf"]
@@ -125,7 +125,7 @@ graph TB
 |---|---|---|---|
 | **Aplicación principal** | Python + LangGraph | `MVP_v1/` | — |
 | **API** | FastAPI | `main.py` | `8000` |
-| **LLM local** | vLLM + GLM-5.3-Flash | `172.28.230.10` | `12555` |
+| **LLM (gateway USFQ)** | OpenAI-compatible + GLM-5.3-Flash | `ai.usfq.edu.ec` | `443` |
 | **Base de datos** | PostgreSQL 16 + pgvector | Docker (`postgres-db`) | `5432` |
 | **Compilador LaTeX** | FastAPI + TeXLive | Docker (`latex-compiler`) | `8080` |
 | **Servicio de embeddings** | FastAPI + sentence-transformers (bge-m3) | Docker (`embedding-service`) | `8081` |
@@ -462,7 +462,7 @@ Definida en `projects/core/src/core/config.py` y `projects/agents-backend/src/ag
 | Parámetro | Valor | Descripción |
 |---|---|---|
 | `llm_model` | `zai-org/GLM-5.3-Flash` | Modelo servido |
-| `llm_base_url` | `http://172.28.230.10:12555/v1` | Endpoint vLLM |
+| `llm_base_url` | `https://ai.usfq.edu.ec/api/agents/llm/main/v1` | Endpoint del gateway LLM (USFQ) |
 | `llm_max_tokens` | `65536` | Salida máxima por llamada |
 | `llm_temperature` | `0.7` | Temperatura del generador |
 | `llm_temperature_evaluator` | `0.2` | Temperatura del evaluador (más determinista) |

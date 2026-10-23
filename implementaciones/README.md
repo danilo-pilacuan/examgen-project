@@ -23,6 +23,9 @@
 | 7a | [07a-mapa-dependencias.md](./07a-mapa-dependencias.md) | Grafo de dependencias del contrato de traducción (frontend → exam-app → agents-backend → core) | ✅ Completada |
 | 8 | [08-auth-multitenant-navbar-reactivo.md](./08-auth-multitenant-navbar-reactivo.md) | Auth JWT multi-profesor (multi-tenant), navbar superior con selector reactivo bidireccional, CRUD completo del banco desde el chat | ✅ Completada (Tag V1.0.0) |
 | 9 | [09-raw-llm-audit-json-english.md](./09-raw-llm-audit-json-english.md) | Auditoría LLM (raw answer/thinking en `llm_responses`), tool eliminar archivos de material, descarga JSON (banco + examen), inglés forzado en el prompt | ✅ Completada |
+| 10 | [10-qa-flujo-completo-navegador/](./10-qa-flujo-completo-navegador/README.md) | QA E2E manual en navegador (profesor HITL): 12 bugs + 10 issues + 7 RFCs + backlog P0/P1/P2 | ✅ Completada (documentación de la ronda) |
+| 11 | [11-qa-round1-correcciones-certificacion.md](./11-qa-round1-correcciones-certificacion.md) | Correcciones de la ronda QA (P0 aplicado; P1/P2: BUG-01/08/10/11, ISS-07/10) + plan de ejecución y certificación E2E | 🟨 En progreso |
+| 12 | [12-qa-round2-persistencia-conversaciones-registros-examenes.md](./12-qa-round2-persistencia-conversaciones-registros-examenes.md) | QA ronda 2: persistencia de conversaciones (BUG-13) + un registro por examen con ZIP (BUG-14) | ✅ Completada |
 
 ---
 
@@ -47,12 +50,15 @@
 
 ## 📊 Progreso global
 
-- **Etapa actual:** 1 (push a GitHub de los 7 repos + CI) — etapas 0-9 completadas y validadas
+- **Etapa actual:** 11 (correcciones QA ronda 1 + certificación E2E) — etapas 0-9 completadas; etapa 1 (GitHub) sigue pendiente
 - **Sesiones estimadas totales:** 10-14
 - **MVP usable (etapas 0-8):** ✅ completado y validado E2E en Docker + navegador; **release `Tag_V1.0.0`** (auth multi-profesor + navbar reactivo + CRUD completo)
 - **Etapa 9 (2.ª revisión):** ✅ auditoría LLM (raw answer/thinking), tool eliminar archivos, descarga JSON, inglés forzado
-- **Backlog (pospuesto, no bloquea):** endpoint de modelo en caliente (hoy configurable por `.env` + restart), repos GitHub + CI (etapa 1), deduplicación con embeddings reales, `owner_id` de materias legacy
-- **Última actualización:** 2026-10-19
+- **Etapa 10 (QA ronda 1):** ✅ QA E2E manual documentado (12 bugs, 10 issues, 7 RFCs, backlog)
+- **Etapa 11 (correcciones + certificación):** 🟨 fixes P0 (nginx, heartbeat SSE, fail-fast pipeline) aplicados en código; pendientes BUG-01/08/10/11, ISS-07/10 + re-test E2E completo (ver [etapa 11](./11-qa-round1-correcciones-certificacion.md))
+- **Etapa 12 (QA ronda 2):** ✅ persistencia de conversaciones (endpoint historial + hidratación frontend) y un registro por examen con ZIP (agrupado por base + filtro de huérfanos); verificados E2E en navegador (ver [etapa 12](./12-qa-round2-persistencia-conversaciones-registros-examenes.md))
+- **Backlog (pospuesto, no bloquea):** endpoint de modelo en caliente (hoy configurable por `.env` + restart), repos GitHub + CI (etapa 1), deduplicación con embeddings reales, `owner_id` de materias legacy, ISS-01/02/03/04/05/08/09
+- **Última actualización:** 2026-10-23
 
 ---
 

@@ -82,9 +82,10 @@ services:
       OPENWEBUI_PUBLIC_URL: http://172.28.230.10:39001
       OPENWEBUI_ADMIN_EMAIL: admin@localhost
       OPENWEBUI_ADMIN_PASSWORD: admin
-      # Remote LLM vLLM (already running on the host)
-      LLM_BASE_URL: http://172.28.230.10:12555/v1
+      # USFQ LLM gateway (OpenAI-compatible)
+      LLM_BASE_URL: https://ai.usfq.edu.ec/api/agents/llm/main/v1
       LLM_MODEL: zai-org/GLM-5.3-Flash
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?set OPENAI_API_KEY in the environment or .env}
       # Root directory of the subjects' material
       MATERIAL_ROOT: /app/inputs
     ports:
