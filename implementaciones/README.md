@@ -26,6 +26,7 @@
 | 10 | [10-qa-flujo-completo-navegador/](./10-qa-flujo-completo-navegador/README.md) | QA E2E manual en navegador (profesor HITL): 12 bugs + 10 issues + 7 RFCs + backlog P0/P1/P2 | ✅ Completada (documentación de la ronda) |
 | 11 | [11-qa-round1-correcciones-certificacion.md](./11-qa-round1-correcciones-certificacion.md) | Correcciones de la ronda QA (P0 aplicado; P1/P2: BUG-01/08/10/11, ISS-07/10) + plan de ejecución y certificación E2E | 🟨 En progreso |
 | 12 | [12-qa-round2-persistencia-conversaciones-registros-examenes.md](./12-qa-round2-persistencia-conversaciones-registros-examenes.md) | QA ronda 2: persistencia de conversaciones (BUG-13) + un registro por examen con ZIP (BUG-14) | ✅ Completada |
+| 13 | [13-qa-round3-navegador/](./13-qa-round3-navegador/README.md) | QA ronda 3: fixes 11.1-11.6 certificados (C6-C13, R1-R7) + BUG-15 nginx (SPA shadowed) corregido | ✅ Completada |
 
 ---
 
@@ -55,9 +56,10 @@
 - **MVP usable (etapas 0-8):** ✅ completado y validado E2E en Docker + navegador; **release `Tag_V1.0.0`** (auth multi-profesor + navbar reactivo + CRUD completo)
 - **Etapa 9 (2.ª revisión):** ✅ auditoría LLM (raw answer/thinking), tool eliminar archivos, descarga JSON, inglés forzado
 - **Etapa 10 (QA ronda 1):** ✅ QA E2E manual documentado (12 bugs, 10 issues, 7 RFCs, backlog)
-- **Etapa 11 (correcciones + certificación):** 🟨 fixes P0 (nginx, heartbeat SSE, fail-fast pipeline) aplicados en código; pendientes BUG-01/08/10/11, ISS-07/10 + re-test E2E completo (ver [etapa 11](./11-qa-round1-correcciones-certificacion.md))
+- **Etapa 11 (correcciones + certificación):** ✅ fixes 11.1-11.6 aplicados y certificados en la ronda 3 (C6-C13, R1-R7); ver [etapa 11](./11-qa-round1-correcciones-certificacion.md) y [etapa 13](./13-qa-round3-navegador/README.md)
 - **Etapa 12 (QA ronda 2):** ✅ persistencia de conversaciones (endpoint historial + hidratación frontend) y un registro por examen con ZIP (agrupado por base + filtro de huérfanos); verificados E2E en navegador (ver [etapa 12](./12-qa-round2-persistencia-conversaciones-registros-examenes.md))
-- **Backlog (pospuesto, no bloquea):** endpoint de modelo en caliente (hoy configurable por `.env` + restart), repos GitHub + CI (etapa 1), deduplicación con embeddings reales, `owner_id` de materias legacy, ISS-01/02/03/04/05/08/09
+- **Etapa 13 (QA ronda 3):** ✅ certificación de los fixes pendientes + BUG-15 (nginx sombreaba la ruta SPA `/subjects`) corregido con routing por Accept header; ver [etapa 13](./13-qa-round3-navegador/README.md)
+- **Backlog (pospuesto, no bloquea):** endpoint de modelo en caliente (hoy configurable por `.env` + restart), repos GitHub + CI (etapa 1), deduplicación con embeddings reales, `owner_id` de materias legacy, ISS-01/02/03/04/05/08/09, BUG-16/ISS-11..16 (ver backlog ronda 3)
 - **Última actualización:** 2026-10-23
 
 ---

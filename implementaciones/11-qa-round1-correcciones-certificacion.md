@@ -2,9 +2,9 @@
 
 > **Objetivo:** Cerrar la ronda de corrección derivada del QA de flujo completo en navegador ([10-qa-flujo-completo-navegador](./10-qa-flujo-completo-navegador/README.md)): completar los fixes P0/P1 que faltan, re-testear los ya aplicados y certificar el caso de uso central (profesor genera examen de 10 preguntas y descarga el ZIP) antes de congelar desarrollo (noviembre) y pasar al escrito de la tesis.
 >
-> **Estado:** 🟨 En progreso (P0 aplicado en código, pendiente re-test E2E; P1 parcial)
+> **Estado:** ✅ Completada (fixes 11.1-11.6 aplicados y certificados en la ronda 3; ver [etapa 13](./13-qa-round3-navegador/README.md))
 > **Depende de:** Etapas 0-9 (`Tag_V1.0.0` + stage 9) · QA ronda 1 (2026-10-19)
-> **Fecha de última actualización:** 2026-10-22
+> **Fecha de última actualización:** 2026-10-23
 
 ---
 
@@ -31,21 +31,23 @@ Verificado contra el código real (no solo los docs del QA):
 
 | Fix | Bugs | Archivos | Estado |
 |---|---|---|---|
-| RFC-01 nginx: `client_max_body_size 100m`, timeouts 3600s + `proxy_buffering off` en `/api/`, `location = /exams/generate` | BUG-02, 03, 05, 07 | `projects/frontend/nginx.conf` | ✅ Aplicado (re-test pendiente) |
-| RFC-02 backend: heartbeat SSE `": ping\n\n"` cada ~15 s + propagación de frames crudos (`Union[SSEEvent, str]` en ports/engine/service/router) | BUG-03, 06, 07 | `exam_app/infrastructure/langgraph_engine.py`, `domain/ports.py`, `services/chat_engine.py`, `api/v1/chat.py` | ✅ Aplicado |
-| RFC-02 frontend: parser ignora frames de comentario, `useChatStream.retry()`, store `failMessage`/`clearMessageFailure`, UI "connection lost + Retry" (i18n en/es) | BUG-03, 06, 07 | `frontend/src/api/sse.ts`, `composables/useChatStream.ts`, `stores/chat.ts`, `ChatPanel.vue`, `MessageList.vue`, `i18n/{en,es}.ts` | ✅ Aplicado |
-| RFC-04 pipeline: fail-fast con `approved_items` vacío (`compiler_node` → `status="failed"`, `should_retry_compilation` → end, `generate_exam_pdf` → error con `rejection_log`), `rejection_log` + `total_llm_calls` en el JSON, errores de generator/evaluator logueados en `llm_responses` (`pipeline:generator_error` / `pipeline:evaluator_error`) | BUG-04 | `agents_backend/exam_pipeline/{nodes,graph}.py`, `conversational/tools.py` | ✅ Aplicado |
+| RFC-01 nginx: `client_max_body_size 100m`, timeouts 3600s + `proxy_buffering off` en `/api/`, `location = /exams/generate` | BUG-02, 03, 05, 07 | `projects/frontend/nginx.conf` | ✅ Aplicado y certificado (ronda 3) |
+| RFC-02 backend: heartbeat SSE `": ping\n\n"` cada ~15 s + propagación de frames crudos (`Union[SSEEvent, str]` en ports/engine/service/router) | BUG-03, 06, 07 | `exam_app/infrastructure/langgraph_engine.py`, `domain/ports.py`, `services/chat_engine.py`, `api/v1/chat.py` | ✅ Aplicado y certificado (ronda 3) |
+| RFC-02 frontend: parser ignora frames de comentario, `useChatStream.retry()`, store `failMessage`/`clearMessageFailure`, UI "connection lost + Retry" (i18n en/es) | BUG-03, 06, 07 | `frontend/src/api/sse.ts`, `composables/useChatStream.ts`, `stores/chat.ts`, `ChatPanel.vue`, `MessageList.vue`, `i18n/{en,es}.ts` | ✅ Aplicado y certificado (ronda 3) |
+| RFC-04 pipeline: fail-fast con `approved_items` vacío (`compiler_node` → `status="failed"`, `should_retry_compilation` → end, `generate_exam_pdf` → error con `rejection_log`), `rejection_log` + `total_llm_calls` en el JSON, errores de generator/evaluator logueados en `llm_responses` (`pipeline:generator_error` / `pipeline:evaluator_error`) | BUG-04 | `agents_backend/exam_pipeline/{nodes,graph}.py`, `conversational/tools.py` | ✅ Aplicado y certificado (ronda 3) |
 
 ### 1.3 Fixes PENDIENTES (verificados en código)
 
+> **ACTUALIZACIÓN 2026-10-23:** los 6 fixes (11.1-11.6) fueron implementados y certificados E2E en la ronda 3 (ver [etapa 13](./13-qa-round3-navegador/README.md)). La tabla se conserva como registro histórico.
+
 | # | Bug/Issue | Hallazgo en código | Fix |
 |---|---|---|---|
-| 1 | **BUG-01** (401 en Save/Save & verify del QuestionCard) | `QuestionCard.save()` envía `{message, thread_id, subject_id}` **sin `token`** en el body; `MessageList.vue` renderiza `<QuestionCard :question=…>` sin pasar `:subject-id`/`:thread-id`; `chat.py::_resolve_user` solo lee el token del body (sin fallback al header `Authorization` que `apiFetch` sí inyecta) | 11.1 |
-| 2 | **BUG-08** (exámenes legacy de otra materia en el historial) | `exams.py::list_subject_exams` mantiene el fallback que lista **todos** los PDFs no persistidos del output dir por prefijo de nombre, sin filtrar por materia | 11.2 |
-| 3 | **BUG-10** (pending item consumido aunque el stream muera) | `save_pending_question` limpia el pending (`set_pending_item(None, None)`) después de guardar; si el stream muere tras la tool, el profesor no sabe si guardó y no hay re-consulta por statement | 11.3 |
-| 4 | **BUG-11** (HEAD /output → 405) | `main.py` registra solo `@app.get("/output/{filename}")` (verificado en vivo: `HEAD` → 405, `allow: GET`) | 11.4 |
-| 5 | **BUG-12 + ISS-07** (errores crudos / sin feedback) | `MaterialView.vue` muestra el texto crudo del status; `ExamsView.vue::generate()` tiene `catch {}` vacío (formulario queda abierto sin mensaje) | 11.5 |
-| 6 | **ISS-10** (tablas markdown desbordan) | `MarkdownRenderer.vue` tiene `overflow-x` en `pre` pero no en `table` | 11.6 |
+| 1 | **BUG-01** (401 en Save/Save & verify del QuestionCard) | `QuestionCard.save()` envía `{message, thread_id, subject_id}` **sin `token`** en el body; `MessageList.vue` renderiza `<QuestionCard :question=…>` sin pasar `:subject-id`/`:thread-id`; `chat.py::_resolve_user` solo lee el token del body (sin fallback al header `Authorization` que `apiFetch` sí inyecta) | 11.1 ✅ certificado (C7) |
+| 2 | **BUG-08** (exámenes legacy de otra materia en el historial) | `exams.py::list_subject_exams` mantiene el fallback que lista **todos** los PDFs no persistidos del output dir por prefijo de nombre, sin filtrar por materia | 11.2 ✅ cubierto por agrupado por base + filtro de huérfanos (ronda 2) |
+| 3 | **BUG-10** (pending item consumido aunque el stream muera) | `save_pending_question` limpia el pending (`set_pending_item(None, None)`) después de guardar; si el stream muere tras la tool, el profesor no sabe si guardó y no hay re-consulta por statement | 11.3 ✅ certificado (C9) |
+| 4 | **BUG-11** (HEAD /output → 405) | `main.py` registra solo `@app.get("/output/{filename}")` (verificado en vivo: `HEAD` → 405, `allow: GET`) | 11.4 ✅ certificado (C11) |
+| 5 | **BUG-12 + ISS-07** (errores crudos / sin feedback) | `MaterialView.vue` muestra el texto crudo del status; `ExamsView.vue::generate()` tiene `catch {}` vacío (formulario queda abierto sin mensaje) | 11.5 ✅ certificado (C12) |
+| 6 | **ISS-10** (tablas markdown desbordan) | `MarkdownRenderer.vue` tiene `overflow-x` en `pre` pero no en `table` | 11.6 ✅ certificado (C13) |
 
 ### 1.4 Fixes ya cubiertos sin código nuevo
 
