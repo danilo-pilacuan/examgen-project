@@ -1,18 +1,18 @@
-﻿[submodule "projects/frontend"]
+[submodule "projects/frontend"]
 	path = projects/frontend
-	url = ./projects/frontend
+	url = https://github.com/danilo-pilacuan/examgen-frontend.git
 [submodule "projects/exam-app"]
 	path = projects/exam-app
-	url = ./projects/exam-app
+	url = https://github.com/danilo-pilacuan/examgen-exam-app.git
 [submodule "projects/agents-backend"]
 	path = projects/agents-backend
-	url = ./projects/agents-backend
+	url = https://github.com/danilo-pilacuan/examgen-agents-backend.git
 [submodule "projects/latex-compiler"]
 	path = projects/latex-compiler
-	url = ./projects/latex-compiler
+	url = https://github.com/danilo-pilacuan/examgen-latex-compiler.git
 [submodule "projects/embedding-service"]
 	path = projects/embedding-service
-	url = ./projects/embedding-service
+	url = https://github.com/danilo-pilacuan/examgen-embedding-service.git
 [submodule "projects/core"]
 	path = projects/core
-	url = ./projects/core
+	url = https://github.com/danilo-pilacuan/examgen-core.git
