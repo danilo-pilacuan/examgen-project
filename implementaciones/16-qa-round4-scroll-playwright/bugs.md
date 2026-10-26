@@ -1,4 +1,4 @@
-# Bugs — Ronda 4 (2026-10-27)
+# Bugs — Ronda 4 (2026-10-26)
 
 ## BUG-17 — Sin scroll en vistas con contenido mayor al viewport
 

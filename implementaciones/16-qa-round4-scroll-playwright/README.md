@@ -1,6 +1,6 @@
 # 16 · QA Round 4 — Scroll global + toggles Bank vía nginx (Playwright)
 
-> **Estado:** ✅ Completada (2026-10-27)
+> **Estado:** ✅ Completada (2026-10-26)
 > **Rama:** `RC2/develop`
 > **Alcance:** QA E2E con navegador integrado (Playwright) de todas las vistas del frontend tras el fix del scroll global (BUG-17) y el fix del routing nginx del toggle de verificación (BUG-17b).
 > **Entorno:** Docker Compose completo (`exam_frontend:3000`, `exam_app:8000`, `exam_postgres_db:5432`), frontend rebuilt con los dos fixes.

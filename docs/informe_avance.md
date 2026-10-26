@@ -6,6 +6,16 @@
 
 Este informe resume **qué está implementado**, **qué falta** y **cómo funciona** el sistema (arquitectura + loop de agentes). Sirve como base para el seguimiento quincenal con el tutor y para el capítulo de implementación del escrito.
 
+- **Nota de actualización (2026-10-26, ronda QA 4 — etapa 16):** ronda de QA con navegador real
+  (Playwright) tras reporte del usuario: las listas que excedían el viewport no scrolleaban
+  (**BUG-17**, `overflow: hidden` en `.main-view` de `AppHeader.vue` → `overflow-y: auto`) y el
+  toggle de verificación del Bank respondía 404 vía nginx (**BUG-17b**, el rewrite del bloque
+  `/questions-api` eliminaba el prefijo en vez de conservarlo; una línea en `nginx.conf` +
+  rebuild del contenedor). Ambos corregidos y verificados en las 5 vistas + chat del agente.
+  Quedan en backlog ISS-17 (materia activa se pierde en hard reload) e ISS-18 (el conteo que da
+  el agente en el chat sale de su estado de sesión, no de la BD). Detalle en
+  `implementaciones/16-qa-round4-scroll-playwright/README.md`.
+
 > **Nota de actualización (2026-10-26, RC2 — framework de evaluación):** sobre las ramas `RC2/develop` (meta-repo + 6 submódulos) se construyó y ejecutó un **framework de evaluación y benchmarking del agente generador** (`test/evaluation/`): registro central multi-proveedor de modelos (`models.yaml`), 5 materias clonadas (mismo material, nombres distintos) como control experimental, 4 experimentos OFAT (temperatura del generador, top_k del RAG, robustez entre clones, temperatura del evaluador), 6 familias de métricas (calidad, diversidad, RAG, Bloom, coste, SOTA de agentes) y un **judge LLM de faithfulness**. **Campaña real ejecutada: 102 runs** con GLM-5.3-Flash vía gateway USFQ. **Las 5 hipótesis quedaron resueltas**: H1 capacidad (aprobación 0.90–0.96) ✅, H2 óptimo de temperatura del generador en 0.7 ✅, H3 diversidad << umbral anti-duplicados ✅, H4 top_k=3 óptimo (k=8 duplica coste sin ganar calidad) ✅, H5 robustez entre clones σ=0.665 < 1.0 ✅. La configuración de producción quedó **validada empíricamente** en sus 3 hiperparámetros. Este elemento de acción (#5 "investigar métricas de evaluación agente + RAG", descartado el 2026-10-18) **vuelve al alcance y está completo**. Detalle completo en `implementaciones/15-framework-evaluacion-agente.md` y `test/evaluation/README.md`.
 
 > **Nota de actualización (2026-10-19, etapa 9 — 2.ª revisión):** se cerraron los ítems pendientes de la segunda revisión del proyecto: **auditoría cruda de LLM** (tabla `llm_responses` con prompt, raw answer y —opcional vía `LLM_CAPTURE_THINKING`— la cadena de pensamiento de cada llamada, chat y pipeline), **tool `delete_material_file`** (eliminar archivos del material desde el chat, con borrado de chunks y archivo físico), **descarga del JSON intermedio** (export del banco en JSON + JSON crudo blueprint+ítems adjunto junto al PDF del examen) y **regla LANGUAGE** en el prompt del sistema (el agente responde siempre en inglés). El endpoint de modelo en caliente quedó en backlog (el modelo ya es configurable por `.env` sin tocar código). Detalle en `implementaciones/09-raw-llm-audit-json-english.md`.

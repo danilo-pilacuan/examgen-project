@@ -1,4 +1,4 @@
-# Issues — Ronda 4 (2026-10-27)
+# Issues — Ronda 4 (2026-10-26)
 
 ## ISS-17 · Navegación SPA pierde la materia activa en recarga completa
 

@@ -67,7 +67,7 @@
 - **Etapa 15 (RC2 — evaluación):** ✅ framework de evaluación en `test/evaluation/` + 102 runs reales + H1-H5 resueltas + judge LLM; ver [etapa 15](./15-framework-evaluacion-agente.md). Commits `007a9d7`, `1af2255`, `9514247`, `78a874f`
 - **Etapa 16 (QA ronda 4):** ✅ scroll global corregido (`.main-view` overflow-y en AppHeader) + PUT de verificación vía nginx corregido (rewrite `/questions-api` conserva prefijo); QA Playwright de las 5 vistas + chat; ver [etapa 16](./16-qa-round4-scroll-playwright/README.md)
 - **Backlog (pospuesto, no bloquea):** endpoint de modelo en caliente, CI por repo (etapa 1), deduplicación con embeddings reales, `owner_id` de materias legacy, ISS-01/02/03/04/05/08/09, ISS-17/18 (ver backlog ronda 4)
-- **Última actualización:** 2026-10-27
+- **Última actualización:** 2026-10-26
 
 ---
 

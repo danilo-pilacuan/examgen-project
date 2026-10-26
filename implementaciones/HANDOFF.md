@@ -1,7 +1,7 @@
 # 🔄 Handoff — Próxima sesión (leer primero)
 
-> **Última actualización:** 2026-10-27 · **Rama activa:** `RC2/develop` (meta-repo + 6 submódulos)
-> **Estado del árbol:** limpio (todo commiteado y pusheado: frontend `1c3c674` + meta `a8629b1` con docs etapa 16)
+> **Última actualización:** 2026-10-26 · **Rama activa:** `RC2/develop` (meta-repo + 6 submódulos)
+> **Estado del árbol:** limpio (todo commiteado y pusheado: frontend `1c3c674` + meta `719c4da`)
 
 ## Contexto en 30 segundos
 
@@ -12,7 +12,7 @@ Sistema: **Exam Generator** — multi-agente LangGraph que genera exámenes con 
 - **RC2 (etapa 15):** framework de evaluación en `test/evaluation/` + **102 runs reales** con
   GLM-5.3-Flash (gateway USFQ). **Hipótesis H1-H5 todas resueltas**; hiperparámetros de
   producción validados empíricamente (gen T=0.7, top_k=3, eval T=0.2).
-- **Ronda 4 (etapa 16, 2026-10-27):** QA Playwright de frontend — BUG-17 (scroll global) y
+- **Ronda 4 (etapa 16, 2026-10-26):** QA Playwright de frontend — BUG-17 (scroll global) y
   BUG-17b (PUT verificación 404 vía nginx) corregidos y verificados en navegador.
 
 ## Qué leer y en qué orden
@@ -38,19 +38,28 @@ Sistema: **Exam Generator** — multi-agente LangGraph que genera exámenes con 
 | Campañas reales E01-E04 | ✅ 102 runs, agregados, FINDINGS, plots |
 | Judge LLM faithfulness | ✅ implementado + ejecutado sobre E03 (0.352 ± 0.052) |
 | Hipótesis H1-H5 | ✅ todas resueltas |
-| Publicación | ✅ `origin/RC2/develop` (commits 007a9d7 → a8629b1) |
-| QA ronda 4 (scroll + nginx PUT) | ✅ fixes verificados en navegador (etapa 16); commit pendiente |
+| Publicación | ✅ `origin/RC2/develop` (commits 007a9d7 → 719c4da) |
+| QA ronda 4 (scroll + nginx PUT) | ✅ fixes verificados en navegador y documentados (etapa 16) |
 | Informes de implementación | ✅ etapa 15 y 16 creadas; README de etapas y informe_avance actualizados |
 
-## Trabajo pendiente (ninguno depende de código)
+## Trabajo pendiente
 
-1. **Escrito de la tesis** (prioridad alta): capítulo de experimentación tiene toda la base
-   (FINDINGS + metodología + limitaciones documentadas).
-2. **Cross-provider comparativa** (opcional): solo requiere un modelo nuevo en el gateway →
-   1 entrada en `test/evaluation/models.yaml` + 1 brazo en `experiments.yaml`. Sin código.
-3. **Backlog ronda 4** (P2/P3, opcional): suite Playwright versionada, ISS-17 (materia activa en
-   hard reload), ISS-18 (conteo del agente desde BD). Ver
+1. **Escrito de la tesis** (prioridad alta, sin código): capítulo de experimentación tiene toda
+   la base (FINDINGS + metodología + limitaciones documentadas).
+2. **Cross-provider comparativa** (opcional, sin código): solo requiere un modelo nuevo en el
+   gateway → 1 entrada en `test/evaluation/models.yaml` + 1 brazo en `experiments.yaml`.
+3. **Backlog ronda 4** (P2/P3, con código): suite Playwright versionada, ISS-17 (materia activa
+   en hard reload), ISS-18 (conteo del agente desde BD). Ver
    [16-qa-round4-scroll-playwright/backlog.md](./16-qa-round4-scroll-playwright/backlog.md).
+
+## Próxima sesión sugerida
+
+- **Si el foco es la tesis:** partir de `test/evaluation/experiments/E0*/FINDINGS.md` (orden de
+  lectura en la sección 3) y redactar el capítulo de experimentación; el sistema no requiere
+  cambios.
+- **Si el foco es el producto:** atacar el backlog ronda 4 — empezar por la suite Playwright
+  versionada (convierte la matriz de QA de la etapa 16 en `projects/frontend/e2e/`) y luego
+  ISS-17 (persistir `activeSubjectId` en localStorage y restaurarlo en el bootstrap del store).
 
 ## Gotchas que NO hay que redescubrir
 
