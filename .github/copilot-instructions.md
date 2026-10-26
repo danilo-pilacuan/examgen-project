@@ -1,170 +1,223 @@
-# Copilot Instructions — Exam Generator (tesis USFQ)
+# Copilot Instructions - DigitalMe
 
-Instrucciones permanentes para el agente en este repositorio. **Léelas al inicio de cada sesión
-y aplícalas sin necesidad de que se te vuelvan a pedir.**
+Permanent instructions for the agent in this repository. Read them at the start of every
+session and apply them without being asked again.
 
-## 0. Política permanente: documentación de estado de implementación y handoff
+> `AGENTS.md` remains the product rulebook (rules, architecture, roadmap, knowledge model).
+> This file governs *how the agent works* in the repository; the lifecycle structure it uses
+> lives in `.ops/` and is described in section 1.
 
-El objetivo de este repo es **reproducibilidad del desarrollo**: cualquier persona (o agente)
-debe poder retomar el proyecto leyendo 2-3 archivos. Por eso, como **política del repositorio**:
+## 0. Permanent policy: implementation status and handoff
 
-> **Toda sesión del agente en este repo DEBE generar y actualizar la documentación de estado de
-> implementación y handoff como parte del propio trabajo de la sesión, no como un extra
-> opcional.** Aplica siempre, sin que el usuario tenga que volver a pedirla.
+Goal: reproducibility of development - anyone (or any agent) must be able to resume the
+project by reading 2-3 files. Therefore, as repository policy:
 
-Flujo obligatorio de cada sesión:
+> **Every agent session in this repo MUST generate and update the implementation status and
+> handoff documentation as part of the session's own work, not as an optional extra.**
+> Always apply it, without the user having to ask again.
 
-1. **Al iniciar:** leer [implementaciones/HANDOFF.md](../implementaciones/HANDOFF.md) →
-   [implementaciones/README.md](../implementaciones/README.md) → el `.md` de la etapa activa.
-   No rehacer trabajo ya hecho; continuar desde el estado registrado.
-2. **Durante:** si aparece una etapa nueva (o un bloque de trabajo grande), crear el directorio
-   `implementaciones/NN-nombre-descriptivo/` con su README y avanzar sus checkboxes. Registrar
-   los bugs/issues que aparezcan con la numeración global vigente.
-3. **Al cerrar (checklist de cierre):** actualizar, en este orden:
-   - el `.md`/directorio de la etapa (estado real, verificado, no "creo que quedó");
-   - la fila de la etapa en el mapa de [implementaciones/README.md](../implementaciones/README.md)
-     + sección 📊 Progreso global (con fecha real del día);
-   - [implementaciones/HANDOFF.md](../implementaciones/HANDOFF.md) (fecha, rama, estado del
-     árbol, tabla "Estado por dónde se quedó", gotchas nuevos descubiertos en la sesión);
-   - si el hito es visible para el seguimiento de la tesis (release, ronda QA, etapa cerrada):
-     añadir una nota de actualización al inicio de [docs/informe_avance.md](../docs/informe_avance.md);
-   - commits atómicos y push a `origin` al final de la sesión si hay red.
+Mandatory session flow:
 
-## 1. Estructura de documentación por etapa
+1. **Start:** read `.ops/project/handoff.md` -> `PROGRESS.md` -> the active phase spec in
+   `.ops/implementations/`. Do not redo finished work; continue from the recorded state.
+2. **During:** update the documents that describe the work in the same change set as the
+   code it describes (phase spec, traceability, test cases). Open BUG files for defects and
+   DEC files for open decisions as they appear, continuing global numbering (section 3).
+3. **Close (session checklist):** update, in this order:
+   - the active phase spec in `.ops/implementations/` (real, verified state - never
+     "I think it works");
+   - `.ops/qa/traceability.md` and every QT/BUG touched;
+   - `.ops/project/handoff.md` (date, branch, tree state, work in progress, gotchas
+     discovered in the session);
+   - `PROGRESS.md` (one entry: what was done, what is missing, which decision was taken -
+     rule 7 of AGENTS.md section 0);
+   - atomic commits, and push to `origin` at the end of the session if network is available.
 
-Cada bloque de trabajo vive en `implementaciones/` con este patrón de nombres:
+Definition of done: a task is done when the change is implemented + verified (test or
+browser, with real output shown) + documented in its phase spec + committed. A session is
+done when handoff.md reflects the exact stopping state + the phase/plan maps are updated +
+commits are pushed (or marked as pending push in handoff.md).
 
-```
-implementaciones/
-├── HANDOFF.md                    # ← PUNTO DE ENTRADA. Siempre actualizado.
-├── README.md                     # mapa de etapas (tabla) + progreso global (📊)
-├── NN-nombre-etapa.md            # etapa simple: un solo archivo
-└── NN-nombre-etapa/              # etapa compleja o ronda QA: un directorio
-    ├── README.md                 # objetivo, alcance, matriz de verificación, artefactos
-    ├── bugs.md                   # BUG-XX: síntoma, causa raíz, fix, estado
-    ├── issues.md                 # ISS-XX: problemas menores/no bloqueantes, propuestas
-    ├── rfcs.md                   # RFC-XX: decisiones de diseño (si aplica)
-    └── backlog.md                # prioridades resultantes (P1/P2/P3)
-```
+Before finishing a turn that changes code, verify that the phase spec, the traceability and
+PROGRESS.md reflect the change; if they do not, update them or state explicitly why not.
 
-Referencias de formato: [13-qa-round3-navegador/](../implementaciones/13-qa-round3-navegador/README.md)
-y [16-qa-round4-scroll-playwright/](../implementaciones/16-qa-round4-scroll-playwright/README.md).
+## 1. The `.ops/` development structure (mandatory)
 
-### Plantilla de bugs.md (usar exactamente estos campos)
+`.ops/` is the lifecycle reference of the project. It is NOT part of the shipped code: it
+holds governance, planning and traceability. Every change that affects product state must
+be reflected there in the same change set. Boundaries: `.ops` holds management and
+governance of the lifecycle; platform knowledge lives in `core/` and `orgs/`; the daily
+progress log lives in root `PROGRESS.md`. `.ops` organizes and links; `PROGRESS.md` is the
+single source of truth for progress - never duplicate or replace it.
 
-```markdown
-## BUG-XX — <título corto>
+### Tree map
 
-- **Severidad:** 🔴 Crítica / 🟠 Alta / 🟡 Media / ⚪ Baja
-- **Vista(s)/Componente(s):** <dónde>
-- **Síntoma:** <qué se observa, con mensaje de error exacto si hay>
-- **Causa raíz:** <archivo y línea aproximada; el "por qué", no solo el "dónde">
-- **Por qué no se detectó antes:** <una línea; vacío si no aplica>
-- **Fix:** <cambio exacto + comando de rebuild si hace falta>
-- **Estado:** ✅ Corregido y verificado / 🟨 Corregido sin verificar / ❌ Abierto
-```
+| Directory | Content |
+|---|---|
+| `.ops/product/` | REQ requirements and product vision |
+| `.ops/project/` | phase plan, BL backlog, handoff |
+| `.ops/architecture/` | overview, NFR, threat model |
+| `.ops/decisions/` | DEC decision register (open/closed) |
+| `.ops/governance/` | charter, RACI, DoR/DoD, change control, risks |
+| `.ops/qa/` | test strategy, traceability matrix, BUG defects |
+| `.ops/implementations/` | per-phase specs + conventions |
+| `.ops/ux-and-interfaces/` | CLI, outputs and usability |
+| `.ops/security/` | VULN findings, MR security review, periodic checks |
+| `.ops/operations/` | RUN runbooks, REL releases, service objectives, incidents |
+| `.ops/data/` | MIG migrations, logical data model, tenancy/RLS map |
+| `.ops/development/` | coding, review, branching and onboarding guides |
+| `.ops/templates/` | OKF 0.2 contract + one template per doc type |
 
-### Cómo numerar
+Each directory has its own README (purpose, who writes/approves, when to update, index) -
+read it before adding documents there.
 
-- BUG/ISS/RFC: continuar la secuencia global (no por archivo). El último número usado está en
-  los `bugs.md`/`issues.md` de las rondas previas.
-- Etapas: siguiente número libre en `implementaciones/` (16 → 17...).
+**Invoke the `ops-lifecycle` skill before creating or updating any `.ops` document** - it
+carries the templates, the OKF 0.2 frontmatter contract, the tree indexes, the numbering
+indexes and the bootstrap procedure. The agent never invents a document format, state
+vocabulary or numbering from memory; the live `.ops` indexes are always the source.
 
-## 2. Reglas técnicas del repositorio
+### Hard rules of `.ops`
 
-### Arquitectura
+- One file per document; large registers (DEC, RSK, BUG, QT, REL) are their own files,
+  referenced from their index.
+- Content files stay under ~40 content lines; folder READMEs under 15 lines (the root
+  `.ops/README.md` may exceed that).
+- **The agent never assigns `verified` to itself.** Only a human (rol:propietario or
+  rol:funcional) writes `verified: <ISO date>` after reviewing evidence. Without `verified`
+  a document is `unverified`.
+- Roles: `rol:agente` drafts and executes; `rol:propietario` approves (scope, plan,
+  states, phase closure); `rol:funcional` validates knowledge. The RACI matrix is in
+  `governance/roles-raci.md`; these governance roles are not the tenant ingestion roles of
+  `org.yaml`.
+- No secrets and no real client data; synthetic examples only.
+- Content that reproduces requirements cites the AGENTS.md section it derives from; do not
+  paraphrase it as new rules.
+- Do not move or rename `.ops` documents without reading
+  `governance/change-control.md`; changes to AGENTS.md or to scope require human approval
+  (a DEC must be opened first and answered by the owner before the MR).
 
-- Meta-repo con submódulos: `projects/frontend`, `projects/exam-app`,
-  `projects/agents-backend`, `projects/core`, `projects/embedding-service`,
-  `projects/latex-compiler`. Un cambio de código exige commit **dentro del submódulo** y luego
-  bump del puntero en el meta-repo.
-- Grafo de dependencias acíclico: `frontend → exam-app → agents-backend → libs/core`. Nada de
-  imports en sentido contrario.
-- Arquitectura limpia por app: `domain → application → interface adapters → infrastructure`.
+### Traceability chain and numbering
 
-### Docker (entorno de ejecución)
+- Chain: every BL links a REQ; every IMPL links a BL; every QT links a REQ.
+  `.ops/qa/traceability.md` is the coverage matrix (REQ -> BL -> IMPL -> QT with evidence).
+- Numbering is global, never per-file: continue REQ-NNN, BL-NNN, IMPL-NNN, QT-NNN, BUG-NNN,
+  DEC-NNN, RSK-NNN, VULN-NNN, RUN-NNN, MIG-NNN, REL-NNN from the last number used in the
+  corresponding index of the target tree. Guides in `.ops/development/` use descriptive ids
+  (`dev-<topic>`), no numbering.
 
-- Compose principal: `docker/docker-compose.yml` (correr comandos compose desde `docker/`).
-- Servicios: `exam_frontend` (:3000, nginx + SPA), `exam_app` (:8000, FastAPI),
-  `exam_postgres_db` (:5432), `exam_latex_compiler` (:8080), `exam_embedding_service` (:8081),
-  `exam_open_webui`.
-- **Cambios en `projects/frontend/nginx.conf` o en el código fuente requieren
-  `docker compose build <svc> && docker compose up -d <svc>`** — el conf y el bundle van horneados
-  en la imagen, no hay bind-mount.
-- Verificación mínima tras rebuild: `curl http://localhost:3000/` → 200.
+## 2. Handoff document (`.ops/project/handoff.md`)
 
-### Frontend
+The support document to pass context to the next session (human or agent). It must be
+readable in under 2 minutes and always keep these sections, in this order:
 
-- Vue 3 + Vite + TS + Pinia. Auth: token en localStorage bajo `mvp_auth`; todas las llamadas
-  REST pasan por `src/api/http.ts` (`apiFetch`, que manda `Accept: application/json` y Bearer).
-- **Routing API/SPA en nginx es condicional por header `Accept`:** los prefijos `/subjects` y
-  `/questions` se proxían al backend solo si el request espera JSON; si no, sirven `index.html`
-  (rutas SPA del mismo nombre). Al añadir un prefijo nuevo:
-  1. replicar el par de bloques `/<prefijo>` + `/<prefijo>-api`;
-  2. en el rewrite del bloque `-api` **conservar el prefijo** (`/<prefijo>$1`), no eliminarlo;
-  3. probar **todos los métodos HTTP** del endpoint vía nginx (curl con token), no solo el GET
-     de listado — un GET que funciona no garantiza el PUT/POST/DELETE (lección BUG-17b).
+1. **Header (blockquote):** last update date (real date of the day, never estimated),
+   active branch and tree state (clean/pending, with hashes of relevant recent commits).
+2. **Product state:** what the system is, current phase/release, recent achievements.
+3. **How to use it:** read order for a new session: handoff -> `PROGRESS.md` -> active
+   phase spec in `.ops/implementations/`.
+4. **Local environment:** services, host ports, env file, demo credentials, known
+   environment limitations (explicitly not product defects).
+5. **How to run and verify:** compose commands, test suites, E2E checks, what requires
+   image rebuild vs. hot reload.
+6. **Document map:** table of supporting documents and when each one is updated.
+7. **Work in progress and pending:** prioritized list; each item states whether it needs
+   code.
+8. **Session history:** one row per session (scope and result).
 
-### QA en navegador
+Maintenance rules: update the date every time the file is touched; if something is left
+unfinished, describe the next concrete step, not just the symptom; never delete gotchas
+without confirming they no longer apply.
 
-- QA E2E = navegador real vía Playwright sobre `http://localhost:3000`, no solo TestClient.
-- Credenciales de prueba de profesor: preguntar al usuario (no hay credenciales versionadas).
-- Checklist mínimo por ronda QA: login → activar materia → Bank (lista + toggle verificación) →
-  Exams (lista + formulario con scroll) → Material → Subjects → Chat (pregunta simple al agente).
-- En vistas con listas: verificar `scrollHeight > clientHeight` y que el último elemento es
-  visible (scrollIntoView) — el scroll global vive en `.main-view` de `AppHeader.vue`
-  (`overflow-y: auto`); no volver a poner `overflow: hidden` ahí.
-- Restaurar el estado de la BD tras pruebas que lo mutan (toggles, creación de registros).
+## 3. Defects (BUG) and open decisions (DEC)
 
-### Windows / contenedores (gotchas del entorno)
+- **Defects** are files `BUG-NNN.md` in `.ops/qa/` (template `templates/defect.md`),
+  listed in `qa/README.md`. Required fields: severity (critical/high/medium/low),
+  evidence (real command or test output - never claim without running), component and
+  location, root cause (file and approximate line; the "why", not just the "where"),
+  why it was not caught earlier, fix + verification command, and state
+  (abierto / corregido / verificado).
+- **Open decisions** are files `DEC-NNN.md` in `.ops/decisions/`: question, phase, and
+  options with pros/cons/risks in 6 lines max - then wait for the owner's answer. The
+  agent never closes a DEC by itself, never edits AGENTS.md or scope on its own, and
+  stops to report contradictions with evidence instead of adapting silently.
 
-- PowerShell no soporta `&&` → usar `;` o `if ($?) { ... }`.
-- Scripts creados en Windows llevan CRLF: `sh` de alpine los rechaza ("not found") →
-  `dos2unix` dentro del contenedor o generar el script sin backslash-continuaciones.
-- Para debug HTTP dentro de la red de Docker, copiar un script con `docker cp` y ejecutarlo con
-  `docker exec <container> sh /tmp/script.sh`.
-- curl.exe en PowerShell: escapar JSON con `\"` dentro del cuerpo (`--data '{\"k\":1}'`).
+## 4. Technical rules of this repository
 
-## 3. Definición de "terminado" (por tarea y por sesión)
+One rule = one problem that already cost time once; do not document preferences.
+Environment specifics (ports, env values, demo users, rebuild triggers) live in
+`.ops/project/handoff.md` and are kept current there - do not duplicate them here.
 
-Una tarea está terminada cuando: el cambio está hecho + verificado (navegador o test) +
-documentado en su etapa + commiteado. Una sesión está terminada cuando: HANDOFF.md refleja el
-estado exacto en que se quedó + README de etapas actualizado + commits pusheados (o indicados
-como pendientes de push en el HANDOFF).
+- Platform: GitHub (`danilo-pilacuan/DigitalMe`), CI in GitHub Actions. Git is the source
+  of truth; work enters by branch per task and PR.
+- Mandatory validation before commit (from `.ops/implementations/conventions.md`):
+  - `npx tsc --noEmit` with no errors;
+  - CLI validator in `repo` mode green:
+    `node --experimental-strip-types tools/index/src/cli.ts --modo=repo`;
+  - secret scanner green (gitleaks in CI);
+  - phase test suites green, including rejection cases; never weaken tests to make them
+    pass.
+- Working cadence (from AGENTS.md section 0): one phase and one task at a time; adversarial
+  tests written before the feature (every suite includes a case that must be rejected);
+  execute before claiming (show real output); SQL in docs is a draft until verified
+  against a real Postgres; no system clock in business logic - inject a clock.
 
-## 4. Documento de handoff: estructura obligatoria
+### Universal environment gotchas
 
-[implementaciones/HANDOFF.md](../implementaciones/HANDOFF.md) es **el documento de soporte para
-pasar contexto a la siguiente sesión** (humana o de agente). Debe poder leerse en <2 minutos y
-mantener SIEMPRE estas secciones, en este orden:
+- PowerShell does not support `&&` -> use `;` or `if ($?) { ... }`.
+- Scripts created on Windows get CRLF: `sh` rejects them ("not found") -> `dos2unix` inside
+  the container, or generate the script without backslash continuations.
+- For HTTP debug inside a Docker network: `docker cp` the script into the container and run
+  it with `docker exec <container> sh /tmp/script.sh`.
+- `curl.exe` in PowerShell: escape JSON with `\"` inside the body (`--data '{\"k\":1}'`).
+- When adding routes/prefixes behind a reverse proxy: test **every HTTP method** of the
+  endpoint through the proxy (a working GET does not guarantee PUT/POST/DELETE) and verify
+  the rewrite **keeps the prefix** instead of stripping it.
 
-1. **Encabezado** (blockquote): fecha de última actualización, rama activa y estado del árbol
-   (limpio/pendiente, con los hashes de los últimos commits relevantes).
-2. **Contexto en 30 segundos:** qué es el sistema, en qué release/etapa está, logros recientes
-   en bullets.
-3. **Qué leer y en qué orden:** rutas relativas a los documentos de soporte relevantes para los
-   escenarios actuales (continuar desarrollo, QA, tesis, etc.).
-4. **Estado por dónde se quedó:** tabla `| Tema | Estado |` — es el resumen ejecutivo; cada fila
-   debe poder verificarse (comando, test o vista).
-5. **Trabajo pendiente:** lista priorizada; indicar si cada ítem requiere código o no.
-6. **Gotchas que NO hay que redescubrir:** lecciones del entorno/infra que ya costaron tiempo
-   una vez (rebuilds, encoding, semántica de datos, etc.). Añadir los descubiertos en la sesión;
-   no borrar los vigentes sin confirmar que ya aplican.
+## 5. Language policy
 
-Reglas de mantenimiento: actualizar la fecha SIEMPRE que se toca el archivo; usar la fecha real
-del día (no estimar); si algo queda sin terminar, describir el siguiente paso concreto, no solo
-el síntoma.
+- Never use accented or non-ASCII characters (the set a e i o u n and their uppercase
+  variants) in comments, identifiers, or log messages. Comments are plain ASCII English.
+- Accented characters are allowed only inside user-facing string literals when the product
+  language requires them (for example, Spanish UI text). If a Spanish term must appear in
+  a comment or identifier, write it without diacritics (e.g. `numero`, `ejecucion`).
+- Keep source files ASCII-safe outside of those user-facing string literals.
+- The `.ops` documents of this repo are also written without diacritics; follow the same
+  convention when creating new ones, in English or Spanish as the document requires.
 
-## 5. Al iniciar un proyecto nuevo a partir de este (uso como template)
+## 6. Communication
 
-Copiar esta estructura y adaptarla en orden:
+- Keep answers short, impersonal, and factual. Use Markdown.
+- Start every fenced code block with its programming language. Never wrap the whole
+  response in triple backticks.
+- Use KaTeX for math: `$...$` inline, `$$...$$` for blocks. Use mermaid blocks for
+  diagrams when they clarify.
+- There is one reply per conversation turn: make it complete and actionable.
+- Reply in English even when the user's request is written in Spanish.
 
-1. `.github/copilot-instructions.md` (este archivo) → renombrar el dominio de negocio y las
-   reglas técnicas de la sección 2; mantener tal cual las secciones 0 (política de
-   documentación), 1 (estructura por etapa), 3 (definición de terminado) y 4 (estructura del
-   handoff) — son de proceso, no de dominio.
-2. `implementaciones/HANDOFF.md` + `implementaciones/README.md` iniciales (pueden partir de las
-   plantillas de las secciones 1 y 4 de este archivo).
-3. Carpetas por etapa según se vayan planificando.
-4. Conservar la regla de numeración global de BUG/ISS/RFC y el formato de `bugs.md`: es lo que
-   hace auditable el historial entre sesiones y modelos de IA.
+## 7. Working rules
+
+- Make minimal, complete changes; do not refactor beyond scope or fix unrelated issues.
+- Verify changes with the smallest relevant build, lint, or test command before
+  considering the task done.
+- Do not invent APIs: confirm symbols and files exist in the repository before using them.
+- If a requirement is ambiguous, ask instead of guessing.
+
+## 8. Commit messages
+
+- Conventional Commits format in English, imperative mood, no accents:
+  `type(scope): summary`.
+
+## 9. Adopting this file in a project
+
+1. Copy this file to `<repo>/.github/copilot-instructions.md`.
+2. Sections 0-3 are process policy: keep them intact across projects. If the project uses
+   another name for the state directory, rename `.ops` in this file and in every
+   reference; what matters is that a single entry point exists.
+3. Adapt section 4 to the project's real technical rules (a rule = a problem already
+   suffered, not a preference).
+4. Bootstrap the state tree via the `ops-lifecycle` skill (bootstrap mode): create the
+   tree of section 1 with its READMEs, `project/plan.md`, `project/handoff.md`,
+   `PROGRESS.md`, and seed `templates/base.md` untouched (it is the frontmatter contract).
+   The skill guarantees that only the forms are copied, never this project's contents.
+5. Keep the global numbering of REQ/BL/IMPL/QT/BUG/DEC and the frontmatter contract:
+   that is what makes the history auditable across sessions and AI models.
