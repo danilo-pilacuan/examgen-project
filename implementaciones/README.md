@@ -29,6 +29,7 @@
 | 13 | [13-qa-round3-navegador/](./13-qa-round3-navegador/README.md) | QA ronda 3: fixes 11.1-11.6 certificados (C6-C13, R1-R7) + BUG-15 nginx (SPA shadowed) corregido | ✅ Completada |
 | 14 | [14-informe-estado-RC1.md](./14-informe-estado-RC1.md) | Informe de estado de implementación del RC1 (Tag_RC1): funcionalidad certificada, bugs, deuda | ✅ Completada |
 | 15 | [15-framework-evaluacion-agente.md](./15-framework-evaluacion-agente.md) | RC2: framework de evaluación del agente generador (benchmarking, OFAT, métricas SOTA, materias clonadas); campañas reales E01-E04 (102 runs GLM-5.3-Flash), hipótesis H1-H5 resueltas, judge LLM de faithfulness | ✅ Completada |
+| 16 | [16-qa-round4-scroll-playwright/](./16-qa-round4-scroll-playwright/README.md) | QA ronda 4 con Playwright: fix BUG-17 (scroll global recortado en vistas) + BUG-17b (PUT verificación 404 vía nginx) | ✅ Completada |
 
 ---
 
@@ -64,8 +65,9 @@
 - **Etapa 13 (QA ronda 3):** ✅ certificación de los fixes pendientes + BUG-15 (nginx sombreaba la ruta SPA `/subjects`) corregido con routing por Accept header; ver [etapa 13](./13-qa-round3-navegador/README.md)
 - **Etapa 14 (informe RC1):** ✅ estado consolidado del release candidate (ver [etapa 14](./14-informe-estado-RC1.md))
 - **Etapa 15 (RC2 — evaluación):** ✅ framework de evaluación en `test/evaluation/` + 102 runs reales + H1-H5 resueltas + judge LLM; ver [etapa 15](./15-framework-evaluacion-agente.md). Commits `007a9d7`, `1af2255`, `9514247`, `78a874f`
-- **Backlog (pospuesto, no bloquea):** endpoint de modelo en caliente, CI por repo (etapa 1), deduplicación con embeddings reales, `owner_id` de materias legacy, ISS-01/02/03/04/05/08/09, BUG-16/ISS-11..16 (ver backlog ronda 3)
-- **Última actualización:** 2026-10-26
+- **Etapa 16 (QA ronda 4):** ✅ scroll global corregido (`.main-view` overflow-y en AppHeader) + PUT de verificación vía nginx corregido (rewrite `/questions-api` conserva prefijo); QA Playwright de las 5 vistas + chat; ver [etapa 16](./16-qa-round4-scroll-playwright/README.md)
+- **Backlog (pospuesto, no bloquea):** endpoint de modelo en caliente, CI por repo (etapa 1), deduplicación con embeddings reales, `owner_id` de materias legacy, ISS-01/02/03/04/05/08/09, ISS-17/18 (ver backlog ronda 4)
+- **Última actualización:** 2026-10-27
 
 ---
 
