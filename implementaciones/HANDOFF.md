@@ -1,7 +1,7 @@
 # 🔄 Handoff — Próxima sesión (leer primero)
 
 > **Última actualización:** 2026-10-27 · **Rama activa:** `RC2/develop` (meta-repo + 6 submódulos)
-> **Estado del árbol:** commit pendiente de la etapa 16 (QA ronda 4); ver "Estado por dónde se quedó".
+> **Estado del árbol:** limpio (todo commiteado y pusheado: frontend `1c3c674` + meta `a8629b1` con docs etapa 16)
 
 ## Contexto en 30 segundos
 
@@ -38,7 +38,7 @@ Sistema: **Exam Generator** — multi-agente LangGraph que genera exámenes con 
 | Campañas reales E01-E04 | ✅ 102 runs, agregados, FINDINGS, plots |
 | Judge LLM faithfulness | ✅ implementado + ejecutado sobre E03 (0.352 ± 0.052) |
 | Hipótesis H1-H5 | ✅ todas resueltas |
-| Publicación | ✅ `origin/RC2/develop` (commits 007a9d7 → 78a874f) |
+| Publicación | ✅ `origin/RC2/develop` (commits 007a9d7 → a8629b1) |
 | QA ronda 4 (scroll + nginx PUT) | ✅ fixes verificados en navegador (etapa 16); commit pendiente |
 | Informes de implementación | ✅ etapa 15 y 16 creadas; README de etapas y informe_avance actualizados |
 
