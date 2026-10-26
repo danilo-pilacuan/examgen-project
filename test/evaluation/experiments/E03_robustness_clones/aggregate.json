@@ -11,28 +11,28 @@
       "num_runs": 10,
       "metrics": {
         "approval_rate": {
-          "mean": 0.6375,
-          "std": 0.0375,
+          "mean": 0.925,
+          "std": 0.0829,
           "n": 10
         },
         "quality_mean": {
-          "mean": 7.2657,
-          "std": 0.1936,
+          "mean": 6.1534,
+          "std": 1.2581,
           "n": 10
         },
         "quality_std": {
-          "mean": 0.2078,
-          "std": 0.1374,
+          "mean": 3.3278,
+          "std": 1.1409,
           "n": 10
         },
         "attempts_per_item": {
-          "mean": 0.375,
-          "std": 0.0559,
+          "mean": 0.0875,
+          "std": 0.1125,
           "n": 10
         },
         "pairwise_sim_mean": {
-          "mean": -0.005,
-          "std": 0.0064,
+          "mean": 0.5105,
+          "std": 0.0278,
           "n": 10
         },
         "topic_coverage": {
@@ -46,51 +46,51 @@
           "n": 10
         },
         "rag_faithfulness": {
-          "mean": 0.0,
-          "std": 0.0,
+          "mean": 0.2354,
+          "std": 0.24,
           "n": 10
         },
         "rag_retrieval_score": {
-          "mean": 0.7,
-          "std": 0.0,
+          "mean": 0.4649,
+          "std": 0.0052,
           "n": 10
         },
         "bloom_accuracy": {
-          "mean": 1.0,
-          "std": 0.0,
+          "mean": 0.925,
+          "std": 0.0829,
           "n": 10
         },
         "difficulty_accuracy": {
-          "mean": 1.0,
-          "std": 0.0,
+          "mean": 0.925,
+          "std": 0.0829,
           "n": 10
         },
         "calls_per_item": {
-          "mean": 3.1467,
-          "std": 0.16,
+          "mean": 2.1167,
+          "std": 0.2702,
           "n": 10
         },
         "tokens_per_item": {
-          "mean": 987.9,
-          "std": 53.5172,
+          "mean": 2079.7,
+          "std": 293.2675,
           "n": 10
         },
         "latency_mean_ms": {
-          "mean": 0,
-          "std": 0.0,
+          "mean": 15020.1,
+          "std": 7299.607,
           "n": 10
         }
       },
       "self_consistency": 1.0,
       "robustness_cross_subject": {
         "per_subject_mean": {
-          "eva": 7.1333,
-          "maria": 7.215,
-          "sofia": 7.3517,
-          "lucia": 7.3284,
-          "pablo": 7.3
+          "eva": 6.07,
+          "maria": 5.9437,
+          "sofia": 5.1269,
+          "lucia": 8.145,
+          "pablo": 5.4812
         },
-        "between_subject_std": 0.0807
+        "between_subject_std": 1.051
       },
       "status_counts": {
         "completed": 10

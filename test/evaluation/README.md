@@ -144,7 +144,7 @@ clones), `--limit-repeats 1` (smoke test), `--dry-run` (stub determinista).
 | `analysis/aggregate.py` + `reporting/report.py` | ✅ implementado |
 | 4 experimentos definidos en `experiments.yaml` | ✅ |
 | Dry-run E01–E04 validado end-to-end (61 runs, agregación + reportes + plots) | ✅ |
-| Runs reales E01–E04 (gateway USFQ + Docker infra) | ⏳ pendiente de ejecutar |
+| **Runs reales E01–E04 completados: 82 runs GLM-5.3-Flash vía gateway USFQ** | ✅ (2026-10-26) |
 
 ### Resultados de la validación dry-run (stubs deterministas)
 

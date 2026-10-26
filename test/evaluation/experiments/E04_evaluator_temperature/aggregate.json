@@ -12,28 +12,28 @@
       "num_runs": 6,
       "metrics": {
         "approval_rate": {
-          "mean": 0.6667,
+          "mean": 0.9583,
           "std": 0.0589,
           "n": 6
         },
         "quality_mean": {
-          "mean": 7.2953,
-          "std": 0.1309,
+          "mean": 6.7717,
+          "std": 0.6768,
           "n": 6
         },
         "quality_std": {
-          "mean": 0.3112,
-          "std": 0.1002,
+          "mean": 3.4515,
+          "std": 0.5652,
           "n": 6
         },
         "attempts_per_item": {
-          "mean": 0.3542,
-          "std": 0.0859,
+          "mean": 0.0417,
+          "std": 0.0589,
           "n": 6
         },
         "pairwise_sim_mean": {
-          "mean": -0.0059,
-          "std": 0.0058,
+          "mean": 0.5178,
+          "std": 0.0186,
           "n": 6
         },
         "topic_coverage": {
@@ -47,51 +47,51 @@
           "n": 6
         },
         "rag_faithfulness": {
-          "mean": 0.0,
-          "std": 0.0,
+          "mean": 0.169,
+          "std": 0.2455,
           "n": 6
         },
         "rag_retrieval_score": {
-          "mean": 0.7,
+          "mean": 0.4679,
           "std": 0.0,
           "n": 6
         },
         "bloom_accuracy": {
-          "mean": 1.0,
-          "std": 0.0,
+          "mean": 0.9583,
+          "std": 0.0589,
           "n": 6
         },
         "difficulty_accuracy": {
-          "mean": 1.0,
-          "std": 0.0,
+          "mean": 0.9583,
+          "std": 0.0589,
           "n": 6
         },
         "calls_per_item": {
-          "mean": 3.0222,
-          "std": 0.2514,
+          "mean": 2.0952,
+          "std": 0.1347,
           "n": 6
         },
         "tokens_per_item": {
-          "mean": 949.8333,
-          "std": 82.1694,
+          "mean": 2119.5,
+          "std": 167.0047,
           "n": 6
         },
         "latency_mean_ms": {
-          "mean": 0,
-          "std": 0.0,
+          "mean": 12590.1667,
+          "std": 2748.757,
           "n": 6
         }
       },
       "self_consistency": 1.0,
       "robustness_cross_subject": {
         "per_subject_mean": {
-          "eva": 7.37,
-          "maria": 7.2206
+          "eva": 6.8708,
+          "maria": 6.6725
         },
-        "between_subject_std": 0.0747
+        "between_subject_std": 0.0992
       },
       "status_counts": {
-        "completed": 6
+        "failed": 6
       }
     },
     "arm_1": {
@@ -104,33 +104,33 @@
       "num_runs": 6,
       "metrics": {
         "approval_rate": {
-          "mean": 0.625,
-          "std": 0.0722,
+          "mean": 0.9167,
+          "std": 0.0589,
           "n": 6
         },
         "quality_mean": {
-          "mean": 7.2294,
-          "std": 0.0752,
+          "mean": 7.5544,
+          "std": 0.4859,
           "n": 6
         },
         "quality_std": {
-          "mean": 0.1841,
-          "std": 0.1186,
+          "mean": 2.3346,
+          "std": 0.8405,
           "n": 6
         },
         "attempts_per_item": {
-          "mean": 0.4167,
-          "std": 0.1179,
+          "mean": 0.0833,
+          "std": 0.0589,
           "n": 6
         },
         "pairwise_sim_mean": {
-          "mean": -0.0088,
-          "std": 0.0054,
+          "mean": 0.5059,
+          "std": 0.014,
           "n": 6
         },
         "topic_coverage": {
-          "mean": 1.0,
-          "std": 0.0,
+          "mean": 0.9583,
+          "std": 0.0932,
           "n": 6
         },
         "bloom_coverage": {
@@ -139,51 +139,51 @@
           "n": 6
         },
         "rag_faithfulness": {
-          "mean": 0.0,
-          "std": 0.0,
+          "mean": 0.3215,
+          "std": 0.2336,
           "n": 6
         },
         "rag_retrieval_score": {
-          "mean": 0.7,
+          "mean": 0.4679,
           "std": 0.0,
           "n": 6
         },
         "bloom_accuracy": {
-          "mean": 1.0,
-          "std": 0.0,
+          "mean": 0.9167,
+          "std": 0.0589,
           "n": 6
         },
         "difficulty_accuracy": {
-          "mean": 1.0,
-          "std": 0.0,
+          "mean": 0.9167,
+          "std": 0.0589,
           "n": 6
         },
         "calls_per_item": {
-          "mean": 3.2445,
-          "std": 0.39,
+          "mean": 2.1905,
+          "std": 0.1347,
           "n": 6
         },
         "tokens_per_item": {
-          "mean": 1025.6667,
-          "std": 139.9698,
+          "mean": 2209.8333,
+          "std": 205.3407,
           "n": 6
         },
         "latency_mean_ms": {
-          "mean": 0,
-          "std": 0.0,
+          "mean": 22450.1667,
+          "std": 5806.4283,
           "n": 6
         }
       },
       "self_consistency": 1.0,
       "robustness_cross_subject": {
         "per_subject_mean": {
-          "eva": 7.2406,
-          "maria": 7.2183
+          "eva": 7.8937,
+          "maria": 7.215
         },
-        "between_subject_std": 0.0111
+        "between_subject_std": 0.3394
       },
       "status_counts": {
-        "completed": 6
+        "failed": 6
       }
     },
     "arm_2": {
@@ -196,33 +196,33 @@
       "num_runs": 6,
       "metrics": {
         "approval_rate": {
-          "mean": 0.625,
-          "std": 0.125,
+          "mean": 0.9167,
+          "std": 0.0589,
           "n": 6
         },
         "quality_mean": {
-          "mean": 7.3358,
-          "std": 0.0697,
+          "mean": 6.2996,
+          "std": 1.4048,
           "n": 6
         },
         "quality_std": {
-          "mean": 0.2845,
-          "std": 0.1333,
+          "mean": 2.9941,
+          "std": 1.1231,
           "n": 6
         },
         "attempts_per_item": {
-          "mean": 0.4375,
-          "std": 0.1875,
+          "mean": 0.0833,
+          "std": 0.0589,
           "n": 6
         },
         "pairwise_sim_mean": {
-          "mean": -0.0081,
-          "std": 0.0089,
+          "mean": 0.5068,
+          "std": 0.0147,
           "n": 6
         },
         "topic_coverage": {
-          "mean": 1.0,
-          "std": 0.0,
+          "mean": 0.9583,
+          "std": 0.0932,
           "n": 6
         },
         "bloom_coverage": {
@@ -231,51 +231,51 @@
           "n": 6
         },
         "rag_faithfulness": {
-          "mean": 0.0,
-          "std": 0.0,
+          "mean": 0.3435,
+          "std": 0.2453,
           "n": 6
         },
         "rag_retrieval_score": {
-          "mean": 0.7,
+          "mean": 0.4679,
           "std": 0.0,
           "n": 6
         },
         "bloom_accuracy": {
-          "mean": 1.0,
-          "std": 0.0,
+          "mean": 0.9167,
+          "std": 0.0589,
           "n": 6
         },
         "difficulty_accuracy": {
-          "mean": 1.0,
-          "std": 0.0,
+          "mean": 0.9167,
+          "std": 0.0589,
           "n": 6
         },
         "calls_per_item": {
-          "mean": 3.3334,
-          "std": 0.6666,
+          "mean": 2.1905,
+          "std": 0.1347,
           "n": 6
         },
         "tokens_per_item": {
-          "mean": 1060,
-          "std": 235.0567,
+          "mean": 2145.3333,
+          "std": 98.4423,
           "n": 6
         },
         "latency_mean_ms": {
-          "mean": 0,
-          "std": 0.0,
+          "mean": 11701.8333,
+          "std": 2429.9495,
           "n": 6
         }
       },
       "self_consistency": 1.0,
       "robustness_cross_subject": {
         "per_subject_mean": {
-          "eva": 7.3783,
-          "maria": 7.2933
+          "eva": 6.9658,
+          "maria": 5.6333
         },
-        "between_subject_std": 0.0425
+        "between_subject_std": 0.6663
       },
       "status_counts": {
-        "completed": 6
+        "failed": 6
       }
     }
   }
