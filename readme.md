@@ -35,7 +35,7 @@ MVP_v1/
 │
 ├── docs/                     # informe de avance y arquitectura objetivo (tesis)
 │
-└── implementaciones/         # planes de etapa y progreso
+└── .ops/                     # ciclo de vida OKF: plan, backlog, QA, handoff
 ```
 
 ## 🚀 Uso rápido (frontend propio)
