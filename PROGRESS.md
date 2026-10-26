@@ -6,6 +6,27 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
+## 2026-10-26 (ronda QA 5)
+
+* **Hecho:** commit `166c71e` con el nuevo instruccionado del agente (copilot-instructions.md,
+  skill ops-lifecycle, workflow validate.yml; sin publicar en origin). QA ronda 5 API-centrada
+  (IMPL-021): routing nginx (Accept json, SPA fallback, OPTIONS/HEAD, /output 404), auth 401,
+  aislamiento multi-tenant, 422 accionable, generacion E2E con banco vacio (16 llamadas LLM,
+  8 preguntas, zip via /output 200), DELETE de pregunta, BUG-017b re-verificado (toggle 200
+  bidireccional). num_versions verificado funcional (2 versiones / 4 PDFs con el campo
+  anidado en `blueprint.metadata`); BUG-018 abierto como endurecimiento (Pydantic descarta
+  campos extra del blueprint sin 422). C16-C20 agregados al test-plan. Sondas de QA
+  purgadas de la BD.
+* **Falta:** BUG-018 endurecimiento (extra=forbid); C2 con PDF grande real; BUG-016 retry;
+  BL-010 suite Playwright; capitulo de experimentacion de la tesis; revision `verified` del
+  propietario; publicar `RC2/develop` en origin; inconsistencia del instruccionado (validate.yml
+  referencia infra DigitalMe ausente: tools/, mcp/, package.json raiz).
+* **Decision:** contrato de /exams/generate confirmado con sondas contrastadas: metadatos
+  (title/name/num_versions) viven en `blueprint.metadata` (el frontend ya lo anida asi);
+  GET/DELETE /subjects/{id} sin endpoint (API minima por diseno, gap menor).
+* **Medicion:** 5 sujetos de prueba aislados correctos; generacion ~0.5-4 min/run; zip
+  101-130 KB; 0 rechazos de items; 3 rondas de generacion persistidas y purgadas.
+
 ## 2026-10-26
 
 * **Hecho:** migracion de la carpeta `implementaciones/` al arbol `.ops` (BL-000 / IMPL-020):

@@ -12,7 +12,7 @@ status: stable
 sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.md, title: copilot-instructions }]
 ---
 
-Matriz de certificacion E2E. Rondas: 1=2026-10-19 (IMPL-013), 2=2026-10-23 (IMPL-015), 3=2026-10-23 (IMPL-016), 4=2026-10-26 (IMPL-019).
+Matriz de certificacion E2E. Rondas: 1=2026-10-19 (IMPL-013), 2=2026-10-23 (IMPL-015), 3=2026-10-23 (IMPL-016), 4=2026-10-26 (IMPL-019), 5=2026-10-26 (IMPL-021).
 
 ## P0 - caso de uso central
 
@@ -47,7 +47,17 @@ Matriz de certificacion E2E. Rondas: 1=2026-10-19 (IMPL-013), 2=2026-10-23 (IMPL
 | Check | Descripcion | Round | Bug/QT |
 |---|---|---|---|
 | C14 | Scroll completo en Exams/Bank/Subjects/Material | 4 | BUG-017/QT-004 |
-| C15 | Toggle verificacion via nginx (PUT) | 4 | BUG-017b/QT-004 |
+| C15 | Toggle verificacion via nginx (PUT) | 4, 5 | BUG-017b/QT-004 |
+
+## P2 - ronda 5 (regresion API tras instruccionado)
+
+| Check | Descripcion | Round | Bug/QT |
+|---|---|---|---|
+| C16 | Routing nginx Accept json + SPA fallback + OPTIONS/HEAD + /output 404 | 5 | IMPL-021 |
+| C17 | Auth 401 sin token + aislamiento multi-tenant del sonda | 5 | IMPL-021 |
+| C18 | Validacion 422 accionable en POST /exams/generate | 5 | IMPL-021/C12 |
+| C19 | Generacion E2E banco vacio: LLM, PDFs, zip, /output, BD | 5 | IMPL-021 |
+| C20 | DELETE /questions/{id} borra y persiste | 5 | IMPL-021 |
 
 ## Regresion
 

@@ -27,6 +27,7 @@ sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.
 | REQ-001 | BL-012 | IMPL-016 | QT-003 | ejecutado; C1, C5-C13, R1-R7 certificados |
 | REQ-001 | BL-015 | IMPL-017 | QT-003 | ejecutado; informe RC1 15/16 bugs corregidos |
 | REQ-001 | BL-013 | IMPL-019 | QT-004 | ejecutado; matriz 10 casos ronda 4 |
+| REQ-001 | BL-013 | IMPL-021 | QT-004 | ejecutado; ronda 5 regresion API, BUG-017b verificado |
 | REQ-002 | BL-019, 020, 021 | IMPL-018 | QT-005 | ejecutado; 102 runs, H1-H5, FINDINGS.md |
 | REQ-003 | BL-001 | IMPL-001 | QT-006 | borrador; remotos y CI pendientes |
 
@@ -41,4 +42,4 @@ sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.
 | QT-005 | Campana evaluacion E01-E04 (H1-H5) | aprobada | `test/evaluation/` FINDINGS + agregados |
 | QT-006 | Clon fresco + CI submodulos | pendiente | no ejecutable aun (IMPL-001) |
 
-Pendientes conocidos: C2 con PDF grande real; BUG-016 (BL-008); suite versionada BL-010.
+Pendientes conocidos: C2 con PDF grande real; BUG-016 (BL-008); suite versionada BL-010; BUG-018 (num_versions ignorado, nuevo en ronda 5).

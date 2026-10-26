@@ -33,3 +33,6 @@ Una linea: `rewrite ^/questions-api(/.*)$ /questions$1 break;` + rebuild del con
 frontend (el conf va horneado en la imagen). Verificado: PUT 200 via nginx con token
 real; toggle bidireccional en navegador refleja `verified_by_human` en BD. Leccion: el
 routing por Accept necesita tests de TODOS los metodos HTTP de cada prefijo.
+
+Re-verificado ronda 5 (2026-10-26, IMPL-021): PUT via nginx con `{"verified":true}`
+-> 200 y `{"verified":false}` -> 200 (toggle bidireccional). Fix se sostiene.

@@ -36,6 +36,7 @@ status: stable
 | IMPL-018 | Framework de evaluacion RC2 | ejecutado |
 | IMPL-019 | QA ronda 4 | ejecutado |
 | IMPL-020 | Migracion .ops | borrador |
+| IMPL-021 | Ronda QA 5 - verificaciones API tras nuevo instruccionado | ejecutado |
 
 Naming `IMPL-NNN-slug.md`; global numbering; one file per spec. The active phase
 spec is the one linked from `project/handoff.md`. The agent updates estado to the
