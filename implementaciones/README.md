@@ -2,7 +2,7 @@
 
 > **Propósito:** Este directorio funciona como **caché de progreso** entre sesiones de trabajo (y entre cambios de modelo de IA). Cada etapa del plan tiene su propio `.md` con el detalle de tareas, criterios de aceptación y checklist de avance.
 >
-> **Cómo usarlo:** Al iniciar una nueva sesión, leer este README + el `.md` de la etapa en curso. Al completar una etapa (o una tarea dentro de ella), marcar el checkbox `[x]` y actualizar el campo `Estado` y `Fecha de última actualización`.
+> **Cómo usarlo:** Al iniciar una nueva sesión, leer **[HANDOFF.md](./HANDOFF.md)** (contexto y estado actual), luego este README + el `.md` de la etapa en curso. Al completar una etapa (o una tarea dentro de ella), marcar el checkbox `[x]` y actualizar el campo `Estado` y `Fecha de última actualización`.
 
 ---
 
@@ -28,6 +28,7 @@
 | 12 | [12-qa-round2-persistencia-conversaciones-registros-examenes.md](./12-qa-round2-persistencia-conversaciones-registros-examenes.md) | QA ronda 2: persistencia de conversaciones (BUG-13) + un registro por examen con ZIP (BUG-14) | ✅ Completada |
 | 13 | [13-qa-round3-navegador/](./13-qa-round3-navegador/README.md) | QA ronda 3: fixes 11.1-11.6 certificados (C6-C13, R1-R7) + BUG-15 nginx (SPA shadowed) corregido | ✅ Completada |
 | 14 | [14-informe-estado-RC1.md](./14-informe-estado-RC1.md) | Informe de estado de implementación del RC1 (Tag_RC1): funcionalidad certificada, bugs, deuda | ✅ Completada |
+| 15 | [15-framework-evaluacion-agente.md](./15-framework-evaluacion-agente.md) | RC2: framework de evaluación del agente generador (benchmarking, OFAT, métricas SOTA, materias clonadas); campañas reales E01-E04 (102 runs GLM-5.3-Flash), hipótesis H1-H5 resueltas, judge LLM de faithfulness | ✅ Completada |
 
 ---
 
@@ -52,8 +53,9 @@
 
 ## 📊 Progreso global
 
-- **Etapa actual:** 11 (correcciones QA ronda 1 + certificación E2E) — etapas 0-9 completadas; etapa 1 (GitHub) sigue pendiente
-- **Sesiones estimadas totales:** 10-14
+- **Etapa actual:** 15 (RC2 — framework de evaluación) ✅ **completada** — el trabajo activo pasa al **escrito de la tesis** (capítulos de implementación + experimentación)
+- **Rama activa:** `RC2/develop` (meta-repo + 6 submódulos, publicada en GitHub)
+- **Sesiones estimadas totales:** 12-16
 - **MVP usable (etapas 0-8):** ✅ completado y validado E2E en Docker + navegador; **release `Tag_V1.0.0`** (auth multi-profesor + navbar reactivo + CRUD completo)
 - **Etapa 9 (2.ª revisión):** ✅ auditoría LLM (raw answer/thinking), tool eliminar archivos, descarga JSON, inglés forzado
 - **Etapa 10 (QA ronda 1):** ✅ QA E2E manual documentado (12 bugs, 10 issues, 7 RFCs, backlog)
@@ -61,8 +63,9 @@
 - **Etapa 12 (QA ronda 2):** ✅ persistencia de conversaciones (endpoint historial + hidratación frontend) y un registro por examen con ZIP (agrupado por base + filtro de huérfanos); verificados E2E en navegador (ver [etapa 12](./12-qa-round2-persistencia-conversaciones-registros-examenes.md))
 - **Etapa 13 (QA ronda 3):** ✅ certificación de los fixes pendientes + BUG-15 (nginx sombreaba la ruta SPA `/subjects`) corregido con routing por Accept header; ver [etapa 13](./13-qa-round3-navegador/README.md)
 - **Etapa 14 (informe RC1):** ✅ estado consolidado del release candidate (ver [etapa 14](./14-informe-estado-RC1.md))
-- **Backlog (pospuesto, no bloquea):** endpoint de modelo en caliente (hoy configurable por `.env` + restart), repos GitHub + CI (etapa 1), deduplicación con embeddings reales, `owner_id` de materias legacy, ISS-01/02/03/04/05/08/09, BUG-16/ISS-11..16 (ver backlog ronda 3)
-- **Última actualización:** 2026-10-23
+- **Etapa 15 (RC2 — evaluación):** ✅ framework de evaluación en `test/evaluation/` + 102 runs reales + H1-H5 resueltas + judge LLM; ver [etapa 15](./15-framework-evaluacion-agente.md). Commits `007a9d7`, `1af2255`, `9514247`, `78a874f`
+- **Backlog (pospuesto, no bloquea):** endpoint de modelo en caliente, CI por repo (etapa 1), deduplicación con embeddings reales, `owner_id` de materias legacy, ISS-01/02/03/04/05/08/09, BUG-16/ISS-11..16 (ver backlog ronda 3)
+- **Última actualización:** 2026-10-26
 
 ---
 
@@ -93,11 +96,12 @@ git submodule sync --recursive
 
 ## 🚀 Cómo retomar el trabajo en una nueva sesión
 
-1. Leer este `README.md` para ver el mapa de etapas y la etapa actual.
-2. Leer el `.md` de la etapa en curso (columna "Archivo").
-3. Revisar la sección "📝 Notas de sesión" de ese archivo para contexto previo.
-4. Al terminar tareas, marcar `[x]` y actualizar "Estado" y "Notas de sesión".
-5. Al completar una etapa entera, cambiar su estado a ✅ en este README y avanzar la "Etapa actual".
+1. Leer **[HANDOFF.md](./HANDOFF.md)** — estado consolidado y gotchas del entorno.
+2. Leer este `README.md` para ver el mapa de etapas y la etapa actual.
+3. Leer el `.md` de la etapa en curso (columna "Archivo").
+4. Revisar la sección "📝 Notas de sesión" de ese archivo para contexto previo.
+5. Al terminar tareas, marcar `[x]` y actualizar "Estado" y "Notas de sesión".
+6. Al completar una etapa entera, cambiar su estado a ✅ en este README y avanzar la "Etapa actual".
 
 ### Convención de estados
 
