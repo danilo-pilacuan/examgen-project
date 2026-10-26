@@ -3,14 +3,14 @@
 Instrucciones permanentes para el agente en este repositorio. **Léelas al inicio de cada sesión
 y aplícalas sin necesidad de que se te vuelvan a pedir.**
 
-## 0. Regla de oro: documentación de estado por sesión
+## 0. Política permanente: documentación de estado de implementación y handoff
 
 El objetivo de este repo es **reproducibilidad del desarrollo**: cualquier persona (o agente)
-debe poder retomar el proyecto leyendo 2-3 archivos. Por eso:
+debe poder retomar el proyecto leyendo 2-3 archivos. Por eso, como **política del repositorio**:
 
-> **Al ejecutar el agente en este repo, genera y actualiza documentación de estado de
+> **Toda sesión del agente en este repo DEBE generar y actualizar la documentación de estado de
 > implementación y handoff como parte del propio trabajo de la sesión, no como un extra
-> opcional.**
+> opcional.** Aplica siempre, sin que el usuario tenga que volver a pedirla.
 
 Flujo obligatorio de cada sesión:
 
@@ -18,14 +18,17 @@ Flujo obligatorio de cada sesión:
    [implementaciones/README.md](../implementaciones/README.md) → el `.md` de la etapa activa.
    No rehacer trabajo ya hecho; continuar desde el estado registrado.
 2. **Durante:** si aparece una etapa nueva (o un bloque de trabajo grande), crear el directorio
-   `implementaciones/NN-nombre-descriptivo/` con su README y avanzar sus checkboxes.
-3. **Al cerrar:** actualizar (en este orden) el `.md` de la etapa, la fila de la etapa en el
-   mapa de [implementaciones/README.md](../implementaciones/README.md) + sección 📊 Progreso
-   global, y [implementaciones/HANDOFF.md](../implementaciones/HANDOFF.md) (fecha, rama, estado
-   del árbol, tabla "Estado por dónde se quedó", gotchas nuevos).
-4. **Commits atómicos:** un commit por tema (fix, feature, docs), con mensaje descriptivo y
-   trailer `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`. Pushear a
-   `origin` al final de la sesión si hay red.
+   `implementaciones/NN-nombre-descriptivo/` con su README y avanzar sus checkboxes. Registrar
+   los bugs/issues que aparezcan con la numeración global vigente.
+3. **Al cerrar (checklist de cierre):** actualizar, en este orden:
+   - el `.md`/directorio de la etapa (estado real, verificado, no "creo que quedó");
+   - la fila de la etapa en el mapa de [implementaciones/README.md](../implementaciones/README.md)
+     + sección 📊 Progreso global (con fecha real del día);
+   - [implementaciones/HANDOFF.md](../implementaciones/HANDOFF.md) (fecha, rama, estado del
+     árbol, tabla "Estado por dónde se quedó", gotchas nuevos descubiertos en la sesión);
+   - si el hito es visible para el seguimiento de la tesis (release, ronda QA, etapa cerrada):
+     añadir una nota de actualización al inicio de [docs/informe_avance.md](../docs/informe_avance.md);
+   - commits atómicos y push a `origin` al final de la sesión si hay red.
 
 ## 1. Estructura de documentación por etapa
 
@@ -129,14 +132,39 @@ documentado en su etapa + commiteado. Una sesión está terminada cuando: HANDOF
 estado exacto en que se quedó + README de etapas actualizado + commits pusheados (o indicados
 como pendientes de push en el HANDOFF).
 
-## 4. Al iniciar un proyecto nuevo a partir de este (uso como template)
+## 4. Documento de handoff: estructura obligatoria
+
+[implementaciones/HANDOFF.md](../implementaciones/HANDOFF.md) es **el documento de soporte para
+pasar contexto a la siguiente sesión** (humana o de agente). Debe poder leerse en <2 minutos y
+mantener SIEMPRE estas secciones, en este orden:
+
+1. **Encabezado** (blockquote): fecha de última actualización, rama activa y estado del árbol
+   (limpio/pendiente, con los hashes de los últimos commits relevantes).
+2. **Contexto en 30 segundos:** qué es el sistema, en qué release/etapa está, logros recientes
+   en bullets.
+3. **Qué leer y en qué orden:** rutas relativas a los documentos de soporte relevantes para los
+   escenarios actuales (continuar desarrollo, QA, tesis, etc.).
+4. **Estado por dónde se quedó:** tabla `| Tema | Estado |` — es el resumen ejecutivo; cada fila
+   debe poder verificarse (comando, test o vista).
+5. **Trabajo pendiente:** lista priorizada; indicar si cada ítem requiere código o no.
+6. **Gotchas que NO hay que redescubrir:** lecciones del entorno/infra que ya costaron tiempo
+   una vez (rebuilds, encoding, semántica de datos, etc.). Añadir los descubiertos en la sesión;
+   no borrar los vigentes sin confirmar que ya aplican.
+
+Reglas de mantenimiento: actualizar la fecha SIEMPRE que se toca el archivo; usar la fecha real
+del día (no estimar); si algo queda sin terminar, describir el siguiente paso concreto, no solo
+el síntoma.
+
+## 5. Al iniciar un proyecto nuevo a partir de este (uso como template)
 
 Copiar esta estructura y adaptarla en orden:
 
-1. `.github/copilot-instructions.md` (este archivo) → renombrar el dominio de negocio, mantener
-   las secciones 0, 1 y 3 tal cual (son de proceso, no de dominio).
-2. `implementaciones/HANDOFF.md` + `implementaciones/README.md` vacíos con el mapa de etapas
-   inicial del nuevo proyecto.
+1. `.github/copilot-instructions.md` (este archivo) → renombrar el dominio de negocio y las
+   reglas técnicas de la sección 2; mantener tal cual las secciones 0 (política de
+   documentación), 1 (estructura por etapa), 3 (definición de terminado) y 4 (estructura del
+   handoff) — son de proceso, no de dominio.
+2. `implementaciones/HANDOFF.md` + `implementaciones/README.md` iniciales (pueden partir de las
+   plantillas de las secciones 1 y 4 de este archivo).
 3. Carpetas por etapa según se vayan planificando.
 4. Conservar la regla de numeración global de BUG/ISS/RFC y el formato de `bugs.md`: es lo que
    hace auditable el historial entre sesiones y modelos de IA.
