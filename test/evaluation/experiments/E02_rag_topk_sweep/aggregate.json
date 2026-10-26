@@ -1,0 +1,285 @@
+{
+  "experiment": "E02_rag_topk_sweep",
+  "total_runs": 27,
+  "arms": {
+    "arm_0": {
+      "model_profile": "glm-flash-default",
+      "model": "zai-org/GLM-5.3-Flash",
+      "overrides": {
+        "llm_temperature": 0.7,
+        "retrieval_top_k": 1
+      },
+      "num_runs": 9,
+      "metrics": {
+        "approval_rate": {
+          "mean": 0.6944,
+          "std": 0.0621,
+          "n": 9
+        },
+        "quality_mean": {
+          "mean": 7.3,
+          "std": 0.1729,
+          "n": 9
+        },
+        "quality_std": {
+          "mean": 0.2166,
+          "std": 0.0642,
+          "n": 9
+        },
+        "attempts_per_item": {
+          "mean": 0.3472,
+          "std": 0.1145,
+          "n": 9
+        },
+        "pairwise_sim_mean": {
+          "mean": -0.0027,
+          "std": 0.0059,
+          "n": 9
+        },
+        "topic_coverage": {
+          "mean": 1.0,
+          "std": 0.0,
+          "n": 9
+        },
+        "bloom_coverage": {
+          "mean": 0.6667,
+          "std": 0.0,
+          "n": 9
+        },
+        "rag_faithfulness": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 9
+        },
+        "rag_retrieval_score": {
+          "mean": 0.9,
+          "std": 0.0,
+          "n": 9
+        },
+        "bloom_accuracy": {
+          "mean": 1.0,
+          "std": 0.0,
+          "n": 9
+        },
+        "difficulty_accuracy": {
+          "mean": 1.0,
+          "std": 0.0,
+          "n": 9
+        },
+        "calls_per_item": {
+          "mean": 2.9037,
+          "std": 0.265,
+          "n": 9
+        },
+        "tokens_per_item": {
+          "mean": 773.4444,
+          "std": 70.1936,
+          "n": 9
+        },
+        "latency_mean_ms": {
+          "mean": 0,
+          "std": 0.0,
+          "n": 9
+        }
+      },
+      "self_consistency": 1.0,
+      "robustness_cross_subject": {
+        "per_subject_mean": {
+          "eva": 7.3817,
+          "maria": 7.2528,
+          "sofia": 7.2656
+        },
+        "between_subject_std": 0.058
+      },
+      "status_counts": {
+        "completed": 9
+      }
+    },
+    "arm_1": {
+      "model_profile": "glm-flash-default",
+      "model": "zai-org/GLM-5.3-Flash",
+      "overrides": {
+        "llm_temperature": 0.7,
+        "retrieval_top_k": 3
+      },
+      "num_runs": 9,
+      "metrics": {
+        "approval_rate": {
+          "mean": 0.6667,
+          "std": 0.0589,
+          "n": 9
+        },
+        "quality_mean": {
+          "mean": 7.3178,
+          "std": 0.1777,
+          "n": 9
+        },
+        "quality_std": {
+          "mean": 0.242,
+          "std": 0.1207,
+          "n": 9
+        },
+        "attempts_per_item": {
+          "mean": 0.3333,
+          "std": 0.0589,
+          "n": 9
+        },
+        "pairwise_sim_mean": {
+          "mean": -0.005,
+          "std": 0.0049,
+          "n": 9
+        },
+        "topic_coverage": {
+          "mean": 1.0,
+          "std": 0.0,
+          "n": 9
+        },
+        "bloom_coverage": {
+          "mean": 0.6667,
+          "std": 0.0,
+          "n": 9
+        },
+        "rag_faithfulness": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 9
+        },
+        "rag_retrieval_score": {
+          "mean": 0.7,
+          "std": 0.0,
+          "n": 9
+        },
+        "bloom_accuracy": {
+          "mean": 1.0,
+          "std": 0.0,
+          "n": 9
+        },
+        "difficulty_accuracy": {
+          "mean": 1.0,
+          "std": 0.0,
+          "n": 9
+        },
+        "calls_per_item": {
+          "mean": 3.0222,
+          "std": 0.2514,
+          "n": 9
+        },
+        "tokens_per_item": {
+          "mean": 953.2222,
+          "std": 82.9495,
+          "n": 9
+        },
+        "latency_mean_ms": {
+          "mean": 0,
+          "std": 0.0,
+          "n": 9
+        }
+      },
+      "self_consistency": 1.0,
+      "robustness_cross_subject": {
+        "per_subject_mean": {
+          "eva": 7.4483,
+          "maria": 7.2161,
+          "sofia": 7.2889
+        },
+        "between_subject_std": 0.097
+      },
+      "status_counts": {
+        "completed": 9
+      }
+    },
+    "arm_2": {
+      "model_profile": "glm-flash-default",
+      "model": "zai-org/GLM-5.3-Flash",
+      "overrides": {
+        "llm_temperature": 0.7,
+        "retrieval_top_k": 8
+      },
+      "num_runs": 9,
+      "metrics": {
+        "approval_rate": {
+          "mean": 0.6528,
+          "std": 0.0786,
+          "n": 9
+        },
+        "quality_mean": {
+          "mean": 7.302,
+          "std": 0.1547,
+          "n": 9
+        },
+        "quality_std": {
+          "mean": 0.2352,
+          "std": 0.1148,
+          "n": 9
+        },
+        "attempts_per_item": {
+          "mean": 0.3611,
+          "std": 0.1094,
+          "n": 9
+        },
+        "pairwise_sim_mean": {
+          "mean": -0.006,
+          "std": 0.0045,
+          "n": 9
+        },
+        "topic_coverage": {
+          "mean": 1.0,
+          "std": 0.0,
+          "n": 9
+        },
+        "bloom_coverage": {
+          "mean": 0.6667,
+          "std": 0.0,
+          "n": 9
+        },
+        "rag_faithfulness": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 9
+        },
+        "rag_retrieval_score": {
+          "mean": 0.7,
+          "std": 0.0,
+          "n": 9
+        },
+        "bloom_accuracy": {
+          "mean": 1.0,
+          "std": 0.0,
+          "n": 9
+        },
+        "difficulty_accuracy": {
+          "mean": 1.0,
+          "std": 0.0,
+          "n": 9
+        },
+        "calls_per_item": {
+          "mean": 3.1111,
+          "std": 0.3975,
+          "n": 9
+        },
+        "tokens_per_item": {
+          "mean": 973.1111,
+          "std": 121.4079,
+          "n": 9
+        },
+        "latency_mean_ms": {
+          "mean": 0,
+          "std": 0.0,
+          "n": 9
+        }
+      },
+      "self_consistency": 1.0,
+      "robustness_cross_subject": {
+        "per_subject_mean": {
+          "eva": 7.2639,
+          "maria": 7.3317,
+          "sofia": 7.3106
+        },
+        "between_subject_std": 0.0283
+      },
+      "status_counts": {
+        "completed": 9
+      }
+    }
+  }
+}

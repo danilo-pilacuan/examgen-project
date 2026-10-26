@@ -1,0 +1,4 @@
+# Experiment outputs: runs are reproducible, artifacts are heavy.
+# Keep aggregate.json + report.md (small, thesis-ready), ignore runs + plots.
+experiments/*/runs.jsonl
+experiments/*.png

@@ -1,0 +1,28 @@
+# Cloned subjects: SAME material, DIFFERENT names.
+# Purpose: isolate LLM variance from material variance. Every validation run
+# uses one or more clones; the material (files) is identical for all of them.
+#
+# Fields:
+#   id:            short key referenced by experiments.yaml
+#   name:          subject name registered in the DB (must be unique)
+#   material_glob: glob pattern(s) of the source material files
+subjects:
+  - id: eva
+    name: Economía Aplicada — Eva
+    material_glob: data/inputs/Economia_Aplicada/Apuntes/*.pdf
+
+  - id: maria
+    name: Economía Aplicada — María
+    material_glob: data/inputs/Economia_Aplicada/Apuntes/*.pdf
+
+  - id: sofia
+    name: Economía Aplicada — Sofía
+    material_glob: data/inputs/Economia_Aplicada/Apuntes/*.pdf
+
+  - id: lucia
+    name: Economía Aplicada — Lucía
+    material_glob: data/inputs/Economia_Aplicada/Apuntes/*.pdf
+
+  - id: pablo
+    name: Economía Aplicada — Pablo
+    material_glob: data/inputs/Economia_Aplicada/Apuntes/*.pdf
