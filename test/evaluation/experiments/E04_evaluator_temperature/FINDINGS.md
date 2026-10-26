@@ -8,6 +8,10 @@
 
 ## Resultados por brazo
 
+![Approval rate](approval_rate.png)
+![Quality mean](quality_mean.png)
+![Bloom accuracy](bloom_accuracy.png)
+
 | Métrica | eval T=0.0 | eval T=0.2 (producción) | eval T=0.6 |
 |---|---|---|---|
 | Tasa de aprobación | **0.958** | 0.917 | 0.917 |

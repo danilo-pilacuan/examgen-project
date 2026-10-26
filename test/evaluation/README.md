@@ -145,6 +145,9 @@ clones), `--limit-repeats 1` (smoke test), `--dry-run` (stub determinista).
 | 4 experimentos definidos en `experiments.yaml` | ✅ |
 | Dry-run E01–E04 validado end-to-end (61 runs, agregación + reportes + plots) | ✅ |
 | **Runs reales E01–E04 completados: 82 runs GLM-5.3-Flash vía gateway USFQ** | ✅ (2026-10-26) |
+| Judge LLM de faithfulness (`metrics/faithfulness_judge.py`) | ✅ implementado y ejecutado sobre E03 (27/30 runs) |
+| Plots versionados e incrustados en `FINDINGS.md` | ✅ |
+| E03 robustez extendida (4 réplicas/clon, 20 runs) | ✅ — **H5 confirmada: σ=0.665 < 1.0** |
 
 ### Resultados de la validación dry-run (stubs deterministas)
 
@@ -208,13 +211,24 @@ y discriminan entre brazos como se diseñó:
 - `reasoning_effort > none` rompe `with_structured_output` en el pipeline
   batch (documentado en `ARCHITECTURE.md`): los experimentos de reasoning
   aplican al chat, no al generador batch.
-- Faithfulness por overlap léxico es una aproximación; para la tesis puede
-  sustituirse por un judge LLM en una segunda fase.
+- Faithfulness se mide de dos formas complementarias:
+  - **Overlap léxico** (`rag.faithfulness_mean`): aproxima barato pero premia
+    la copia sobre la síntesis (documentado en E02).
+  - **Judge LLM** (`rag_judge.faithfulness_judge_mean`): un LLM puntúa 0-10
+    el soporte factual del enunciado contra los chunks recuperados. Corre
+    post-hoc sobre la auditoría (no interfiere con el pipeline evaluado);
+    se activa automáticamente en modo real. Cambiar de juez = cambiar
+    `model_profile` en `models.yaml` (self-judge vs cross-judge).
 - Los clones comparten archivos fuente, pero el índice RAG se reconstruye por
   clon (embeddings idénticos entre clones, nombres de materia distintos).
 - En dry-run, la correlación retrieval↔statement es posicional (los rechazos
   no persisten su statement); en modo real la fila de auditoría lleva el
   prompt exacto por llamada.
+- **Estabilidad del entorno**: los cambios de postura del portátil
+  (eventos Kernel-Power `InputAccelerometer`) pueden interrumpir WSL2 y el
+  port-forwarding de Docker a mitad de un run. El runner de campañas largas
+  mantiene la sesión despierta (`SetThreadExecutionState`); verificar
+  `docker ps` si un run muere con `RemoteDisconnected`.
 
 ## 10. Checklist para la primera ejecución real
 

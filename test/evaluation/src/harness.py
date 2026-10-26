@@ -39,6 +39,7 @@ from test.evaluation.src.metrics.diversity import diversity_metrics  # noqa: E40
 from test.evaluation.src.metrics.rag import rag_metrics  # noqa: E402
 from test.evaluation.src.metrics.bloom import bloom_metrics  # noqa: E402
 from test.evaluation.src.metrics.cost import cost_metrics  # noqa: E402
+from test.evaluation.src.metrics import faithfulness_judge  # noqa: E402
 
 EVAL_ROOT = Path(__file__).resolve().parent.parent
 EXPERIMENTS_YAML = EVAL_ROOT / "experiments.yaml"
@@ -227,6 +228,17 @@ def run_once(
         r = rag_metrics(_correlate_statements(retrieval_records, item_records))
     c = cost_metrics(calls, len(approved_items))
 
+    # LLM-judge faithfulness (post-hoc, real mode only): judged support of each
+    # statement against the chunks the generator actually saw. Same model as
+    # the pipeline (self-judge) unless a separate judge profile is configured.
+    judged: dict[str, Any] = {}
+    if not dry_run and retrieval_records:
+        try:
+            judged = faithfulness_judge.judge_faithfulness(retrieval_records)
+        except Exception as exc:  # judge failure must not kill the run record
+            print(f"      ⚠️ judge faithfulness failed: {exc}")
+            judged = {"faithfulness_judge_mean": None, "judgement_errors": 1}
+
     run_id = f"{exp['id']}_arm{arm_index}_r{repeat}_{subject_key}"
     record = {
         "run_id": run_id,
@@ -243,7 +255,7 @@ def run_once(
         "status": state.get("status"),
         "error_message": state.get("error_message"),
         "wall_time_ms": wall_ms,
-        "metrics": {"quality": q, "diversity": d, "rag": r, "bloom": b, "cost": c},
+        "metrics": {"quality": q, "diversity": d, "rag": r, "bloom": b, "cost": c, "rag_judge": judged},
         "state_digest": {
             "approved_count": len(approved_items),
             "rejection_count": len(state.get("rejection_log", [])),

@@ -6,6 +6,11 @@
 
 ## Resultados por brazo
 
+![Approval rate](approval_rate.png)
+![Quality mean](quality_mean.png)
+![Bloom accuracy](bloom_accuracy.png)
+![Tokens per item](tokens_per_item.png)
+
 | Métrica | gen T=0.3 | gen T=0.7 (producción) | gen T=1.0 |
 |---|---|---|---|
 | Tasa de aprobación | 0.889 | **0.917** | 0.861 |

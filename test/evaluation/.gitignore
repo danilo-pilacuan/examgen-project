@@ -1,5 +1,6 @@
-# Experiment outputs: runs are reproducible, artifacts are heavy.
-# Keep aggregate.json + report.md (small, thesis-ready), ignore runs + plots.
+# Experiment outputs: raw runs are reproducible but heavy; keep aggregated
+# artifacts (aggregate.json, report.md, plots) versioned for the thesis.
 experiments/**/runs.jsonl
-experiments/**/*.png
-experiments/**/_console.log
+experiments/**/runs_judged.jsonl
+experiments/**/_console*.log
+experiments/**/_judge.log

@@ -33,6 +33,7 @@ METRIC_PATHS = {
     "bloom_coverage": ("diversity", "bloom_coverage"),
     "rag_faithfulness": ("rag", "faithfulness_mean"),
     "rag_retrieval_score": ("rag", "retrieval_score_mean"),
+    "rag_faithfulness_judge": ("rag_judge", "faithfulness_judge_mean"),
     "bloom_accuracy": ("bloom", "bloom_accuracy"),
     "difficulty_accuracy": ("bloom", "difficulty_accuracy"),
     "calls_per_item": ("cost", "calls_per_approved_item"),

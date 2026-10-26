@@ -6,6 +6,11 @@
 
 ## Resultados por brazo
 
+![Approval rate](approval_rate.png)
+![Bloom accuracy](bloom_accuracy.png)
+![Faithfulness](rag_faithfulness.png)
+![Tokens per item](tokens_per_item.png)
+
 | Métrica | top_k=1 | top_k=3 (producción) | top_k=8 |
 |---|---|---|---|
 | Tasa de aprobación | 0.833 | **0.958** | 0.875 |
