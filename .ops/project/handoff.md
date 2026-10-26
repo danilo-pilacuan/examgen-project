@@ -12,10 +12,10 @@ status: stable
 sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.md, title: copilot-instructions }]
 ---
 
-> **Ultima actualizacion:** 2026-10-26 | **Rama:** `RC2/develop` | **Arbol:** el cambio
-> de esta sesion (migracion `implementaciones/` -> `.ops/`) pendiente de commit y push;
-> submodulos publicados en origin (frontend `1c3c674`, exam-app `29a64e3`,
-> agents-backend, core y latex-compiler en 78a874f).
+> **Ultima actualizacion:** 2026-10-26 | **Rama:** `RC2/develop` | **Arbol:** limpio;
+> migracion `implementaciones/` -> `.ops/` publicada en commit `4b50c75`; submodulos
+> publicados en origin (frontend `1c3c674`, exam-app `29a64e3`, agents-backend, core y
+> latex-compiler en 78a874f).
 
 ## Contexto en 30 segundos
 
