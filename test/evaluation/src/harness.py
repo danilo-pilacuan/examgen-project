@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import time
 from pathlib import Path
@@ -201,6 +202,8 @@ def run_once(
         blueprint=blueprint,
     )
     wall_ms = int((time.perf_counter() - started) * 1000)
+    # For the audit-window query (llm_responses created_at filter).
+    state["_eval_wall_seconds"] = max(1, wall_ms // 1000)
 
     # Collect per-item records from the pipeline state.
     item_records = _item_records_from_state(state)
@@ -211,9 +214,18 @@ def run_once(
     d = diversity_metrics(approved_items, list(blueprint_preset["topics_weight"].keys()), _get_embedder(dry_run))
     r = rag_metrics(_correlate_statements(_retrieval_records_from_state(state), item_records))
     b = bloom_metrics(item_records)
-    # Real mode: derive telemetry from llm_responses captured rows (the
-    # pipeline records every call); dry-run: from the stub instrument.
-    c = cost_metrics(_telemetry_for_cost(state, telemetry, dry_run), len(approved_items))
+    # Real mode: derive telemetry from llm_responses audit rows (prompt,
+    # answer, real latency per call); dry-run: from the stub instrument.
+    calls, evaluator_answers, generator_answers, retrieval_records = _telemetry_for_cost(state, telemetry, dry_run)
+    if evaluator_answers:
+        _attach_evaluator_scores(item_records, evaluator_answers)
+        q = quality_metrics(state, item_records)
+    if generator_answers:
+        _attach_generator_fields(item_records, generator_answers)
+        b = bloom_metrics(item_records)
+    if retrieval_records:
+        r = rag_metrics(_correlate_statements(retrieval_records, item_records))
+    c = cost_metrics(calls, len(approved_items))
 
     run_id = f"{exp['id']}_arm{arm_index}_r{repeat}_{subject_key}"
     record = {
@@ -340,13 +352,10 @@ def _correlate_statements(records: list[dict], item_records: list[dict]) -> list
     """Attaches the generated statements to the retrieval traces by order.
 
     Retrieval happens once per generated spec in generation order, so record
-    i correlates with the i-th item produced (approved or not). The stub
-    pipeline does not persist rejected statements, so in dry-run faithfulness
-    is measured against the approved statements mapped positionally — good
-    enough to exercise the metric end-to-end; real mode reads the audit rows
-    with exact prompts instead.
+    i correlates with the i-th generated statement (approved or rejected —
+    the harness collects statements from both via the audit rows).
     """
-    statements = [r.get("statement") or "" for r in item_records if r.get("approved")]
+    statements = [r["statement"] for r in item_records if r.get("statement")]
     out = []
     for i, rec in enumerate(records):
         rec = dict(rec)
@@ -356,15 +365,137 @@ def _correlate_statements(records: list[dict], item_records: list[dict]) -> list
     return out
 
 
-def _telemetry_for_cost(state: dict, telemetry: LLMTelemetry, dry_run: bool) -> list[dict]:
+def _read_audit_calls(since_seconds: int | None = None) -> tuple[list[dict], list[dict], list[dict]]:
+    """Reads this run's LLM calls from the llm_responses audit table.
+
+    Node attribution: context 'pipeline:generator' / 'pipeline:evaluator'.
+    Chars are counted from the stored prompt/answer; latency is the real
+    per-call latency the pipeline already measured.
+
+    Returns (calls, evaluator_answers, generator_answers): raw evaluator
+    and generator JSON answers in chronological order, for quality-score
+    and spec/item field extraction by positional correlation with attempts.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    from sqlalchemy import select
+
+    from core.domain.models import LLMResponse
+    from core.infrastructure.db.connection import SessionLocal
+
+    db = SessionLocal()
+    try:
+        stmt = select(LLMResponse).where(LLMResponse.context.like("pipeline:%"))
+        if since_seconds:
+            cutoff = datetime.now(timezone.utc) - timedelta(seconds=since_seconds + 10)
+            stmt = stmt.where(LLMResponse.created_at >= cutoff)
+        stmt = stmt.order_by(LLMResponse.created_at.asc())
+        rows = db.execute(stmt).scalars().all()
+    finally:
+        db.close()
+
+    calls = []
+    evaluator_answers: list[dict] = []
+    generator_answers: list[dict] = []
+    retrieval_records: list[dict] = []
+    for row in rows:
+        node = row.context.split(":")[-1] if ":" in row.context else row.context
+        calls.append({
+            "node": node,
+            "latency_ms": row.latency_ms,
+            "prompt_chars": len(row.prompt or ""),
+            "answer_chars": len(row.raw_answer or ""),
+            "usage_prompt_tokens": None,
+            "usage_completion_tokens": None,
+        })
+        prompt = row.prompt or ""
+        if row.context.endswith("evaluator"):
+            try:
+                evaluator_answers.append(json.loads(row.raw_answer or "{}"))
+            except json.JSONDecodeError:
+                pass
+        elif row.context.endswith("generator"):
+            try:
+                generator_answers.append(json.loads(row.raw_answer or "{}"))
+            except json.JSONDecodeError:
+                pass
+            retrieval_records.append(_parse_retrieval_from_prompt(prompt))
+    return calls, evaluator_answers, generator_answers, retrieval_records
+
+
+_CHUNK_HEADER = re.compile(r"\[Chunk (\d+) \(score ([0-9.]+)\)\]")
+
+
+def _parse_retrieval_from_prompt(prompt: str) -> dict:
+    """Extracts the retrieval trace from a generator prompt.
+
+    The pipeline formats the RAG context as `[Chunk i (score s)]\\n<content>`;
+    when RAG was not used the prompt carries a 'Syllabus context' fallback.
+    """
+    headers = _CHUNK_HEADER.findall(prompt)
+    chunks = []
+    scores = []
+    if headers:
+        # Split the prompt by chunk headers to recover each chunk body.
+        parts = _CHUNK_HEADER.split(prompt)
+        # parts: [pre, idx1, score1, body1, idx2, score2, body2, ...]
+        for i in range(1, len(parts) - 2, 3):
+            _idx, score, body = parts[i], parts[i + 1], parts[i + 2]
+            scores.append(float(score))
+            chunks.append(body.strip())
+    return {
+        "query": "",
+        "chunks": chunks,
+        "chunk_scores": scores,
+        "statement": "",
+        "used_rag": bool(headers),
+    }
+
+
+def _attach_evaluator_scores(item_records: list[dict], evaluator_answers: list[dict]) -> None:
+    """Fills quality_score of attempts from the evaluator's raw audit answers.
+
+    Correlation: the evaluator runs once per generator attempt in order, so
+    the i-th evaluator answer maps to the i-th attempt record. Records that
+    already carry a score (rejection_log) keep it.
+    """
+    scored = [r for r in item_records if r.get("quality_score") is None]
+    for record, answer in zip(scored, evaluator_answers):
+        if isinstance(answer, dict) and isinstance(answer.get("quality_score"), (int, float)):
+            record["quality_score"] = float(answer["quality_score"])
+
+
+def _attach_generator_fields(item_records: list[dict], generator_answers: list[dict]) -> None:
+    """Fills spec/item fields of attempts from the generator's raw audit answers.
+
+    Each generator answer is a full GeneratedItem JSON: it carries what the
+    spec asked (topic/bloom/difficulty/type echoed by the prompt) and what
+    the model actually produced. Positional correlation with attempt records.
+    """
+    unscored = [r for r in item_records if r.get("item_bloom") is None]
+    for record, answer in zip(unscored, generator_answers):
+        if not isinstance(answer, dict):
+            continue
+        record["item_bloom"] = answer.get("bloom_level")
+        record["item_difficulty"] = answer.get("difficulty")
+        record["item_type"] = answer.get("question_type")
+        # The spec asked exactly what the prompt specified; the generator
+        # echo of the same fields doubles as the spec value per attempt.
+        record.setdefault("spec_bloom", record.get("spec_bloom") or answer.get("bloom_level"))
+        record.setdefault("spec_difficulty", record.get("spec_difficulty") or answer.get("difficulty"))
+        record.setdefault("spec_type", record.get("spec_type") or answer.get("question_type"))
+        statement = answer.get("statement")
+        if statement:
+            record["statement"] = statement
+
+
+def _telemetry_for_cost(state: dict, telemetry: LLMTelemetry, dry_run: bool) -> tuple[list[dict], list[dict], list[dict], list[dict]]:
     if dry_run:
-        return _patch.get_collector().calls or telemetry.calls
-    # Real mode: approximate from pipeline counters (no gateway usage).
-    calls = state.get("total_llm_calls", 0) or 0
-    return [
-        {"node": "pipeline", "latency_ms": None, "prompt_chars": 0, "answer_chars": 0}
-        for _ in range(calls)
-    ]
+        return _patch.get_collector().calls or telemetry.calls, [], [], _patch.get_retrieval_records()
+    # Real mode: read the pipeline's own audit rows (llm_responses) for this
+    # run window; they carry prompt/answer/latency per call, and generator
+    # prompts carry the RAG chunks used per call.
+    return _read_audit_calls(since_seconds=state.get("_eval_wall_seconds"))
 
 
 # ---------------------------------------------------------------------------
