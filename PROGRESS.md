@@ -6,6 +6,28 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
+## 2026-10-27 (ronda QA 8 - anexo UX: banco de preguntas expandible)
+
+* **Hecho:** UX del Banco de Preguntas corregida a pedido del propietario
+  (detalle al final de la lista, fuera de pantalla, sin indicador de
+  seleccion). BankView.vue: acordeon inline de una seleccion — columna
+  chevron + fila con role=button/tabindex/aria-expanded, panel de detalle
+  como fila tr.detail-row (colspan 7) justo bajo la fila pulsada,
+  seleccion alterna por segundo clic o boton X, auto-scroll suave al panel
+  (function ref setDetailRow porque un ref de plantilla dentro de v-for es
+  un array y rompia scrollIntoView), hover/focus-visible, i18n es/en
+  (expandHint/collapseHint/detailInlineHint). Se elimino el bloque de
+  detalle duplicado que quedaba tras la tabla. Verificacion Playwright
+  (qa-r7, 200 preguntas): expandir inline, chevron rotado 90 grados, cerrar
+  por X y por segundo clic, switch a otra fila (seleccion unica), teclado
+  Tab+Enter expandir/colapsar, hover/focus affordance, 0 errores de consola;
+  docker compose build frontend + up aplicado (bundle BankView-B0_gczOs.js).
+* **Falta:** verificado del propietario; commit + push frontend/meta
+  (bump de submodulo y docs).
+* **Decision:** ninguna nueva; extiende la correccion de ronda 8 ya aprobada.
+* **Medicion:** 8 casos Playwright PASS (C54); tsc local OK; 0 errores de
+  consola en navegador real.
+
 ## 2026-10-27 (ronda QA 8: fix DEC-004, hilos de chat server-side)
 
 * **Hecho:** resolucion DEC-004 (a extendida por el propietario) implementada

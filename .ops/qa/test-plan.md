@@ -127,9 +127,11 @@ directa, qa-r8-a/qa-r8-b) + Playwright (qa-r7, navegador real).
 | C51 | Funcional | BUG-023 fix (Playwright): reload del navegador conserva la conversacion en la sidebar; click hidrata desde el checkpointer | PASS | BUG-023/QT-008 |
 | C52 | Funcional | Badges (Playwright): chip de ultima materia usada ("QA R7 Recert") + contador de mensajes ("4") visibles en el listado | PASS | QT-008 |
 | C53 | Funcional | Delete en la sidebar elimina la entrada; chat_threads count=0 en BD (contenido del checkpointer se conserva, purga fuera de alcance) | PASS (nota) | QT-008 |
+| C54 | Funcional (UX) | Banco: filas expandibles inline — click/Enter expande el detalle justo bajo la fila (tr.detail-row), chevron rota 90 grados, cierra por X o segundo clic, switch de fila mantiene una sola seleccion, hover/focus affordance, 0 errores de consola | PASS | QT-008 |
 
 Resultado ronda 8: 12 PASS + 1 PASS con nota (purga del checkpointer
-pendiente como seguimiento). BUG-022 y BUG-023 corregidos; verificacion
+pendiente como seguimiento) + 1 PASS UX (C54, anexo del mismo dia: detalle
+del Banco expandible inline). BUG-022 y BUG-023 corregidos; verificacion
 final pendiente del propietario (QT-008).
 
 ## Regresion

@@ -12,7 +12,7 @@ status: stable
 sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.md, title: copilot-instructions }]
 ---
 
-> **Ultima actualizacion:** 2026-10-27 (QA ronda 8: fix DEC-004 hilos de chat) | **Rama:** `RC3/develop` |
+> **Ultima actualizacion:** 2026-10-27 (QA ronda 8 + anexo UX Banco) | **Rama:** `RC3/develop` |
 > **Arbol:** fix implementado y verificado de BUG-022/BUG-023 (IMPL-025, BL-017, resolucion DEC-004
 > a extendida por el propietario): tabla `chat_threads` con owner (migracion b8c9d0e1f2a3 aplicada),
 > endpoints GET/PATCH/DELETE `/api/chat/threads`, ownership 403 en history/stream/invoke, sidebar
@@ -20,8 +20,11 @@ sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.
 > Verificacion: 12/12 comprobaciones API PASS (scripts/verify-threads-r8.ps1: B history/write/
 > rename/delete sobre hilo ajeno = 403, listado aislado, 401 sin token) + Playwright PASS
 > (reload conserva conversacion, badges visibles, delete funciona). BUG-022/023 en `corregido`;
-> verificado final pendiente del propietario (QT-008). Commits en 3 submodulos + meta-repo
-> pendientes de push (ver historial).
+> verificado final pendiente del propietario (QT-008). Anexo UX del mismo dia: detalle del Banco
+> de Preguntas ahora expandible inline (acordeon con chevron/hover/focus/teclado, auto-scroll),
+> verificado con Playwright (C54, 0 errores de consola) tras eliminar un bloque de detalle
+> duplicado y un TypeError de scrollIntoView (function ref para el v-for). Commits en 3
+> submodulos + meta-repo pendientes de push (ver historial).
 
 ## Contexto en 30 segundos
 
@@ -84,3 +87,4 @@ Exam Generator: MVP de tesis USFQ para que un profesor genere examenes LaTeX por
 | 2026-10-27 (ronda 6) | Certificacion RC3 ejecutada (IMPL-023): BUG-018 verificado via nginx (raiz 422, metadata 200 num_versions=2), RFC-10 PASS (reload conserva materia), RFC-11 PASS (abort+Retry rehidrata sin duplicar contenido), BUG-016 PASS (3 restarts, 0 401), C2 PASS (PDF 5.4 MB, 211 chunks, RAG OK), R1/R2/R4/R5/R6 PASS; hallazgos BUG-019/020/021 documentados con DEC-001/002/003 abiertas; .ops actualizado (test-plan, traceability, READMEs, handoff) |
 | 2026-10-27 (ronda 7) | Recertificacion funcional (Playwright) + integracion (API/nginx/BD) sin unitarias, a pedido del propietario (IMPL-024). Bug reportado "no veo conversaciones pasadas" = BUG-023: listado de hilos solo en `localStorage['mvp_chat_threads']` (`useThreadId.ts`), mismo navegador PASS, storage limpio/otro navegador -> sidebar vacia con hilos en BD; fix en BL-017. BUG-022 critico: B lee y escribe hilos de A (history/stream/invoke sin ownership; evidencia API + visual con tercer usuario). BUG-024 (cabeceras nginx) y BUG-025 (mensaje 401 login) nuevos. C25-C40: 11 PASS/3 FAIL/2 nota; QT-007, DEC-004, IMPL-024, test-plan, traceability, BL-017 re-elevado; limpieza: materia "QA R7 UI Temp" y usuario qa-r7-ui-temp borrados, hilos de control conservados como evidencia |
 | 2026-10-27 (ronda 8) | Fix DEC-004 (a extendida por el propietario) implementado y verificado (IMPL-025/BL-017/QT-008): tabla `chat_threads` (migracion b8c9d0e1f2a3 aplicada en contenedor), threads_service.py con register_or_adopt (nunca reasigna id ajeno) + require_owned_thread, endpoints GET/PATCH/DELETE /api/chat/threads, ownership 403 en history/stream/invoke; frontend: useThreadId server-backed, ThreadSidebar con badges (ultima materia + contador), ChatPanel/ChatView/auth ajustados, i18n es/en. Verificacion: scripts/verify-threads-r8.ps1 12/12 PASS (B sobre hilo de A: history/write/rename/delete = 403; listado aislado; 401 sin token) + Playwright PASS (reload conserva conversacion, badges "QA R7 Recert"+"4", delete con chat_threads=0). Docker rebuild del frontend detecto y corrigio TS2349 (shadowing `t` de useI18n en v-for; el tsc local no lo atrapa - vue-tsc de Docker es la puerta). Usuarios qa-r8-a/b y sus hilos purgados. BUG-022/023 -> `corregido`; DEC-004 -> `tomada`; pendiente push de 4 repos y verificado del propietario |
+| 2026-10-27 (ronda 8 anexo UX) | A pedido del propietario, el detalle del Banco de Preguntas se movio de un bloque al final de la lista a un acordeon inline (C54): columna chevron, filas con role=button/tabindex/aria-expanded, tr.detail-row bajo la fila pulsada, cierre por X o segundo clic, seleccion unica, auto-scroll suave (function ref setDetailRow: un ref de plantilla en v-for es array y rompia scrollIntoView), hover/focus-visible, i18n es/en; se elimino un bloque de detalle duplicado tras la tabla. Playwright (qa-r7, 200 preguntas): expandir/cerrar/switch/teclado/hover PASS, 0 errores de consola; docker compose build frontend + up (bundle BankView-B0_gczOs.js). Pendiente: commit + push frontend/meta |
