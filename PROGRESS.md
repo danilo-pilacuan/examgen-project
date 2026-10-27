@@ -6,6 +6,42 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
+## 2026-10-27 (ronda QA 9 - recertificacion + certificacion de examenes)
+
+* **Hecho:** recertificacion QA ronda 9 ejecutada a pedido del propietario
+  (IMPL-026 / QT-009), agente como verificador humano en Playwright contra
+  el navegador real, sin unitarias. Funcionales F1-F13 PASS (login,
+  bancos 200 preguntas + filtros, detalle inline C54, toggle verificacion,
+  descargas ZIP/PDF, material 41 chunks, crear materia, chat con contexto
+  de materia, sidebar server-side, reload duro, logout/login, guardia de
+  ruta); F9 PASS con BUG-026 nuevo (chips de cabecera 0/0 hasta
+  re-seleccionar el asunto tras login/Activate); F14 registra BUG-025
+  vivo. Integracion I1-I9 PASS (401 sin token, ownership 403 de B sobre
+  hilo de A, guardrail DELETE verificada 403, auth 422/422/401/200,
+  aislamiento entre usuarios con legacy legible, HEAD /output, CRUD de
+  hilos 200/204); I4 FAIL conocido (BUG-024 sin fix planificado).
+  Certificacion de examenes E1-E4 PASS con nota (QA_R9_Cert sobre Eva:
+  8 llamadas LLM, 1 rechazo difficulty_mismatch, 3/4 items publicados,
+  ZIP 175KB A/B + respondido, PDFs GET/HEAD 200 con Content-Disposition,
+  visibilidad por propietario; anomalia `indexed_chunks_count: 0` pese a
+  41 chunks). E5 FAIL -> BUG-027 nuevo (alto): materia con 0 chunks y 0
+  preguntas publica un examen con 2 preguntas genericas fuera de tema
+  ("Sahara Desert"), persiste el examen (BD + ZIP + 2 PDFs) y burla la
+  salvaguarda C6/BUG-004. Limpieza: purgada la materia QA R9 Recert, el
+  examen QA_R9_Empty (BD + 4 archivos en /app/output) y sus 2 preguntas;
+  conservados QA_R9_Cert (evidencia) y el hilo de control 57a386a2. .ops:
+  test-plan Ronda 9, QT-009 -> ejecutado, IMPL-026 -> ejecutado,
+  traceability, README de qa, BUG-026 y BUG-027 nuevos, handoff.
+* **Falta:** verificado del propietario (QT-009, BUG-026, BUG-027);
+  fix de BUG-027 (fail-fast sin material/banco + indexed_chunks_count) y
+  BUG-026 (watcher de activeSubjectId) - ambos requieren codigo + rebuild;
+  commit + push de docs.
+* **Decision:** ninguna nueva (BUG-026/027 abiertos para el propietario;
+  BUG-024 sigue sin fix planificado).
+* **Medicion:** 22 checks PASS / 2 FAIL (24 checks: F1-F14, I1-I9,
+  E1-E5); 2 bugs nuevos (BUG-026 menor, BUG-027 alto); 1 examen de
+  certificacion conservado como evidencia.
+
 ## 2026-10-27 (ronda QA 8 - anexo UX: banco de preguntas expandible)
 
 * **Hecho:** UX del Banco de Preguntas corregida a pedido del propietario
