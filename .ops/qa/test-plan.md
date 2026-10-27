@@ -3,16 +3,16 @@ id: qa-test-plan
 tipo: Guide
 type: Guide
 title: Plan de pruebas y matriz de certificacion
-description: Checks C1-C13 (P0-P2) y regresion R1-R7 con estado de certificacion por ronda.
+description: Checks C1-C20 (P0-P2) y regresion R1-R7 con estado de certificacion por ronda.
 estado: vigente
 dueno: rol:propietario
-fecha: 2026-10-26
+fecha: 2026-10-27
 relaciona: [qa-strategy, REQ-001]
 status: stable
 sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.md, title: copilot-instructions }]
 ---
 
-Matriz de certificacion E2E. Rondas: 1=2026-10-19 (IMPL-013), 2=2026-10-23 (IMPL-015), 3=2026-10-23 (IMPL-016), 4=2026-10-26 (IMPL-019), 5=2026-10-26 (IMPL-021).
+Matriz de certificacion E2E. Rondas: 1=2026-10-19 (IMPL-013), 2=2026-10-23 (IMPL-015), 3=2026-10-23 (IMPL-016), 4=2026-10-26 (IMPL-019), 5=2026-10-26 (IMPL-021), 6=2026-10-27 (IMPL-023).
 
 ## P0 - caso de uso central
 
@@ -59,6 +59,22 @@ Matriz de certificacion E2E. Rondas: 1=2026-10-19 (IMPL-013), 2=2026-10-23 (IMPL
 | C19 | Generacion E2E banco vacio: LLM, PDFs, zip, /output, BD | 5 | IMPL-021 |
 | C20 | DELETE /questions/{id} borra y persiste | 5 | IMPL-021 |
 
+## Ronda 6 (certificacion RC3, 2026-10-27, IMPL-023)
+
+| Check | Descripcion | Round | Bug/QT |
+|---|---|---|---|
+| C21 | BUG-018: sondas HTTP raiz 422 / metadata anidada 200+num_versions=2 | 6 | BUG-018/IMPL-022 |
+| C22 | RFC-10: materia activa persiste tras hard reload | 6 | BL-008/IMPL-022 |
+| C23 | RFC-11: abort stream -> Retry -> rehidratacion sin duplicar contenido | 6 | BL-008/C8 |
+| C24 | BUG-016: 3 restarts exam_app con sesion activa, 0 401 | 6 | BUG-016/RFC-12 |
+| C2 | PDF grande real 5.4 MB: sin 413, 211 chunks, RAG con el material | 6 | BUG-005/QT-001 |
+
+Resultado ronda 6: C21 PASS, C22 PASS, C23 PASS, C24 PASS (3/3 restarts),
+C2 PASS nominal (5.4 MB); caso extremo 6.86 MB destapo BUG-020 (29 h de
+embeddings, sin progreso/cancelacion). Hallazgos nuevos: BUG-019 (HUMAN
+duplicado en checkpointer tras Retry), BUG-021 (persist=false persiste
+examen); decisiones abiertas DEC-001/002/003.
+
 ## Regresion
 
 | Check | Descripcion | Round | Bug/QT |
@@ -67,8 +83,34 @@ Matriz de certificacion E2E. Rondas: 1=2026-10-19 (IMPL-013), 2=2026-10-23 (IMPL
 | R2 | Guardrail anti-borrado de preguntas verificadas | 1, 3 | QT-001 |
 | R3 | Selector de materia sincronizado | 1, 2 | QT-001 |
 | R4 | Banco: filtros, detalle, toggle | 1, 3 | QT-001 |
-| R5 | Exportaciones CSV/XLSX/JSON | 1, 3 | QT-001 |
-| R6 | Auditoria LLM filas nuevas | 1, 3 | QT-001 |
+| R5 | Exportaciones CSV/XLSX/JSON | 1, 3, 6 | QT-001 |
+| R6 | Auditoria LLM filas nuevas | 1, 3, 6 | QT-001 |
 | R7 | Idioma: prompt espanol -> respuesta ingles | 1, 3 | QT-001 |
+
+Resultados ronda 6 (regresion):
+
+- R1 HITL textual PASS: "yes" guardo la pregunta de pilas/colas como
+  verified-by-human (id `a8571657-6a54-4b02-a178-a76f2b75a82f`), widget
+  QuestionCard, verificacion IA "approved (high priority)".
+- R2 Guardrail PASS: "Borra todas las preguntas" -> el agente se nego
+  (proteccion verified-by-human), ningun DELETE emitido, BD conserva la
+  pregunta.
+- R4 Exportaciones PASS via chat (tool `export_questions`, no hay botones
+  de UI): "Exporta en Excel" -> `questions_20261027_172726.xlsx` con la
+  1 pregunta del banco y link de descarga funcional. Hallazgo menor: la
+  auto-adjuncion al chat fallo ("the file could not be auto-attached") y
+  cayo al link; el artifact card inicial mostro el link pero sin emoji
+  correcto hasta el segundo intento del agente.
+- R5 Auditoria LLM PASS: `llm_responses` con 3250 filas; el thread de la
+  ronda registro cada llamada con context `chat:model`, model
+  `zai-org/GLM-5.3-Flash`, latencia y timestamp (18+ filas del turno).
+- R6 Idioma PASS: toggle EN/ES en el header cambia nav, titulo y textos
+  (Banco/Examenes/Materias), persiste en localStorage (`mvp_locale`) tras
+  reload y se restauro a EN al final. Nota menor: tras reload,
+  `document.documentElement.lang` queda "en" aunque la UI este en ES (el
+  atributo solo se re-sincroniza al click; RFC-10 usa su propia key).
+- R3/R7 omitidos esta ronda: R3 (selector sincronizado) cubierto por
+  C22/RFC-10; R7 requiere LLM en ingles, cubierto indirectamente por el
+  agente respondiendo en el idioma del prompt durante R1/R2.
 
 Conversion futura de esta matriz a suite versionada: BL-010 (Playwright e2e).

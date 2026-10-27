@@ -6,7 +6,7 @@ title: Matriz de trazabilidad REQ -> BL -> IMPL -> QT
 description: Cobertura con estado y evidencia; la fuente de la cadena de trazabilidad.
 estado: vigente
 dueno: rol:propietario
-fecha: 2026-10-26
+fecha: 2026-10-27
 relaciona: [qa-test-plan, templates-base]
 status: stable
 sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.md, title: copilot-instructions }]
@@ -30,8 +30,9 @@ sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.
 | REQ-001 | BL-013 | IMPL-021 | QT-004 | ejecutado; ronda 5 regresion API, BUG-017b verificado |
 | REQ-002 | BL-019, 020, 021 | IMPL-018 | QT-005 | ejecutado; 102 runs, H1-H5, FINDINGS.md |
 | REQ-003 | BL-001 | IMPL-001 | QT-006 | borrador; remotos y CI pendientes |
-| REQ-001 | BL-008 | IMPL-022 | QT-003 | en_curso; BUG-016 fix + RFC-10/11 en RC3/develop (browser pending) |
-| REQ-001 | BL-008 | IMPL-022 | QT-005 | resuelto; BUG-018 extra=forbid en RC3/develop (sondas script OK) |
+| REQ-001 | BL-008 | IMPL-022 | QT-003 | resuelto; BUG-016 verificado en navegador ronda 6 (3 restarts, 0 401) + RFC-10/11 PASS (C22/C23) |
+| REQ-001 | BL-008 | IMPL-022 | QT-005 | resuelto; BUG-018 sondas HTTP reales ronda 6: raiz 422, metadata 200 num_versions=2 (C21) |
+| REQ-001 | BL-008 | IMPL-023 | QT-004 | ejecutado; ronda 6 certificacion RC3: C2 PDF 5.4 MB PASS, R1/R2/R4/R5/R6 PASS, hallazgos BUG-019/020/021 + DEC-001/002/003 |
 
 ## QT y su estado
 
@@ -44,6 +45,7 @@ sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.
 | QT-005 | Campana evaluacion E01-E04 (H1-H5) | aprobada | `test/evaluation/` FINDINGS + agregados |
 | QT-006 | Clon fresco + CI submodulos | pendiente | no ejecutable aun (IMPL-001) |
 
-Pendientes conocidos: C2 con PDF grande real; verificacion en navegador de BUG-016
-y RFC-10/11 (BL-008, IMPL-022); suite versionada BL-010. BUG-016 y BUG-018 quedan
-resueltos (fix aplicado en RC3/develop) pendiente verificacion del owner.
+Pendientes conocidos: suite versionada BL-010 (Playwright e2e); BUG-019/020/021
+abiertos (hallazgos ronda 6) con decisiones DEC-001/002/003 pendientes del owner;
+C2 caso extremo (>100 paginas reales) bloqueado por BUG-020. BUG-016 y BUG-018
+verificados en ronda 6 (navegador + sondas HTTP); quedan resueltos.

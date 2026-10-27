@@ -37,5 +37,18 @@ Fix (IMPL-022, rama RC3/develop): `model_config = ConfigDict(extra="forbid")` en
 accionable via FastAPI. Verificado con script desechable: sonda 1 (raiz) ->
 ValidationError/422; sonda 2 (metadata anidada) -> num_versions=2; tool del agente
 (construccion por keywords) y round-trip `model_dump`/`model_validate` (columna JSON de
-la tabla exams) intactos. Pendiente: re-probar las 2 sondas HTTP reales via nginx
-(requiere servicios levantados).
+la tabla exams) intactos.
+
+## Cierre (Ronda 6, 2026-10-27)
+
+Sondas HTTP reales ejecutadas via nginx (R5 de la ronda 5, re-ejecutadas):
+
+- Sonda 1 (campos en la raiz: `num_versions`, `name`): HTTP 422 con detalle
+  accionable de Pydantic (campo extra no permitido). ANTES (ronda 5): 200
+  silencioso con num_versions=1.
+- Sonda 2 (metadata anidada correcta): HTTP 200, BD con `num_versions=2`,
+  4 PDFs (`_A_respondido/_A/_B_respondido/_B`), ZIP creado. Sin regresion.
+- Nota: la sonda 2 dejo una fila en `exams` (id `f4a744b6-fccc-4916-bd10-
+  1b9172023bde`, name `SondaR6Anidada`): el nodo de compilacion persiste la
+  fila/PDFs/ZIP incondicionalmente; ver BUG-021 (el flag `persist=false`
+  solo controla las preguntas, no el examen). No es regresion de BUG-018.

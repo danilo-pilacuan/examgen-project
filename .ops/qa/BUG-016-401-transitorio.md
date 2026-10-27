@@ -30,5 +30,25 @@ Fix (IMPL-022, RFC-12, rama RC3/develop): `apiFetch` reintentar UNA vez ante 401
 el JWT almacenado no ha expirado (`storedTokenUnexpired()` decodifica `exp` del payload)
 o el interceptor re-lee el token de localStorage antes de reintentar; si el reintento
 falla, propaga el error con el mensaje de sesion expirada de `friendlyHttpMessage`.
-Verificado: build + vue-tsc del frontend sin errores. Pendiente: reproducir el reinicio
-de exam_app con sesion activa (C8/C10) para confirmar 0 401 visibles.
+Verificado: build + vue-tsc del frontend sin errores.
+
+## Cierre (Ronda 6, 2026-10-27)
+
+Verificacion robustecida con 3 reinicios independientes de `exam_app`
+(`docker restart exam_app`, espera healthy + 30 s) con sesion activa:
+
+1. Restart 1: mensaje por chat -> HTTP 200 directo en `POST /api/chat/stream`
+   (sin 401 previo), HITL intacto (la pregunta pendiente sobrevivio en el
+   checkpointer).
+2. Restart 2: nuevo turno -> 200 directo, sin 401, ninguna recarga de pagina.
+3. Restart 3 (tras C2, job de indexacion colgado): 200 directo; thread y
+   materia activa intactos.
+
+En los 3 casos el JWT venia de localStorage (sesion conservada) y NO hubo
+ningun 401 visible ni recarga. Bug verificado como RESUELTO en RC3.
+
+Nota menor (hallazgo, no bug): tras restart el store del frontend pierde
+`pendingQuestion` de la sesion (el widget de la pregunta pendiente ya no se
+muestra); el contenido del turno NO se pierde (checkpointer + rehidratacion
+RFC-11) y el usuario puede continuar por chat. Documentado como observacion
+en el test-plan de la ronda 6.
