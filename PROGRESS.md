@@ -6,6 +6,41 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
+## 2026-10-27 (ronda QA 8: fix DEC-004, hilos de chat server-side)
+
+* **Hecho:** resolucion DEC-004 (a extendida por el propietario) implementada
+  y verificada (IMPL-025 / BL-017 / QT-008). Backend: modelo ChatThread +
+  migracion b8c9d0e1f2a3 (aplicada en el contenedor, alembic head), servicio
+  threads_service.py (register_or_adopt nunca reasigna un id ajeno,
+  require_owned_thread, record_turn con badges y tope 1M), endpoints
+  GET/PATCH/DELETE /api/chat/threads, y ownership 403 en history/stream/
+  invoke. Frontend: `useThreadId.ts` reescrito server-backed (refresh/
+  invalidate/ensureLoaded, create/remove/rename, touchThread con titulo
+  fijado solo al primer mensaje), ThreadSidebar con badges (chip de ultima
+  materia + contador de mensajes) y delete asincrono, ChatPanel sin titulo
+  por turno + refreshThreads tras stream, ChatView hidrata el hilo mas
+  reciente, auth.ts invalida el listado en login/register/logout, i18n es/en.
+  Verificacion real: scripts/verify-threads-r8.ps1 12/12 PASS (B sobre hilo
+  de A: history/write/rename/delete = 403; listado aislado; 401 sin token;
+  titulo fijado y message_count=2->4; A renombra y borra lo suyo) +
+  Playwright con qa-r7 (reload conserva la conversacion y la hidrata desde
+  el server, badges "QA R7 Recert"+"4" visibles, delete deja chat_threads=0).
+  Docker rebuild del frontend detecto TS2349 (v-for shadowing de `t` de
+  useI18n) que el tsc local no atrapa; corregido con `th`. Usuarios y hilos
+  de control qa-r8 purgados. .ops: BUG-022/023 -> `corregido`, DEC-004 ->
+  `tomada`, BL-017 -> `ejecutado`, IMPL-025 + QT-008 nuevos, test-plan
+  C41-C53, traceability, READMEs, handoff, esta bitacora.
+* **Falta:** verificado del propietario (QT-008/BUG-022/023); push a origin
+  de 4 repos (core, exam-app, frontend, meta-repo); purga del checkpointer
+  huerfano al borrar hilo (seguimiento); BUG-024/025; DEC-001/002/003 y
+  fixes BUG-019/020/021; tesis; BL-010.
+* **Decision:** DEC-004 tomada (a extendida): listado server-side con
+  badges, almacenamiento global entre materias (lo que se acota es por
+  usuario/dispositivo), titulo fijado, lazy adoption de hilos heredados.
+* **Medicion:** 12/12 comprobaciones API PASS + 3 casos funcionales
+  Playwright PASS (C51-C53); migracion a7b8c9d0e1f2 -> b8c9d0e1f2a3 aplicada;
+  hilos de control qa-r8 y usuarios purgados (0 filas residuales).
+
 ## 2026-10-27 (ronda QA 7: recertificacion funcional + integracion)
 
 * **Hecho:** ronda 7 de QA ejecutada contra RC3/develop a pedido del propietario
