@@ -14,17 +14,16 @@ status: stable
 ## Index
 
 - `strategy.md` - what "verified" means (browser-only rule) + validation rules.
-- `test-plan.md` - C1-C24 + R1-R7 certification matrix per round.
+- `test-plan.md` - C1-C40 + R1-R7 certification matrix per round.
 - `traceability.md` - REQ -> BL -> IMPL -> QT coverage with evidence.
-- `BUG-001..BUG-021.md` - defect register, flat in this folder (22 files).
+- `BUG-001..BUG-025.md` - defect register, flat in this folder (26 files).
 
-Round 6 (2026-10-27, IMPL-023, RC3 certification): BUG-016 verified fixed
-(3 restarts, 0 401), BUG-018 verified fixed (real HTTP sondas via nginx),
-RFC-10/11 PASS in browser, C2 PASS with 5.4 MB PDF (211 chunks, RAG OK).
-New findings: BUG-019 (duplicate HUMAN in checkpointer on Retry),
-BUG-020 (unbounded indexing blocks embedding service ~29 h, no progress
-nor cancel), BUG-021 (persist=false still persists the exam row/PDFs/ZIP).
-Open decisions for the owner: DEC-001, DEC-002, DEC-003.
+Round 7 (2026-10-27, IMPL-024, recertificacion funcional + integracion):
+bug reportado "no veo conversaciones pasadas" = BUG-023 (listado solo en
+localStorage; fix en BL-017); BUG-022 critico (hilos de chat sin
+propiedad: lectura/escritura entre usuarios, DEC-004 abierta); BUG-024
+(sin cabeceras de seguridad nginx) y BUG-025 (mensaje 401 enganoso en
+login) nuevos. C25-C40: 11 PASS / 3 FAIL / 2 PASS con nota.
 
 Bugs follow `templates/defect.md`; the agent writes evidence (real output, never
 claimed), the owner sets `verified`. QT follow `templates/test-case.md`; only the

@@ -20,6 +20,9 @@ status: stable
 - `DEC-003-limites-indexacion-material.md` (abierta, 2026-10-27): limites y
   estrategia de indexacion de material grande; detectada en QA ronda 6
   (BUG-020, C2).
+- `DEC-004-propiedad-hilos-chat.md` (abierta, 2026-10-27): propiedad y
+  listado de hilos de chat (tabla threads vs derivar del checkpoint);
+  detectada en QA ronda 7 (BUG-022/023, reporte de historial).
 
 Open questions are drafted here as `DEC-NNN-slug.md` (template `templates/decision.md`,
 6-line options table max) and the owner answers them. The agent never closes a DEC

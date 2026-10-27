@@ -6,6 +6,40 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
+## 2026-10-27 (ronda QA 7: recertificacion funcional + integracion)
+
+* **Hecho:** ronda 7 de QA ejecutada contra RC3/develop a pedido del propietario
+  (IMPL-024): pruebas funcionales con Playwright en navegador real y de
+  integracion via API/nginx/Postgres, sin unitarias. Diagnostico del bug
+  reportado ("no veo conversaciones pasadas en el historial"): es BUG-023, el
+  listado de hilos vive solo en `localStorage['mvp_chat_threads']`
+  (`useThreadId.ts:4`); en el mismo navegador los 2 hilos de control se listan
+  e hidratan (C26/C27 PASS), pero limpiar el storage deja la sidebar vacia
+  aunque los hilos siguen en el checkpointer (C25 FAIL, repro del reporte).
+  La brecha es BL-017 (pendiente desde ronda 2). Hallazgo critico BUG-022: los
+  endpoints de chat autentican pero no verifican propiedad del thread_id
+  (`chat.py` history/stream/invoke), asi que el usuario B leyo y ESCRIBIO el
+  hilo de A (evidencia API + visual en navegador con un tercer usuario);
+  decision abierta DEC-004 con 3 opciones. Nota: materias semilla sin owner
+  son escribibles por cualquiera. Funcionales PASS: banco (200 filas, filtros,
+  toggle), examenes, material, creacion de materia, chat con materia activa,
+  reload duro, guardia de ruta anonima. Integracion PASS: auth 422/409/401,
+  aislamiento 403, guardrail de verificadas. Nuevos: BUG-024 (nginx sin
+  cabeceras de seguridad), BUG-025 (login invalido muestra "Tu sesion
+  expiro"). .ops actualizado: IMPL-024, QT-007, test-plan C25-C40, BUG-022/023/
+  024/025, DEC-004, traceability, BL-017 re-elevado a listo, indices, handoff.
+* **Falta:** resolucion de DEC-004 y fix de BUG-022/023 (BL-017); fixes
+  BUG-024/025; DEC-001/002/003 y fixes BUG-019/020/021; tesis; BL-010.
+* **Decision:** sin cambios de codigo: los 4 bugs nuevos quedan `abierto`;
+  BUG-022/023 bloqueados por DEC-004 (el agente no cierra decisiones ni
+  aplica fixes sin el propietario). Generacion E2E de examen omitida en la
+  ronda: ya cubierta por C19 (ronda 5) y C2 (ronda 6).
+* **Medicion:** C25-C40: 11 PASS / 3 FAIL / 2 PASS con nota; 2 hilos de
+  control en checkpointer (ad0e765d, c35b172e) con 4 mensajes cada uno; B
+  leyo 4 mensajes de A y le inserto 2; nginx devuelve solo Server y
+  Content-Type (sin HSTS/XCTO/XFO); datos QA temporales purgados (materia
+  "QA R7 UI Temp", usuario qa-r7-ui-temp, token files).
+
 ## 2026-10-27 (ronda QA 6: certificacion RC3)
 
 * **Hecho:** ronda 6 de QA ejecutada contra RC3/develop con stack levantado (IMPL-023).

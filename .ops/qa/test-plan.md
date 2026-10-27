@@ -75,12 +75,42 @@ embeddings, sin progreso/cancelacion). Hallazgos nuevos: BUG-019 (HUMAN
 duplicado en checkpointer tras Retry), BUG-021 (persist=false persiste
 examen); decisiones abiertas DEC-001/002/003.
 
+## Ronda 7 (recertificacion QA 2026-10-27, IMPL-024)
+
+Mandato del propietario: recertificacion con pruebas funcionales
+(Playwright, navegador real) y de integracion (API/nginx/BD), sin
+unitarias. Bug reportado: "no veo conversaciones pasadas en el historial".
+
+| Check | Tipo | Descripcion | Resultado | Bug/QT |
+|---|---|---|---|---|
+| C25 | Funcional | Repro del reporte: limpiar `mvp_chat_threads` + reload -> sidebar 0 con hilos en BD | FAIL -> BUG-023 | BUG-023/QT-007 |
+| C26 | Funcional | Mismo navegador: 2 hilos listados e hidratados al hacer click (contenido completo) | PASS | QT-007 |
+| C27 | Funcional | Logout/login conserva e hidrata los hilos (mismo navegador) | PASS | QT-007 |
+| C28 | Funcional | Banco: 200 filas scrollable, filtros dificultad/verificacion, toggle Pending->Human->Pending | PASS | QT-007 |
+| C29 | Funcional | Examenes: listado con enlaces Download ZIP/PDF | PASS | QT-007 |
+| C30 | Funcional | Material: chunks visibles, botones Delete/Delete-all | PASS | QT-007 |
+| C31 | Funcional | Materias: crear via UI (sin delete en UI ni API) | PASS (nota) | QT-007 |
+| C32 | Funcional | Chat con materia activa: indicador Context + respuesta que usa el asunto | PASS | QT-007 |
+| C33 | Funcional | Reload duro conserva sesion, materia activa y hilos | PASS | QT-007 |
+| C34 | Funcional | Guardia de ruta anonima -> /login?redirect=/; login invalido muestra mensaje (texto enganoso) | PASS (nota) | BUG-025/QT-007 |
+| C35 | Integracion | BUG-022: usuario B lee (200) y escribe (POST agrega mensajes) el hilo de A | FAIL -> BUG-022 | BUG-022/QT-007 |
+| C36 | Integracion | Aislamiento materias: B -> preguntas/examenes/material de A -> 403 | PASS (nota semillas) | QT-007 |
+| C37 | Integracion | Auth: 422 password debil, 409 email duplicado, 401 password invalida, /auth/me correcto | PASS | QT-007 |
+| C38 | Integracion | Toggle verificacion PUT via nginx + guardrail DELETE de verificada -> 403 | PASS | QT-007 |
+| C39 | Integracion | nginx: sin HSTS/X-Content-Type-Options/X-Frame-Options | FAIL -> BUG-024 | BUG-024/QT-007 |
+| C40 | Integracion | BUG-019 matizado: hilo nuevo por stream con roles limpios user,assistant (sin HUMAN doble); duplicado solo en Retry | PASS (nota) | BUG-019/QT-007 |
+
+Resultado ronda 7: 11 PASS, 3 FAIL (BUG-022 critico, BUG-023 alto -el bug
+reportado-, BUG-024 low/medium), 2 PASS con nota (BUG-025 menor; semillas
+sin owner escribibles por cualquiera). Generacion E2E de examen omitida:
+cubo LLM largo ya certificado en C19 (ronda 5) y C2 (ronda 6).
+
 ## Regresion
 
 | Check | Descripcion | Round | Bug/QT |
 |---|---|---|---|
 | R1 | HITL textual (guardar + verificar por chat) | 1, 2, 3 | QT-001 |
-| R2 | Guardrail anti-borrado de preguntas verificadas | 1, 3 | QT-001 |
+| R2 | Guardrail anti-borrado de preguntas verificadas | 1, 3, 7 | QT-001, QT-007 |
 | R3 | Selector de materia sincronizado | 1, 2 | QT-001 |
 | R4 | Banco: filtros, detalle, toggle | 1, 3 | QT-001 |
 | R5 | Exportaciones CSV/XLSX/JSON | 1, 3, 6 | QT-001 |

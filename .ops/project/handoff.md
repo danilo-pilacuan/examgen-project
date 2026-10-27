@@ -12,13 +12,14 @@ status: stable
 sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.md, title: copilot-instructions }]
 ---
 
-> **Ultima actualizacion:** 2026-10-27 (QA ronda 6: certificacion RC3 ejecutada) | **Rama:** `RC3/develop` |
-> **Arbol:** ronda 6 de QA certificada (IMPL-023): BUG-016 y BUG-018 verificados como resueltos
-> en navegador/API, RFC-10/11 PASS, C2 PASS con PDF 5.4 MB (211 chunks, RAG OK). Hallazgos nuevos
-> BUG-019 (HUMAN duplicado tras Retry), BUG-020 (indexacion sin limites/progreso/cancelacion),
-> BUG-021 (persist=false persiste examen) con decisiones abiertas DEC-001/002/003 para el
-> propietario. Rondas previas: RC2 tag publicado en los 7 repos; IMPL-022 con fixes de BUG-018,
-> BUG-016 y BL-008 (RFC-10/11/12).
+> **Ultima actualizacion:** 2026-10-27 (QA ronda 7: recertificacion funcional + integracion) | **Rama:** `RC3/develop` |
+> **Arbol:** ronda 7 de QA ejecutada (IMPL-024) a pedido del propietario: funcionales Playwright
+> + integracion API/nginx/BD, sin unitarias. El bug reportado "no veo conversaciones pasadas"
+> se diagnosticó como BUG-023 (el listado de hilos vive solo en `localStorage`; mismo navegador
+> PASS, otro navegador/storage limpio -> sidebar vacia; fix en BL-017). Hallazgo critico nuevo
+> BUG-022: los hilos no registran propietario y cualquier usuario autenticado lee y ESCRIBE el
+> hilo ajeno (DEC-004 abierta). Ademas BUG-024 (sin cabeceras de seguridad en nginx) y BUG-025
+> (mensaje 401 enganoso en login). C25-C40: 11 PASS / 3 FAIL / 2 PASS con nota.
 
 ## Contexto en 30 segundos
 
@@ -37,7 +38,7 @@ Exam Generator: MVP de tesis USFQ para que un profesor genere examenes LaTeX por
 |---|---|
 | Caso de uso central (materias, material, preguntas HITL, examenes, ZIP) | Verificado E2E (rondas 1-6; C2 PASS con PDF 5.4 MB real en ronda 6) |
 | Framework de evaluacion (etapa 15) | Ejecutado: 102 runs reales; hiperparametros validados T gen=0.7, top_k=3, T eval=0.2 |
-| BUG abiertos | BUG-019 (HUMAN duplicado en checkpointer tras Retry), BUG-020 (indexacion sin limites/progreso/cancelacion, ~29 h para 8000 paginas), BUG-021 (persist=false persiste igualmente examen/PDFs/ZIP). Los 3 con decision pendiente en DEC-001/002/003. BUG-016 y BUG-018 RESUELTOS y verificados en ronda 6 |
+| BUG abiertos | Ronda 6: BUG-019 (HUMAN duplicado en checkpointer tras Retry), BUG-020 (indexacion sin limites/progreso/cancelacion, ~29 h para 8000 paginas), BUG-021 (persist=false persiste igualmente examen/PDFs/ZIP) con DEC-001/002/003 pendientes. Ronda 7: BUG-022 (CRITICO: hilos de chat sin propiedad, lectura+escritura entre usuarios, DEC-004), BUG-023 (listado de hilos solo en localStorage; es el bug reportado; fix en BL-017), BUG-024 (sin cabeceras de seguridad nginx), BUG-025 (mensaje 401 enganoso en login). BUG-016 y BUG-018 RESUELTOS y verificados en ronda 6 |
 | Backlog P2/P3 | BL-008 verificado en browser (ronda 6); BL-010 Playwright suite y demas P2/P3 pendientes |
 | Etapa 01 (repos GitHub + CI) | Pendiente: repos locales listos, remotos no creados |
 | Migracion a .ops | Hecha: `implementaciones/` eliminado; todo vive en `.ops/` (94 docs OKF). IMPL-020 queda `borrador` hasta la revision del propietario |
@@ -45,12 +46,17 @@ Exam Generator: MVP de tesis USFQ para que un profesor genere examenes LaTeX por
 
 ## Trabajo pendiente (priorizado)
 
-1. Escrito de tesis, capitulo de experimentacion (usa `test/evaluation/` FINDINGS; sin codigo).
-2. Resolver DEC-001/002/003 (dueño): semantica de persist, dedupe HUMAN del Retry, limites de indexacion; luego fix de BUG-019/020/021 (P1; requiere codigo).
-3. BL-010 suite Playwright versionada (P2; requiere codigo).
-4. Comparativa cross-provider de modelos (P3; depende de acceso a otro modelo en el gateway).
-5. Etapa 01: crear repos remotos + CI del meta-repo (P3; requiere codigo).
-6. Resolver inconsistencia del instruccionado: validate.yml/copilot-instructions referencian infra DigitalMe ausente (tools/, mcp/, package.json raiz, AGENTS.md).
+1. Resolver DEC-004 (dueño) y fix de BUG-022/023 (P1, seguridad): tabla threads con owner
+   (BL-017) + GET /api/chat/threads + 403 en stream/invoke/history; tambien purga del
+   checkpointer al borrar hilo. Es la respuesta al bug reportado del historial.
+2. Escrito de tesis, capitulo de experimentacion (usa `test/evaluation/` FINDINGS; sin codigo).
+3. Resolver DEC-001/002/003 (dueño): semantica de persist, dedupe HUMAN del Retry, limites de
+   indexacion; luego fix de BUG-019/020/021 (P1; requiere codigo).
+4. Fix menor BUG-025 (mensaje de login) y BUG-024 (cabeceras nginx + rebuild) (P2).
+5. BL-010 suite Playwright versionada (P2; requiere codigo).
+6. Comparativa cross-provider de modelos (P3; depende de acceso a otro modelo en el gateway).
+7. Etapa 01: crear repos remotos + CI del meta-repo (P3; requiere codigo).
+8. Resolver inconsistencia del instruccionado: validate.yml/copilot-instructions referencian infra DigitalMe ausente (tools/, mcp/, package.json raiz, AGENTS.md).
 
 ## Gotchas que NO hay que redescubrir
 
@@ -71,3 +77,4 @@ Exam Generator: MVP de tesis USFQ para que un profesor genere examenes LaTeX por
 | 2026-10-26 (informe) | Commits `166c71e` y `2155694` publicados en origin; creado `docs/informe_implementacion.md` (informe de implementacion para tesis/defensa: arquitectura, 2 loops, 15 tools, RAG, seguridad, campana 102 runs con H1-H5, 5 rondas QA, metricas de escala, guion de defensa; 4 diagramas mermaid) |
 | 2026-10-26 (RC3) | Tag `RC2` + rama `RC3/develop` creados y publicados en los 7 repos; IMPL-022: BUG-018 resuelto (ConfigDict extra=forbid en ExamBlueprint), BUG-016 resuelto (retry 401 con token de localStorage en apiFetch), BL-008 RFC-10 (mvp_active_subject en localStorage) y RFC-11 (loadThread append tras Retry); frontend build + vue-tsc OK; verificacion browser pendiente del propietario |
 | 2026-10-27 (ronda 6) | Certificacion RC3 ejecutada (IMPL-023): BUG-018 verificado via nginx (raiz 422, metadata 200 num_versions=2), RFC-10 PASS (reload conserva materia), RFC-11 PASS (abort+Retry rehidrata sin duplicar contenido), BUG-016 PASS (3 restarts, 0 401), C2 PASS (PDF 5.4 MB, 211 chunks, RAG OK), R1/R2/R4/R5/R6 PASS; hallazgos BUG-019/020/021 documentados con DEC-001/002/003 abiertas; .ops actualizado (test-plan, traceability, READMEs, handoff) |
+| 2026-10-27 (ronda 7) | Recertificacion funcional (Playwright) + integracion (API/nginx/BD) sin unitarias, a pedido del propietario (IMPL-024). Bug reportado "no veo conversaciones pasadas" = BUG-023: listado de hilos solo en `localStorage['mvp_chat_threads']` (`useThreadId.ts`), mismo navegador PASS, storage limpio/otro navegador -> sidebar vacia con hilos en BD; fix en BL-017. BUG-022 critico: B lee y escribe hilos de A (history/stream/invoke sin ownership; evidencia API + visual con tercer usuario). BUG-024 (cabeceras nginx) y BUG-025 (mensaje 401 login) nuevos. C25-C40: 11 PASS/3 FAIL/2 nota; QT-007, DEC-004, IMPL-024, test-plan, traceability, BL-017 re-elevado; limpieza: materia "QA R7 UI Temp" y usuario qa-r7-ui-temp borrados, hilos de control conservados como evidencia |
