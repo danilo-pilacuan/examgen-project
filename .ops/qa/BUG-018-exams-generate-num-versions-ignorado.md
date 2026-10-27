@@ -3,11 +3,11 @@ id: BUG-018
 tipo: Defect
 type: Defect
 title: POST /exams/generate descarta campos desconocidos del blueprint en silencio
-description: extra=ignore de Pydantic acepta num_versions/name en la raiz del blueprint sin 422 y los ignora; el contrato real es blueprint.metadata.
-estado: abierto
+description: extra=ignore de Pydantic aceptaba num_versions/name en la raiz del blueprint sin 422; el contrato real es blueprint.metadata.
+estado: resuelto
 dueno: rol:propietario
 fecha: 2026-10-26
-relaciona: [QT-005, IMPL-021]
+relaciona: [QT-005, IMPL-021, IMPL-022]
 status: draft
 ---
 
@@ -32,7 +32,10 @@ metadatos vivan en `blueprint.metadata`. Un cliente REST que envie
 
 ## Fix y verificacion
 
-Pendiente (endurecimiento menor, no bloquea la tesis): declarar
-`model_config = ConfigDict(extra="forbid")` en `ExamBlueprint` (o validar
-en el endpoint) para que los campos mal ubicados devuelvan 422 accionable;
-reproducir las 2 sondas de la ronda 5 tras el cambio.
+Fix (IMPL-022, rama RC3/develop): `model_config = ConfigDict(extra="forbid")` en
+`ExamBlueprint` (core `domain/schemas/exam.py`); los campos mal ubicados devuelven 422
+accionable via FastAPI. Verificado con script desechable: sonda 1 (raiz) ->
+ValidationError/422; sonda 2 (metadata anidada) -> num_versions=2; tool del agente
+(construccion por keywords) y round-trip `model_dump`/`model_validate` (columna JSON de
+la tabla exams) intactos. Pendiente: re-probar las 2 sondas HTTP reales via nginx
+(requiere servicios levantados).

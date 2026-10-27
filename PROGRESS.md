@@ -6,6 +6,26 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
+## 2026-10-26 (RC2 tag + rama RC3/develop)
+
+* **Hecho:** commit de docs pendientes (`5d5a6f3`); tag `RC2` anotado y publicado en los 7
+  repos (meta + 6 submodulos); rama `RC3/develop` creada y publicada en los 7 repos. Fixes de
+  bugs conocidos (IMPL-022): BUG-018 `ConfigDict(extra="forbid")` en `ExamBlueprint` (core,
+  verificado con script desechable: raiz invalida -> 422, metadata anidada OK, tool del agente
+  OK, round-trip DB OK); BUG-016 retry unico de 401 re-leyendo `mvp_auth` con chequeo de `exp`
+  (`http.ts`); BL-008 RFC-10 persistencia de materia activa (`mvp_active_subject`,
+  `stores/subjects.ts`) y RFC-11 rehidratacion de la burbuja tras Retry (`loadThread(id, false)`
+  + watch en `ChatPanel.vue`). Frontend build (178 modulos) y vue-tsc OK. Docs .ops
+  actualizados (IMPL-022 + indices + BUG/BL + traceability + handoff).
+* **Falta:** verificacion en navegador del propietario (C8 retry 401, F5 materia activa,
+  reinicio exam_app, sondas HTTP del BUG-018); escritura de la tesis; C2 con PDF grande;
+  BL-010 Playwright; inconsistencia validate.yml (infra DigitalMe ausente).
+* **Decision:** todos los repos trabajan en `RC3/develop`; `RC2` queda como tag de linea
+  base. Los BUG pasan a `resuelto` con fix aplicado; el estado `verified` sigue reservado
+  al propietario.
+* **Medicion:** build del frontend 178 modulos / 5.50 s; vue-tsc sin errores; 4 sondas de
+  BUG-018 OK; tag y rama presentes en origin en los 7 repos.
+
 ## 2026-10-26 (informe de implementacion)
 
 * **Hecho:** publicados en origin `166c71e` + `2155694` (QA ronda 5). Creado
