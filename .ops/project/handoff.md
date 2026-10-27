@@ -12,11 +12,10 @@ status: stable
 sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.md, title: copilot-instructions }]
 ---
 
-> **Ultima actualizacion:** 2026-10-26 (ronda QA 5) | **Rama:** `RC2/develop` | **Arbol:**
-> commit `166c71e` adoptando instruccionado `.github` (copilot-instructions, skill
-> ops-lifecycle, workflow validate) sin publicar en origin; migracion `implementaciones/`
-> -> `.ops/` en `4b50c75`; submodulos en sync (frontend `1c3c674`, exam-app `29a64e3`,
-> agents-backend, core y latex-compiler en 78a874f).
+> **Ultima actualizacion:** 2026-10-26 (informe de implementacion) | **Rama:** `RC2/develop` |
+> **Arbol:** commits `166c71e` + `2155694` publicados en origin (instruccionado `.github` y
+> registro de QA ronda 5); migracion `implementaciones/` -> `.ops/` en `4b50c75`; submodulos en
+> sync (frontend `1c3c674`, exam-app `29a64e3`, agents-backend, core y latex-compiler en 78a874f).
 
 ## Contexto en 30 segundos
 
@@ -66,3 +65,4 @@ Exam Generator: MVP de tesis USFQ para que un profesor genere examenes LaTeX por
 | 2026-10-26 (anterior) | Etapa 16 (QA ronda 4 scroll + nginx toggle) ejecutada y publicada; handoff estructurado |
 | 2026-10-26 (actual) | Migracion de `implementaciones/` al arbol `.ops` (89 docs: 21 IMPL, 22 BL, 18 BUG, 3 REQ, plan, handoff, traceability, plantillas, READMEs); referencias externas actualizadas; carpeta original eliminada; sin codigo de producto |
 | 2026-10-26 (ronda 5) | Commit `166c71e` instruccionado agente (sin publicar); QA ronda 5 API: routing nginx, auth, aislamiento, 422, generacion E2E banco vacio (16 llamadas LLM, zip OK), DELETE pregunta, BUG-017b re-verificado; BUG-018 abierto (blueprint acepta campos extra en silencio; num_versions OK anidado en metadata); IMPL-021 + C16-C20 en test-plan; sondas DB purgadas |
+| 2026-10-26 (informe) | Commits `166c71e` y `2155694` publicados en origin; creado `docs/informe_implementacion.md` (informe de implementacion para tesis/defensa: arquitectura, 2 loops, 15 tools, RAG, seguridad, campana 102 runs con H1-H5, 5 rondas QA, metricas de escala, guion de defensa; 4 diagramas mermaid) |

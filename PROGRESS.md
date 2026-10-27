@@ -6,6 +6,23 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
+## 2026-10-26 (informe de implementacion)
+
+* **Hecho:** publicados en origin `166c71e` + `2155694` (QA ronda 5). Creado
+  `docs/informe_implementacion.md`: informe integral en espanol para la tesis y defensa
+  (resumen ejecutivo con metricas, arquitectura monorepo + 6 servicios, pipeline batch de
+  6 nodos, agente ReAct con 15 tools y HITL, RAG, seguridad multi-tenant, framework de
+  evaluacion, resultados de la campana 102 runs con H1-H5, 5 rondas de QA, metricas de
+  escala verificadas contra la BD, limitaciones, trabajo futuro y guion de defensa con
+  demo sugerida). 4 diagramas mermaid (arquitectura, pipeline, loop agente, RAG).
+* **Falta:** escrito de la tesis (capitulos de implementacion y experimentacion); BUG-018
+  endurecimiento; C2 con PDF grande real; BL-010 suite Playwright; revision `verified` del
+  propietario; repos remotos de submodulos (etapa 01); inconsistencia del instruccionado
+  (validate.yml referencia infra DigitalMe ausente).
+* **Decision:** el informe es un documento de referencia integral, no duplica
+  `docs/informe_avance.md` (avance de etapas): este resume el sistema terminado y los
+  resultados; aquel el log de avance por etapa. Nombres de archivos no cambian.
+
 ## 2026-10-26 (ronda QA 5)
 
 * **Hecho:** commit `166c71e` con el nuevo instruccionado del agente (copilot-instructions.md,
