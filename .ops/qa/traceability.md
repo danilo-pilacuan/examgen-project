@@ -35,6 +35,7 @@ sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.
 | REQ-001 | BL-008 | IMPL-023 | QT-004 | ejecutado; ronda 6 certificacion RC3: C2 PDF 5.4 MB PASS, R1/R2/R4/R5/R6 PASS, hallazgos BUG-019/020/021 + DEC-001/002/003 |
 | REQ-001 | BL-017 | IMPL-024 | QT-007 | ejecutado; ronda 7 recertificacion funcional+integracion: BUG-023 confirmado (listado localStorage, reporte del propietario), BUG-022 critico (hilos sin propiedad, DEC-004), BUG-024/025 nuevos; C25-C40 11 PASS/3 FAIL/2 nota |
 | REQ-001 | BL-017 | IMPL-025 | QT-008 | ejecutado; ronda 8 fix DEC-004(a): chat_threads + ownership 403 + listado server-side con badges; API 12/12 PASS (scripts/verify-threads-r8.ps1) + Playwright PASS; BUG-022/023 corregidos (verificado final pendiente del propietario) |
+| REQ-001 | BL-017 | IMPL-026 | QT-009 | ejecutado; ronda 9 recertificacion (Playwright + integracion + examenes E1-E5): 22 PASS / 2 FAIL; BUG-026 y BUG-027 nuevos; QA_R9_Cert como evidencia; verificacion final pendiente del propietario |
 
 ## QT y su estado
 
@@ -48,6 +49,7 @@ sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.
 | QT-006 | Clon fresco + CI submodulos | pendiente | no ejecutable aun (IMPL-001) |
 | QT-007 | Recertificacion ronda 7 (funcionales Playwright + integracion) | pendiente | test-plan ronda 7; BUG-022/023/024/025; pendiente del propietario |
 | QT-008 | Hilos server-side con ownership y badges (ronda 8) | pendiente | IMPL-025; 12/12 API PASS + Playwright PASS; pendiente del propietario |
+| QT-009 | Recertificacion ronda 9 (funcionales Playwright + integracion + certificacion examenes) | ejecutado | test-plan ronda 9; IMPL-026; agente actua como verificador humano en navegador; BUG-026/BUG-027 nuevos; pendiente del propietario |
 
 Pendientes conocidos: suite versionada BL-010 (Playwright e2e); BUG-019/020/021
 abiertos (hallazgos ronda 6) con decisiones DEC-001/002/003 pendientes del owner;
@@ -56,4 +58,8 @@ verificados en ronda 6 (navegador + sondas HTTP); quedan resueltos. Ronda 7 anad
 BUG-022 (critico, DEC-004), BUG-023 (bug reportado del historial, fix en BL-017),
 BUG-024 y BUG-025. Ronda 8 (IMPL-025): BUG-022/023 corregidos via BL-017
 (DEC-004 a); QT-008 pendiente de verificacion del propietario; purga del
-checkpointer huerfano queda como seguimiento.
+checkpointer huerfano queda como seguimiento. Ronda 9 (IMPL-026): BUG-026
+(estadisticas de cabecera tras restaurar asunto) y BUG-027 (pipeline publica
+examenes sin material ni banco, regression del criterio C6/BUG-004) abiertos;
+BUG-024/BUG-025 siguen abiertos; QT-009 pendiente de verificacion del
+propietario.

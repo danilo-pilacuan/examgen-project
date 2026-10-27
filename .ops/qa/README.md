@@ -14,9 +14,18 @@ status: stable
 ## Index
 
 - `strategy.md` - what "verified" means (browser-only rule) + validation rules.
-- `test-plan.md` - C1-C53 + R1-R7 certification matrix per round.
+- `test-plan.md` - C1-C54 + F1-F14 + I1-I8 + E1-E5 + R1-R7 certification matrix per round.
 - `traceability.md` - REQ -> BL -> IMPL -> QT coverage with evidence.
-- `BUG-001..BUG-025.md` - defect register, flat in this folder (26 files).
+- `BUG-001..BUG-027.md` - defect register, flat in this folder (28 files).
+
+Round 9 (2026-10-27, IMPL-026, recertificacion + certificacion de examenes):
+funcionales Playwright (F1-F13) + integracion API (I1-I6) + examenes E1-E5.
+22 PASS / 2 FAIL. BUG-027 nuevo (alto): el pipeline publica examenes con 0
+chunks y 0 preguntas (preguntas genericas fuera de tema, "Sahara Desert");
+E1 reporta `indexed_chunks_count:0` pese a 41 chunks en BD. BUG-026 nuevo
+(menor): chips de cabecera 0/0 hasta re-seleccionar el asunto tras login o
+Activate. I4 sigue FAIL conocido (BUG-024, sin fix planificado). Hilos de
+control r9 purgados; examen QA_R9_Cert queda como evidencia.
 
 Round 8 (2026-10-27, IMPL-025, fix DEC-004): hilos de chat server-side
 (BL-017): tabla `chat_threads` + GET/PATCH/DELETE /api/chat/threads +

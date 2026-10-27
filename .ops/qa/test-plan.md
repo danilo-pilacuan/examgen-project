@@ -3,7 +3,7 @@ id: qa-test-plan
 tipo: Guide
 type: Guide
 title: Plan de pruebas y matriz de certificacion
-description: Checks C1-C20 (P0-P2) y regresion R1-R7 con estado de certificacion por ronda.
+description: Checks C1-C54, F1-F14, I1-I8, E1-E5 (P0-P2) y regresion R1-R7 con estado de certificacion por ronda.
 estado: vigente
 dueno: rol:propietario
 fecha: 2026-10-27
@@ -133,6 +133,50 @@ Resultado ronda 8: 12 PASS + 1 PASS con nota (purga del checkpointer
 pendiente como seguimiento) + 1 PASS UX (C54, anexo del mismo dia: detalle
 del Banco expandible inline). BUG-022 y BUG-023 corregidos; verificacion
 final pendiente del propietario (QT-008).
+
+## Ronda 9 (recertificacion QA 2026-10-27, IMPL-026)
+
+Mandato del propietario: recertificacion de nuevo con pruebas funcionales
+(Playwright, navegador real, el agente actua como humano verificador) y de
+integracion (API/nginx/BD), sin unitarias; ademas certificar el caso de uso
+de examenes que la ronda 7 omitio. Cuentas de control: qa-r7 (A) y
+qa-r7-b (B), contrasenas restablecidas en la sesion. Datos semilla heredados
+(Economia Aplicada Eva/Lucia: 497 preguntas, 82 chunks) visibles por el
+fallback legacy (owner NULL) para ambos usuarios.
+
+| Check | Tipo | Descripcion | Resultado | Bug/QT |
+|---|---|---|---|---|
+| F1 | Funcional | Login A -> / con nombre del profesor visible | PASS (sesion persistente valida; "QA Round 7" en header) | QT-009 |
+| F2 | Funcional | Bancos: materias semilla listan preguntas; 200+ filas scrolleables; filtros dificultad/verificacion | PASS (Eva 200 preguntas API-limit; filtro hard 49/49; scrollHeight 10387 > clientHeight 515) | QT-009 |
+| F3 | Funcional | Detalle expandible inline (chevron, X, una sola seleccion) - anexo UX ronda 8 | PASS (tr.detail-row, cierre por click/X, expandedRows=1) | QT-009 |
+| F4 | Funcional | Toggle verificacion Pending->Human->Pending desde la UI | PASS (PUT 200 verificado; nota: la celda in-place queda desactualizada por re-orden de la lista) | QT-009 |
+| F5 | Funcional | Examenes: listado con enlaces Download ZIP/PDF funcionales | PASS (ZIP GET 200 128KB cd=attachment; PDF GET 200 41KB; HEAD 200) | QT-009 |
+| F6 | Funcional | Material: chunks visibles, Delete/Delete-all presentes | PASS (evaluation 41 chunks expandibles, botones Delete y Delete all) | QT-009 |
+| F7 | Funcional | Materias: crear via UI y queda activa | PASS ("QA R9 Recert" creada, activa y en combobox; API no expone DELETE de materias, limpieza via BD) | QT-009 |
+| F8 | Funcional | Chat con materia activa: indicador Context + respuesta usa el asunto | PASS ("Context: Eva" + respuesta cita archivo evaluation 41 chunks) | QT-009 |
+| F9 | Funcional | Sidebar hilos server-side: badges, click hidrata, reload duro conserva | PASS con BUG (hidratacion e historial OK tras reload; al restaurar el asunto activo las estadisticas 0/0 hasta re-seleccion manual) | BUG-026 |
+| F10 | Funcional | Logout/login conserva e hidrata los hilos | PASS (tras re-login el hilo aparece con badge de materia y 6 mensajes) | QT-009 |
+| F11 | Funcional (re) | Ruta anonima -> /login?redirect=/ | PASS (/bank anonimo redirige a /login) | QT-007/009 |
+| F12 | Funcional (re) | Guardrail anti-borrado de verificadas (API 403 + agente se niega) | PASS (DELETE 403; agente se niega en chat y la pregunta sigue en BD) | R2/QT-009 |
+| F13 | Funcional (re) | Aislamiento de materias e hilos entre A y B | PASS (B solo ve 5 semillas; hilo de A invisible para B en UI) | QT-007/009 |
+| I1 | Integracion | GET /api/chat/threads sin token -> 401 | PASS (threads/subjects/auth/me -> 401 via nginx) | QT-008/009 |
+| I2 | Integracion | B: history/write/rename/delete del hilo de A -> 403 (BUG-022 fix) | PASS (403 "Thread belongs to another user" en GET/PATCH/DELETE; hilo intacto) | BUG-022/QT-009 |
+| I3 | Integracion | Toggle verificacion PUT via nginx + guardrail DELETE verificada -> 403 | PASS (PUT verified=true 200; DELETE 403; restore ok; nota: campo del body es "verified") | QT-007/009 |
+| I4 | Integracion | nginx cabeceras de seguridad (BUG-024 conocido, sin fix planificado) | FAIL conocido (sin X-Frame-Options, X-Content-Type-Options, CSP, HSTS, Referrer-Policy) | BUG-024/QT-009 |
+| I5 | Integracion | Auth: 422 password debil, 409 email duplicado, 401 password invalida, /auth/me | PASS (422 cuerpo invalido, 422 duplicado, 401 credenciales, /auth/me 200, token invalido 401; nota BUG-025: mensaje de error enganoso) | BUG-025/QT-009 |
+| I6 | Integracion | Aislamiento materias: A -> preguntas/examenes de B; legacy visible (nota) | PASS (403 en preguntas/examenes/material cruzados; legacy legible por ambos por diseno) | QT-009 |
+| E1 | Funcional | Examen via formulario Exams (materia semilla B): POST /exams/generate 200 | PASS con nota (QA_R9_Cert: POST 200, 8 llamadas LLM, 1 rechazo por difficulty_mismatch, 3/4 items publicados; "indexed_chunks_count:0" en respuesta pese a 41 chunks en BD - ver E5) | BUG-027/QT-009 |
+| E2 | Funcional | ZIP con 2 versiones (con/sin respuestas) descargable | PASS (QA_R9_Cert.zip 175KB con A/B + A/B_respondido; Content-Disposition attachment) | QT-009 |
+| E3 | Funcional | PDFs en /output con Content-Disposition; HEAD no 405 | PASS (A.pdf 39425 B, CT application/pdf, CD attachment; HEAD 200) | QT-009 |
+| E4 | Funcional | Examen nuevo aparece solo en la vista de su materia (propietario) | PASS con nota (materia propietaria lo lista; B bloqueado 403 en materias propias de A; seeds legacy visibles a ambos por diseno) | QT-009 |
+| E5 | Funcional | Pipeline sin items aprobados no publica examen | FAIL (materia con 0 chunks y 0 preguntas genero 2 preguntas genericas fuera de tema ("Sahara Desert") y las publico con ZIP/PDF) | BUG-027/QT-009 |
+
+Resultado ronda 9: 22 PASS / 2 FAIL (I4 conocido BUG-024 sin fix planificado;
+E5/F12-chat -> BUG-027 nuevo: el pipeline publica examenes sin material
+indexado y sin banco, con preguntas genericas fuera de tema; E1 detecta
+ademas "indexed_chunks_count:0" en la respuesta pese a tener 41 chunks).
+BUG-026 nuevo (menor): estadisticas de cabecera 0/0 hasta re-seleccion manual
+del asunto tras restauracion.
 
 ## Regresion
 
