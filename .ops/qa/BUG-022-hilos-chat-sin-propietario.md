@@ -4,11 +4,11 @@ tipo: Defect
 type: Defect
 title: Hilos de chat sin control de propiedad (lectura y escritura entre usuarios)
 description: Cualquier usuario autenticado lee y escribe el hilo de otro via /api/chat/history y /api/chat.
-estado: abierto
+estado: corregido
 dueno: rol:propietario
 fecha: 2026-10-27
-relaciona: [QT-007, IMPL-024, BL-017, DEC-004]
-status: draft
+relaciona: [QT-007, QT-008, IMPL-024, IMPL-025, BL-017, DEC-004]
+status: fixed
 ---
 
 ## Evidencia
@@ -38,7 +38,11 @@ el checkpointer LangGraph no registra owner y no existe tabla de hilos
 
 ## Fix y verificacion
 
-Pendiente de DEC-004: tabla `threads` con owner (BL-017) + validacion 403 en
-los 3 endpoints de chat. Verificacion: B recibe 403 al leer/escribir el hilo
-de A; el listado de hilos (BL-017) devuelve solo hilos propios; caso adversario
-con thread_id ajeno.
+Implementado (IMPL-025, DEC-004 a): tabla `chat_threads` con owner (migracion
+b8c9d0e1f2a3), `require_owned_thread` en history (404 desconocido, 403 ajeno)
+y `register_or_adopt` en stream/invoke (403 si el id ya esta registrado a
+otro usuario; nunca reasigna). Verificado via API con qa-r8-a/qa-r8-b
+(scripts/verify-threads-r8.ps1): lectura, escritura, rename y delete del
+hilo ajeno -> 403; listado de B no contiene hilos de A; hilos de control
+purgados del registro. Pendiente: verificado final del propietario
+(estado pasa a `verificado` solo con su revision).

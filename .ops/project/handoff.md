@@ -6,20 +6,22 @@ title: Handoff entre sesiones
 description: Punto de entrada de cada sesion; estado exacto donde se quedo el trabajo.
 estado: vigente
 dueno: rol:propietario
-fecha: 2026-10-26
+fecha: 2026-10-27
 relaciona: [plan, ops-readme]
 status: stable
 sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.md, title: copilot-instructions }]
 ---
 
-> **Ultima actualizacion:** 2026-10-27 (QA ronda 7: recertificacion funcional + integracion) | **Rama:** `RC3/develop` |
-> **Arbol:** ronda 7 de QA ejecutada (IMPL-024) a pedido del propietario: funcionales Playwright
-> + integracion API/nginx/BD, sin unitarias. El bug reportado "no veo conversaciones pasadas"
-> se diagnosticó como BUG-023 (el listado de hilos vive solo en `localStorage`; mismo navegador
-> PASS, otro navegador/storage limpio -> sidebar vacia; fix en BL-017). Hallazgo critico nuevo
-> BUG-022: los hilos no registran propietario y cualquier usuario autenticado lee y ESCRIBE el
-> hilo ajeno (DEC-004 abierta). Ademas BUG-024 (sin cabeceras de seguridad en nginx) y BUG-025
-> (mensaje 401 enganoso en login). C25-C40: 11 PASS / 3 FAIL / 2 PASS con nota.
+> **Ultima actualizacion:** 2026-10-27 (QA ronda 8: fix DEC-004 hilos de chat) | **Rama:** `RC3/develop` |
+> **Arbol:** fix implementado y verificado de BUG-022/BUG-023 (IMPL-025, BL-017, resolucion DEC-004
+> a extendida por el propietario): tabla `chat_threads` con owner (migracion b8c9d0e1f2a3 aplicada),
+> endpoints GET/PATCH/DELETE `/api/chat/threads`, ownership 403 en history/stream/invoke, sidebar
+> server-side con badges (ultima materia + contador de mensajes) y titulo fijado al primer mensaje.
+> Verificacion: 12/12 comprobaciones API PASS (scripts/verify-threads-r8.ps1: B history/write/
+> rename/delete sobre hilo ajeno = 403, listado aislado, 401 sin token) + Playwright PASS
+> (reload conserva conversacion, badges visibles, delete funciona). BUG-022/023 en `corregido`;
+> verificado final pendiente del propietario (QT-008). Commits en 3 submodulos + meta-repo
+> pendientes de push (ver historial).
 
 ## Contexto en 30 segundos
 
@@ -38,7 +40,7 @@ Exam Generator: MVP de tesis USFQ para que un profesor genere examenes LaTeX por
 |---|---|
 | Caso de uso central (materias, material, preguntas HITL, examenes, ZIP) | Verificado E2E (rondas 1-6; C2 PASS con PDF 5.4 MB real en ronda 6) |
 | Framework de evaluacion (etapa 15) | Ejecutado: 102 runs reales; hiperparametros validados T gen=0.7, top_k=3, T eval=0.2 |
-| BUG abiertos | Ronda 6: BUG-019 (HUMAN duplicado en checkpointer tras Retry), BUG-020 (indexacion sin limites/progreso/cancelacion, ~29 h para 8000 paginas), BUG-021 (persist=false persiste igualmente examen/PDFs/ZIP) con DEC-001/002/003 pendientes. Ronda 7: BUG-022 (CRITICO: hilos de chat sin propiedad, lectura+escritura entre usuarios, DEC-004), BUG-023 (listado de hilos solo en localStorage; es el bug reportado; fix en BL-017), BUG-024 (sin cabeceras de seguridad nginx), BUG-025 (mensaje 401 enganoso en login). BUG-016 y BUG-018 RESUELTOS y verificados en ronda 6 |
+| BUG abiertos | Ronda 6: BUG-019 (HUMAN duplicado en checkpointer tras Retry), BUG-020 (indexacion sin limites/progreso/cancelacion, ~29 h para 8000 paginas), BUG-021 (persist=false persiste igualmente examen/PDFs/ZIP) con DEC-001/002/003 pendientes. Ronda 7: BUG-022 (CRITICO) y BUG-023 -> `corregido` en ronda 8 (IMPL-025, QT-008; pendiente verificado del propietario); BUG-024 (sin cabeceras de seguridad nginx), BUG-025 (mensaje 401 enganoso en login). Purga del checkpointer huerfano al borrar hilo: seguimiento separado. BUG-016 y BUG-018 RESUELTOS y verificados en ronda 6 |
 | Backlog P2/P3 | BL-008 verificado en browser (ronda 6); BL-010 Playwright suite y demas P2/P3 pendientes |
 | Etapa 01 (repos GitHub + CI) | Pendiente: repos locales listos, remotos no creados |
 | Migracion a .ops | Hecha: `implementaciones/` eliminado; todo vive en `.ops/` (94 docs OKF). IMPL-020 queda `borrador` hasta la revision del propietario |
@@ -46,17 +48,20 @@ Exam Generator: MVP de tesis USFQ para que un profesor genere examenes LaTeX por
 
 ## Trabajo pendiente (priorizado)
 
-1. Resolver DEC-004 (dueño) y fix de BUG-022/023 (P1, seguridad): tabla threads con owner
-   (BL-017) + GET /api/chat/threads + 403 en stream/invoke/history; tambien purga del
-   checkpointer al borrar hilo. Es la respuesta al bug reportado del historial.
-2. Escrito de tesis, capitulo de experimentacion (usa `test/evaluation/` FINDINGS; sin codigo).
-3. Resolver DEC-001/002/003 (dueño): semantica de persist, dedupe HUMAN del Retry, limites de
+1. Verificado del propietario de QT-008 / BUG-022 / BUG-023 (ronda 8): revisar evidencia
+   (12/12 API PASS + Playwright PASS) y pasar a `verificado`.
+2. Push a origin de los commits de la ronda 8 (core, exam-app, frontend, meta-repo; rama
+   RC3/develop) si quedo pendiente por red.
+3. Purga del contenido huerfano del checkpointer al borrar hilo (P2; seguimiento separado,
+   el listado ya no expone huerfanos).
+4. Escrito de tesis, capitulo de experimentacion (usa `test/evaluation/` FINDINGS; sin codigo).
+5. Resolver DEC-001/002/003 (dueño): semantica de persist, dedupe HUMAN del Retry, limites de
    indexacion; luego fix de BUG-019/020/021 (P1; requiere codigo).
-4. Fix menor BUG-025 (mensaje de login) y BUG-024 (cabeceras nginx + rebuild) (P2).
-5. BL-010 suite Playwright versionada (P2; requiere codigo).
-6. Comparativa cross-provider de modelos (P3; depende de acceso a otro modelo en el gateway).
-7. Etapa 01: crear repos remotos + CI del meta-repo (P3; requiere codigo).
-8. Resolver inconsistencia del instruccionado: validate.yml/copilot-instructions referencian infra DigitalMe ausente (tools/, mcp/, package.json raiz, AGENTS.md).
+6. Fix menor BUG-025 (mensaje de login) y BUG-024 (cabeceras nginx + rebuild) (P2).
+7. BL-010 suite Playwright versionada (P2; requiere codigo).
+8. Comparativa cross-provider de modelos (P3; depende de acceso a otro modelo en el gateway).
+9. Etapa 01: crear repos remotos + CI del meta-repo (P3; requiere codigo).
+10. Resolver inconsistencia del instruccionado: validate.yml/copilot-instructions referencian infra DigitalMe ausente (tools/, mcp/, package.json raiz, AGENTS.md).
 
 ## Gotchas que NO hay que redescubrir
 
@@ -78,3 +83,4 @@ Exam Generator: MVP de tesis USFQ para que un profesor genere examenes LaTeX por
 | 2026-10-26 (RC3) | Tag `RC2` + rama `RC3/develop` creados y publicados en los 7 repos; IMPL-022: BUG-018 resuelto (ConfigDict extra=forbid en ExamBlueprint), BUG-016 resuelto (retry 401 con token de localStorage en apiFetch), BL-008 RFC-10 (mvp_active_subject en localStorage) y RFC-11 (loadThread append tras Retry); frontend build + vue-tsc OK; verificacion browser pendiente del propietario |
 | 2026-10-27 (ronda 6) | Certificacion RC3 ejecutada (IMPL-023): BUG-018 verificado via nginx (raiz 422, metadata 200 num_versions=2), RFC-10 PASS (reload conserva materia), RFC-11 PASS (abort+Retry rehidrata sin duplicar contenido), BUG-016 PASS (3 restarts, 0 401), C2 PASS (PDF 5.4 MB, 211 chunks, RAG OK), R1/R2/R4/R5/R6 PASS; hallazgos BUG-019/020/021 documentados con DEC-001/002/003 abiertas; .ops actualizado (test-plan, traceability, READMEs, handoff) |
 | 2026-10-27 (ronda 7) | Recertificacion funcional (Playwright) + integracion (API/nginx/BD) sin unitarias, a pedido del propietario (IMPL-024). Bug reportado "no veo conversaciones pasadas" = BUG-023: listado de hilos solo en `localStorage['mvp_chat_threads']` (`useThreadId.ts`), mismo navegador PASS, storage limpio/otro navegador -> sidebar vacia con hilos en BD; fix en BL-017. BUG-022 critico: B lee y escribe hilos de A (history/stream/invoke sin ownership; evidencia API + visual con tercer usuario). BUG-024 (cabeceras nginx) y BUG-025 (mensaje 401 login) nuevos. C25-C40: 11 PASS/3 FAIL/2 nota; QT-007, DEC-004, IMPL-024, test-plan, traceability, BL-017 re-elevado; limpieza: materia "QA R7 UI Temp" y usuario qa-r7-ui-temp borrados, hilos de control conservados como evidencia |
+| 2026-10-27 (ronda 8) | Fix DEC-004 (a extendida por el propietario) implementado y verificado (IMPL-025/BL-017/QT-008): tabla `chat_threads` (migracion b8c9d0e1f2a3 aplicada en contenedor), threads_service.py con register_or_adopt (nunca reasigna id ajeno) + require_owned_thread, endpoints GET/PATCH/DELETE /api/chat/threads, ownership 403 en history/stream/invoke; frontend: useThreadId server-backed, ThreadSidebar con badges (ultima materia + contador), ChatPanel/ChatView/auth ajustados, i18n es/en. Verificacion: scripts/verify-threads-r8.ps1 12/12 PASS (B sobre hilo de A: history/write/rename/delete = 403; listado aislado; 401 sin token) + Playwright PASS (reload conserva conversacion, badges "QA R7 Recert"+"4", delete con chat_threads=0). Docker rebuild del frontend detecto y corrigio TS2349 (shadowing `t` de useI18n en v-for; el tsc local no lo atrapa - vue-tsc de Docker es la puerta). Usuarios qa-r8-a/b y sus hilos purgados. BUG-022/023 -> `corregido`; DEC-004 -> `tomada`; pendiente push de 4 repos y verificado del propietario |

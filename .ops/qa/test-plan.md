@@ -105,6 +105,33 @@ reportado-, BUG-024 low/medium), 2 PASS con nota (BUG-025 menor; semillas
 sin owner escribibles por cualquiera). Generacion E2E de examen omitida:
 cubo LLM largo ya certificado en C19 (ronda 5) y C2 (ronda 6).
 
+## Ronda 8 (fix hilos chat 2026-10-27, IMPL-025)
+
+Fix de DEC-004 (a extendida): hilos de chat server-side con owner, listado
+server-side con badges (ultima materia + contador de mensajes) y titulo
+fijado al primer mensaje. Ejecucion: scripts/verify-threads-r8.ps1 (API
+directa, qa-r8-a/qa-r8-b) + Playwright (qa-r7, navegador real).
+
+| Check | Tipo | Descripcion | Resultado | Bug/QT |
+|---|---|---|---|---|
+| C41 | Integracion | Login A/B; listas iniciales vacias por usuario (A=0, B=0) | PASS | QT-008 |
+| C42 | Integracion | Primer turno de A registra fila en chat_threads con titulo fijado (primer mensaje, 200 chars) y message_count=2 | PASS | QT-008 |
+| C43 | Integracion | BUG-022 fix: B lee history del hilo de A -> 403 (antes 200) | PASS | BUG-022/QT-008 |
+| C44 | Integracion | BUG-022 fix: B escribe en el hilo de A (POST /api/chat) -> 403 | PASS | BUG-022/QT-008 |
+| C45 | Integracion | BUG-022 fix: B renombra (PATCH) el hilo de A -> 403 | PASS | BUG-022/QT-008 |
+| C46 | Integracion | BUG-022 fix: B borra (DELETE) el hilo de A -> 403 | PASS | BUG-022/QT-008 |
+| C47 | Integracion | Aislamiento de listado: GET /api/chat/threads de B no contiene hilos de A | PASS | BUG-022/QT-008 |
+| C48 | Integracion | Sin token -> GET /api/chat/threads 401 | PASS | QT-008 |
+| C49 | Integracion | Segundo turno: titulo sigue fijado, message_count=4, last_subject_name actualizado | PASS | QT-008 |
+| C50 | Integracion | Operaciones propias: A renombra (200) y borra su hilo (fila fuera del listado y de la BD) | PASS | QT-008 |
+| C51 | Funcional | BUG-023 fix (Playwright): reload del navegador conserva la conversacion en la sidebar; click hidrata desde el checkpointer | PASS | BUG-023/QT-008 |
+| C52 | Funcional | Badges (Playwright): chip de ultima materia usada ("QA R7 Recert") + contador de mensajes ("4") visibles en el listado | PASS | QT-008 |
+| C53 | Funcional | Delete en la sidebar elimina la entrada; chat_threads count=0 en BD (contenido del checkpointer se conserva, purga fuera de alcance) | PASS (nota) | QT-008 |
+
+Resultado ronda 8: 12 PASS + 1 PASS con nota (purga del checkpointer
+pendiente como seguimiento). BUG-022 y BUG-023 corregidos; verificacion
+final pendiente del propietario (QT-008).
+
 ## Regresion
 
 | Check | Descripcion | Round | Bug/QT |

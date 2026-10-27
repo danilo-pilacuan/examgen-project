@@ -14,9 +14,17 @@ status: stable
 ## Index
 
 - `strategy.md` - what "verified" means (browser-only rule) + validation rules.
-- `test-plan.md` - C1-C40 + R1-R7 certification matrix per round.
+- `test-plan.md` - C1-C53 + R1-R7 certification matrix per round.
 - `traceability.md` - REQ -> BL -> IMPL -> QT coverage with evidence.
 - `BUG-001..BUG-025.md` - defect register, flat in this folder (26 files).
+
+Round 8 (2026-10-27, IMPL-025, fix DEC-004): hilos de chat server-side
+(BL-017): tabla `chat_threads` + GET/PATCH/DELETE /api/chat/threads +
+ownership 403 en history/stream/invoke; sidebar con badges (ultima materia,
+contador de mensajes) e hidratacion server-side. BUG-022 y BUG-023 ->
+`corregido` (verificacion final pendiente del propietario). QT-008:
+12 comprobaciones API PASS + verificacion Playwright PASS. Hilos de control
+qa-r8 purgados.
 
 Round 7 (2026-10-27, IMPL-024, recertificacion funcional + integracion):
 bug reportado "no veo conversaciones pasadas" = BUG-023 (listado solo en

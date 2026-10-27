@@ -4,11 +4,11 @@ tipo: Defect
 type: Defect
 title: El historial de conversaciones vive solo en localStorage del navegador
 description: Sidebar vacia tras limpiar storage, en otro navegador/dispositivo; el listado no se acota por usuario y borrar en UI no purga el checkpointer.
-estado: abierto
+estado: corregido
 dueno: rol:propietario
 fecha: 2026-10-27
-relaciona: [BL-017, BUG-013, BUG-022, QT-007, IMPL-024, DEC-004]
-status: draft
+relaciona: [BL-017, BUG-013, BUG-022, QT-007, QT-008, IMPL-024, IMPL-025, DEC-004]
+status: fixed
 ---
 
 ## Evidencia
@@ -37,8 +37,14 @@ listado de hilos (BL-017, pendiente desde ronda 2) ni purga del checkpointer.
 
 ## Fix y verificacion
 
-BL-017: tabla `threads` con owner + endpoint `GET /api/chat/threads` que
-liste solo hilos propios; la sidebar debe hidratarse desde la BD (criterio
-de BL-017: el mismo usuario ve sus conversaciones desde otro navegador).
-Verificacion: limpiar storage + reload conserva el historial; usuario B no
-ve hilos de A; DELETE de hilo purga o marca el thread.
+Implementado (IMPL-025, DEC-004 a): `GET /api/chat/threads` lista solo hilos
+propios y la sidebar se hidrata del servidor (useThreadId reescrito; el
+localStorage `mvp_chat_threads` ya no se usa; invalidate() en login/logout/
+register evita herencia entre usuarios). Verificado en navegador (qa-r7,
+Playwright): conversacion de control sigue en la sidebar tras reload con
+hidratacion server-side; badges visibles (ultima materia "QA R7 Recert" +
+contador de mensajes "4"); delete de la sidebar elimina la fila del registro
+(chat_threads count=0). Pendiente: purga del contenido huerfano del
+checkpointer (segunda parte del defecto, sigue abierta como mejora; el
+listado ya no expone hilos huerfanos). Verificado final pendiente del
+propietario.
