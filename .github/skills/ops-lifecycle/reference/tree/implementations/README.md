@@ -2,35 +2,46 @@
 id: implementations-readme
 tipo: Guide
 type: Guide
-title: Implementations - especificaciones por fase
-description: Especificaciones fase-0..fase-10 con estado de verificacion y convenciones de implementacion.
+title: Implementations index
+description: Especificaciones IMPL por fase y convenciones de la fase activa.
 estado: vigente
 dueno: rol:propietario
-fecha: 2026-06-15
-relaciona: [impl-conventions, proj-plan]
+fecha: 2026-10-26
+relaciona: [templates-implementation]
 status: stable
-verified: 2026-06-15T00:00:00Z
-sources: [{ id: agents-md, resource: ../../AGENTS.md, title: AGENTS.md v3 }]
 ---
 
-- **Proposito:** especificacion por fase (alcance, tareas, criterio de salida, decisiones) y convenciones transversales de implementacion.
-- **Escribe:** rol:agente (redacta y ejecuta) · **Aprueba:** rol:propietario (pasa la especificacion a `verificado` tras ver la evidencia).
-- **Cuando:** al iniciar una fase se redacta/actualiza la especificacion; al cerrarla se marca `verificado` con el checklist del DoD.
+## Index
 
-## Especificaciones por fase
-
-| Fase | Especificacion | Estado |
+| IMPL | Title | estado |
 |---|---|---|
-| 0 - Estandar y validador | [fase-0.md](fase-0.md) | verificado |
-| 1 - Conocimiento sintetico | [fase-1.md](fase-1.md) | verificado |
-| 2 - Indexado, RLS y MCP de lectura | [fase-2.md](fase-2.md) | verificado |
-| 3 - Escritura controlada y CI | [fase-3.md](fase-3.md) | verificado |
-| 4 - Skills y agentes | [fase-4.md](fase-4.md) | verificado |
-| 5 - Promocion E2E y UAT | [fase-5.md](fase-5.md) | verificado |
-| 6 - Gobernanza y fundacion de producto | [fase-6.md](fase-6.md) | borrador |
-| 7 - MCP HTTP y embeddings bge-m3 | [fase-7.md](fase-7.md) | borrador |
-| 8 - BFF FastAPI y agente HITL | [fase-8.md](fase-8.md) | borrador |
-| 9 - Frontend Vue 3 | [fase-9.md](fase-9.md) | borrador |
-| 10 - Integracion docker y cierre | [fase-10.md](fase-10.md) | borrador |
+| IMPL-000 | Reestructuracion del monorepo | ejecutado |
+| IMPL-001 | Repos y submodulos + CI | borrador |
+| IMPL-002 | Backend reactivo exam-app | ejecutado |
+| IMPL-003 | Arquitectura limpia exam-app | ejecutado |
+| IMPL-004 | Arquitectura limpia agents-backend | ejecutado |
+| IMPL-005 | Frontend base | ejecutado |
+| IMPL-006 | Widgets de chat | ejecutado |
+| IMPL-007 | Pantallas | ejecutado |
+| IMPL-008 | Docker pulido | ejecutado |
+| IMPL-009 | Traduccion a ingles | ejecutado |
+| IMPL-010 | Mapa de dependencias | ejecutado |
+| IMPL-011 | Auth multitenant (Tag_V1.0.0) | ejecutado |
+| IMPL-012 | Auditoria raw LLM | ejecutado |
+| IMPL-013 | QA ronda 1 | ejecutado |
+| IMPL-014 | Correcciones ronda 1 + certificacion | ejecutado |
+| IMPL-015 | QA ronda 2 | ejecutado |
+| IMPL-016 | QA ronda 3 (certificacion central) | ejecutado |
+| IMPL-017 | Informe RC1 (Tag_RC1) | ejecutado |
+| IMPL-018 | Framework de evaluacion RC2 | ejecutado |
+| IMPL-019 | QA ronda 4 | ejecutado |
+| IMPL-020 | Migracion .ops | borrador |
+| IMPL-021 | Ronda QA 5 - verificaciones API tras nuevo instruccionado | ejecutado |
+| IMPL-022 | RC3 - fixes de bugs conocidos | borrador |
+| IMPL-023 | QA ronda 6 (certificacion RC3) | ejecutado |
+| IMPL-024 | QA ronda 7 - recertificacion funcional e integracion | ejecutado |
+| IMPL-025 | Hilos de chat server-side con ownership y badges | ejecutado |
 
-**Convenciones transversales:** [conventions.md](conventions.md) · **Plantilla:** [../templates/implementation.md](../templates/implementation.md) · **Plan:** [../project/plan.md](../project/plan.md).
+Naming `IMPL-NNN-slug.md`; global numbering; one file per spec. The active phase
+spec is the one linked from `project/handoff.md`. The agent updates estado to the
+real verified state (never "I think it works"); only the owner sets `verified`.
