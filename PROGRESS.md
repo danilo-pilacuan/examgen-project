@@ -6,6 +6,36 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
+## 2026-10-27 (ronda QA 6: certificacion RC3)
+
+* **Hecho:** ronda 6 de QA ejecutada contra RC3/develop con stack levantado (IMPL-023).
+  Verificado: BUG-018 (sonda raiz -> 422 real via nginx; sonda metadata anidada -> 200 con
+  num_versions=2, 4 PDFs y ZIP); RFC-10 (hard reload conserva la materia activa y contadores);
+  RFC-11 (abort de SSE -> burbuja failed + Retry -> turno completo y rehidratado desde el
+  checkpointer sin duplicar contenido); BUG-016 (3 restarts de exam_app con sesion activa,
+  0 401, HITL intacto); C2 (PDF real 5.4 MB, sin 413, 211 chunks indexados ~20 min, RAG
+  citando el material). Regresiones: R1 save HITL verified-by-human, R2 guardrail anti-borrado,
+  R4 export XLSX por chat (tool export_questions), R5 auditoria llm_responses (3250 filas,
+  thread trazado), R6 toggle ES/EN persistente. Hallazgos nuevos documentados: BUG-019 (el
+  mensaje HUMAN se duplica en el checkpointer tras Retry: `_initial_state` reinserta el user
+  y `add_messages` anade), BUG-020 (indexacion de material grande sin limites/progreso/
+  cancelacion: 8000 paginas ~29 h de embeddings, satura exam_embedding_service y bloquea
+  uploads), BUG-021 (persist=false de /exams/generate persiste igualmente fila+PDFs+ZIP,
+  `nodes.py` ~627 incondicional). Decisiones abiertas para el propietario: DEC-001 (semantica
+  de persist), DEC-002 (dedupe HUMAN), DEC-003 (limites de indexacion). .ops actualizado:
+  IMPL-023, test-plan (C21-C24 + resultados ronda 6), traceability, READMEs qa/decisions,
+  BUG-016/018 cerrados con evidencia, handoff.
+* **Falta:** fixes de BUG-019/020/021 tras las DEC-001/002/003; escritura de la tesis;
+  BL-010 Playwright suite; etapa 01 (repos remotos + CI); inconsistencia validate.yml.
+* **Decision:** los 3 bugs nuevos quedan `abierto` con DEC abierta: el agente no cierra
+  decisiones ni inventa fixes sin decision del propietario (regla .ops). La sonda 2 de
+  BUG-018 dejo el examen "SondaR6Anidada" en la lista Exams: es consecuencia de BUG-021,
+  no regresion de BUG-018.
+* **Medicion:** 3 restarts/0 401; PDF 5.4 MB -> 211 chunks / ~20 min; caso extremo 6.86 MB
+  -> ~41,500 chunks / ~29 h estimadas de embeddings (CPU, batch 16 @ ~90 s); llm_responses
+  3250 filas; export XLSX con 1 pregunta; 0 DELETEs del guardrail; toggle idioma persistente
+  tras reload.
+
 ## 2026-10-26 (RC2 tag + rama RC3/develop)
 
 * **Hecho:** commit de docs pendientes (`5d5a6f3`); tag `RC2` anotado y publicado en los 7
