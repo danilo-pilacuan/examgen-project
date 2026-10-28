@@ -35,7 +35,16 @@ en contenedor (No module named 'docx'; python-docx/python-pptx no
 declarados en manifests); La validacion previa conserva los chunks
 existentes (51/51 tras el 400). Corregido: deps declaradas en los 3
 manifests + rebuild exam-app; repro 200/200/200 con 4, 40 y 85 chunks
-reinsertados (85 total, 41 PDF + 4 docx + 40 pptx). Verificacion final
+reinsertados (85 total, 41 PDF + 4 docx + 40 pptx). Campana real COMPLETADA
+82/82 (0 fallidos) con agregados + reportes + FINDINGS r11 (commit 9e6bd6c).
+Hallazgo J1: el juez LLM in-run registro num_judged=0 en 82/82 (retrieval sin
+correlacionar); corregido en harness.py + windowing de judge_experiment.py
+(commit 3827e4d); juez post-hoc abortado por deriva de +-1 fila en las
+ventanas de auditoria (documentado, no silenciado). Ingles de la campana
+verificado: 621 items escaneados (scripts/qa_r11_english_check.py), 0 cuerpos
+en espanol, 13/621 nombres propios o glosas del material, 3/621 subtopic con
+eco del temario, 5 rechazos language_not_english del evaluador en campana.
+Verificacion final
 pendiente del propietario.
 
 Round 8 (2026-10-27, IMPL-025, fix DEC-004): hilos de chat server-side
