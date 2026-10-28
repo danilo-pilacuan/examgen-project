@@ -43,6 +43,7 @@ status: stable
 | IMPL-025 | Hilos de chat server-side con ownership y badges | ejecutado |
 | IMPL-026 | QA ronda 9 - recertificacion funcional e integracion | ejecutado |
 | IMPL-027 | QA ronda 10 - framework e2e versionado (BL-010) y contrato de idioma | ejecutado |
+| IMPL-028 | QA ronda 11 - recertificacion, BD desde cero, ingles e2e y set de metricas | ejecutado |
 
 Naming `IMPL-NNN-slug.md`; global numbering; one file per spec. The active phase
 spec is the one linked from `project/handoff.md`. The agent updates estado to the

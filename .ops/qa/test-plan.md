@@ -220,6 +220,39 @@ idioma con rejection_reason=language_not_english). El banco heredado
 anterior al contrato, no defecto de codigo; decision pendiente del propietario
 (remediar/traducir o dejar como legado).
 
+## Ronda 11 (recertificacion QA 2026-10-28, IMPL-028, QT-011)
+
+Mandato del propietario: recertificar lo primordial, regenerar el framework
+de pruebas, asegurar ingles en TODO el sistema (preguntas y respuestas
+incluidas), regenerar el set completo de metricas de medicion y reconstruir
+la BD desde cero. El agente actua como verificador humano (derecho HITL
+otorgado explicitamente). Cuenta de control: qa-r11@usfq.test. Decision
+BUG-028 ejecutada: opcion (c) purga + regeneracion.
+
+| Check | Tipo | Descripcion | Resultado | Bug/QT |
+|---|---|---|---|---|
+| DB-1 | Datos | BD desde cero: drop + alembic upgrade head (b8c9d0e1f2a3, 13 tablas), 0 registros heredados | PASS | QT-011 |
+| DB-2 | Datos | Material re-indexado: Database Systems 28 chunks, Economia Aplicada - QA11 51 chunks (79 total) | PASS | QT-011 |
+| DB-3 | Datos | 12 preguntas nuevas (6 por materia) generadas via pipeline real, source=pipeline, 100% en ingles (statements, opciones, respuestas, explicaciones) | PASS | QT-011 |
+| HITL-1 | Humana (agente) | Revision docente de las 12 preguntas (exactitud, distractores, dificultad, redaccion) | PASS 12/12 APROBADAS | QT-011 |
+| HITL-2 | Humana (agente) | 2 sospechas de mojibake (beta U+03B2, por U+00D7) investigadas: UTF-8 real en BD y API; artefacto de consola cp1252 de PowerShell 5.1 (simbolos matematicos, no espanol) | PASS (falso positivo descartado) | QT-011 |
+| HITL-3 | Humana (agente) | Marcado verified_by_human=true en 12/12 via PUT /questions/{id}/verification {"verified":true} | PASS (12/12=t en BD) | QT-011 |
+| F-serie | Funcional | Suite Playwright versionada ronda 11 (helpers + specs actualizados a qa-r11) | PASS 15/15 (10.8 s) | QT-011 |
+| L2 | Idioma | Prueba de idioma del banco endurecida de informativa a asercion estricta (0 preguntas con espanol en la muestra) | PASS (toHaveLength(0)) | BUG-028/QT-011 |
+| E1-EN | Funcional | 2 examenes de control en ingles compilan (qa11_control_db, qa11_control_econ) con PDFs con/sin respuestas + ZIP en data/agent_outputs | PASS | QT-011 |
+| EVAL-1 | Evaluacion | subjects.yaml regenerado: 5 clones en ingles adam/bella/carlos/diana/esteban ("Applied Economics - X"), mismo material_glob | PASS | QT-011 |
+| EVAL-2 | Evaluacion | experiments.yaml regenerado: topics_weight en ingles (Market Study 0.3, Financial Flows 0.3, Economic and Financial Analysis 0.25, Pricing 0.15; suma 1.0); 82 runs validados (E01=27, E02=27, E03=10, E04=18) | PASS | QT-011 |
+| EVAL-3 | Evaluacion | Smoke dry-run: 6 familias de metricas computadas, nombres en ingles; polucion del smoke purgada (FK-order) | PASS | QT-011 |
+| EVAL-4 | Evaluacion | Campana REAL 82 runs lanzada en background (E04->E03->E01->E02, scripts/run_eval_campaign_r11.ps1) | EN CURSO al cierre (agregados pendientes) | QT-011 |
+| ADV-1 | Adversarial | Indexar solo docx (Economia Aplicada) con clear=true: debe fallar y NO perder chunks | 400 "Could not extract text" + chunks intactos 51/51 -> BUG-029 (No module named 'docx'; python-docx/python-pptx no declarados) | BUG-029/QT-011 |
+
+Resultado ronda 11: certificacion funcional PASS (DB + HITL + suite 15/15 +
+examenes de control en ingles); BUG-028 -> corregido (purga y regeneracion
+verificadas: 0 preguntas en espanol en BD); BUG-029 nuevo (medio, deps no
+declaradas en la imagen exam-app; la validacion previa conserva los chunks).
+Campana de evaluacion regenerada y lanzada; agregados e informes por
+experimento al finalizar.
+
 ## Regresion
 
 | Check | Descripcion | Round | Bug/QT |

@@ -6,7 +6,43 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
-## 2026-10-28 (ronda QA 10 - framework e2e versionado + contrato de idioma)
+## 2026-10-28 (ronda QA 11 - recertificacion, BD desde cero, ingles e2e y set de metricas)
+
+* **Hecho:** ronda 11 ejecutada a pedido del propietario (IMPL-028 / QT-011):
+  recertificar lo primordial con el agente como verificador humano (derecho
+  HITL otorgado), regenerar el framework de pruebas, asegurar ingles en TODO
+  el sistema (preguntas y respuestas incluidas), regenerar el set completo de
+  metricas y reconstruir la BD desde cero. (1) BD reconstruida desde cero
+  (drop + alembic head b8c9d0e1f2a3, 13 tablas) y material re-indexado
+  (28 + 51 chunks). (2) 12 preguntas nuevas 100% en ingles via pipeline real
+  (6 por materia: Database Systems; Economia Aplicada - QA11); revision
+  humana HITL 12/12 APROBADAS (exactitud, distractores, dificultad,
+  redaccion); 2 sospechas de mojibake descartadas como falso positivo
+  (beta U+03B2 / por U+00D7 son simbolos matematicos UTF-8 reales; artefacto
+  de consola cp1252 de PowerShell 5.1; verificado con cliente Python y
+  regex en BD); verified_by_human=true en 12/12 via
+  PUT /questions/{id}/verification. (3) Suite Playwright 15/15 PASS (10.8 s)
+  con credenciales qa-r11 y L2 endurecido a asercion estricta (0 espanol en
+  el banco). (4) 2 examenes de control en ingles compilan (qa11_control_db,
+  qa11_control_econ) con PDFs con/sin respuestas + ZIP. (5) Set de metricas
+  regenerado: subjects.yaml (5 clones en ingles adam..esteban),
+  experiments.yaml (topics en ingles; 82 runs: E01=27, E02=27, E03=10,
+  E04=18), raws de ronda 10 archivadas, smoke dry-run OK con purga de su
+  polucion, campana REAL lanzada en background (E04->E03->E01->E02,
+  scripts/run_eval_campaign_r11.ps1). (6) BUG-028 -> corregido (opcion (c)
+  del propietario: purga + regeneracion; 0 preguntas en espanol en BD).
+  BUG-029 nuevo (medio): indexacion docx/pptx falla en contenedor
+  ("No module named 'docx'"; python-docx/python-pptx no declarados en los
+  manifests); con clear=true los chunks existentes se conservan (51/51 tras
+  el 400: la validacion va antes del borrado). .ops: test-plan Ronda 11,
+  QT-011, IMPL-028, traceability, READMEs, BUG-028/BUG-029.
+* **Falta:** agregados + informes por experimento al terminar la campana
+  (analysis.aggregate + reporting.report; judge E03 opcional); push a
+  origin; verificado del propietario (QT-011/IMPL-028/BUG-028/BUG-029);
+  fix BUG-029 (deps + rebuild, P2); BUG-026/027/024/025 siguen abiertos.
+* **Decision:** BUG-028 resuelto con la opcion (c) confirmada por el
+  propietario en el mandato de la ronda 11.
+
 
 * **Hecho:** ronda 10 ejecutada a pedido del propietario: recertificar lo
   esencial, crear el framework de pruebas versionado y verificar que TODO el
