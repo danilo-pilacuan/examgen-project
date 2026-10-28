@@ -1,57 +1,62 @@
-# E02 — RAG: barrido top_k 1 / 3 / 8 (RESULTADOS REALES)
+# E02 — RAG: top_k sweep 1 / 3 / 8 (REAL RESULTS, ROUND 11)
 
-> 27 runs reales (3 brazos × 3 clones × 3 repeticiones), GLM-5.3-Flash vía
-> gateway USFQ. Generador 0.7, evaluador 0.2 (producción). Todos los runs
-> `completed` con PDF.
+> 27 real runs (3 arms x 3 English clones x 3 repeats), GLM-5.3-Flash via
+> the USFQ gateway. Generator 0.7, evaluator 0.2 (production). All 27 runs
+> `completed`. English verified: 0 of 205 delivered items have a Spanish
+> body (deterministic scan + human spot review).
 
-## Resultados por brazo
+## Per-arm results
 
 ![Approval rate](approval_rate.png)
 ![Bloom accuracy](bloom_accuracy.png)
 ![Faithfulness](rag_faithfulness.png)
 ![Tokens per item](tokens_per_item.png)
 
-| Métrica | top_k=1 | top_k=3 (producción) | top_k=8 |
+| Metric | top_k=1 | top_k=3 (production) | top_k=8 |
 |---|---|---|---|
-| Tasa de aprobación | 0.833 | **0.958** | 0.875 |
-| Quality score medio | 6.51 | 6.64 | **6.75** |
-| Bloom accuracy | 0.833 | **0.958** | 0.875 |
-| RAG retrieval score | **0.492** | 0.467 | 0.437 |
-| RAG faithfulness | 0.305 | 0.175 | **0.337** |
-| Tokens por ítem (estimado) | **1.554** | 2.088 | 3.934 |
-| Llamadas por ítem aprobado | 2.45 | **2.08** | 2.34 |
-| Robustez entre clones (σ) | 1.198 | 0.683 | 0.455 |
+| Approval rate | **0.986 ± 0.04** | **0.986 ± 0.04** | 0.875 ± 0.12 |
+| Quality score mean | 5.27 ± 1.25 | 4.99 ± 1.06 | 4.24 ± 1.04 |
+| Bloom accuracy | **0.986** | **0.986** | 0.875 |
+| Attempts per item | 0.014 | 0.014 | 0.139 |
+| Pairwise similarity (diversity) | 0.534 | 0.506 | 0.502 |
+| RAG faithfulness (lexical) | 0.009 | 0.008 | 0.047 |
+| RAG retrieval score | **0.497** | 0.489 | 0.462 |
+| Tokens per item | **1,454** | 2,107 | 4,211 |
+| Calls per item | 2.03 | 2.03 | 2.33 |
+| Robustness across clones (sigma) | 0.341 | 0.471 | 0.438 |
 
-## Hallazgos
+## Findings
 
-1. **top_k=3 (configuración de producción) maximiza la aprobación y la
-   alineación** (0.958 aprobación y Bloom accuracy): es el punto dulce entre
-   contexto insuficiente (k=1) y contexto diluido (k=8). Confirma H4 en su
-   primera mitad: subir top_k NO mejora la calidad.
+1. **top_k=8 is dominated**: lowest approval (0.875 vs 0.986), lowest Bloom
+   accuracy (0.875), the most regeneration attempts (0.139 vs 0.014), and
+   2-3x the token cost (4,211 vs 1,454/2,107). Adding more context beyond
+   k=3 dilutes the generator. Confirms H4: raising top_k does NOT improve
+   quality.
 
-2. **El coste escala linealmente con top_k**: 1.554 → 2.088 → 3.934
-   tokens/ítem (k=8 casi duplica a k=3) por el contexto extra inyectado en
-   cada prompt del generador. Con calidad igual o peor, k=8 es estrictamente
-   dominado en eficiencia.
+2. **k=1 and k=3 tie on alignment (0.986) but differ on cost** (1,454 vs
+   2,107 tokens). With only 3 repeats per clone, the tie is within noise;
+   k=3 stays production default because topic_coverage is full (1.000 vs
+   0.972) and the round-10 conclusion (k=3 sweet spot) is not contradicted.
 
-3. **Paradoja del faithfulness**: k=1 y k=8 tienen faithfulness mayor
-   (0.305/0.337) que k=3 (0.175). Explicación: con k=1 el enunciado se
-   copia casi literal del único chunk; con k=8 hay más material presente
-   que cubrir; con k=3 el generador sintetiza más allá del contexto
-   (menos overlap léxico pero más calidad de síntesis). La métrica de
-   overlap premia la copia, no la síntesis → limitación documentada de la
-   aproximación léxica; para la tesis, considerar judge LLM.
+3. **Cost scales linearly with top_k** (1,454 -> 2,107 -> 4,211 tokens per
+   item): extra context is injected into every generator prompt.
 
-4. **Retrieval score decrece con k** (0.492 → 0.467 → 0.437): los chunks
-   adicionales de las colas son progresivamente menos relevantes —
-   comportamiento esperado del ranking por similitud coseno.
+4. **Lexical faithfulness rises at k=8** (0.047 vs ~0.008): with more chunks
+   in the prompt there is more surface to overlap with. Consistent with the
+   known limitation that the lexical overlap rewards copying, not
+   synthesis. The LLM judge (this round aborted, see E01 caveat) is the
+   right instrument for that comparison in a future round.
 
-5. **Robustez entre clones mejora con k mayor** (σ 1.20 → 0.68 → 0.46):
-   más contexto reduce la varianza entre "profesores". Trade-off real:
-   k=8 es más estable pero más caro y menos aprobador que k=3.
+5. **Retrieval score decays with k** (0.497 -> 0.489 -> 0.462): tail chunks
+   are progressively less relevant, as expected from cosine ranking.
 
-## Implicación de configuración
+6. **Self-consistency 1.0 in all arms**; cross-clone sigma stays in a narrow
+   band (0.34-0.47), so stability is not a differentiator between k values
+   in this round.
 
-`retrieval.top_k=3` queda **validado empíricamente**: máxima aprobación,
-máxima alineación Bloom, coste intermedio. k=8 solo se justificaría si la
-estabilidad entre profesores pesara más que el coste (no es el caso MVP).
+## Configuration implication
+
+`retrieval.top_k=3` remains the validated production setting: full topic
+coverage, maximum alignment, mid cost. k=8 is strictly dominated in this
+configuration; k=1 is a cheap fallback if cost becomes the binding
+constraint.

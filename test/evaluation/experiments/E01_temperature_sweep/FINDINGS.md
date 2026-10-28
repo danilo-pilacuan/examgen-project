@@ -1,56 +1,68 @@
-# E01 — Generador: barrido de temperatura 0.3 / 0.7 / 1.0 (RESULTADOS REALES)
+# E01 — Generator: temperature sweep 0.3 / 0.7 / 1.0 (REAL RESULTS, ROUND 11)
 
-> 27 runs reales (3 brazos × 3 clones × 3 repeticiones), GLM-5.3-Flash vía
-> gateway USFQ. Evaluador fijo en 0.2 (producción), top_k 3. Todos los runs
-> `completed` con PDF.
+> 27 real runs (3 arms x 3 English clones x 3 repeats), GLM-5.3-Flash via the
+> USFQ gateway. Evaluator fixed at 0.2 (production), top_k 3. All 27 runs
+> `completed`. English verified: 0 of 206 delivered items have a Spanish
+> body (deterministic scan + human spot review).
 
-## Resultados por brazo
+## Per-arm results
 
 ![Approval rate](approval_rate.png)
 ![Quality mean](quality_mean.png)
 ![Bloom accuracy](bloom_accuracy.png)
 ![Tokens per item](tokens_per_item.png)
 
-| Métrica | gen T=0.3 | gen T=0.7 (producción) | gen T=1.0 |
+| Metric | gen T=0.3 | gen T=0.7 (production) | gen T=1.0 |
 |---|---|---|---|
-| Tasa de aprobación | 0.889 | **0.917** | 0.861 |
-| Quality score medio | 6.39 | **6.51** | 6.43 |
-| σ intra-run del quality | 3.37 | 3.09 | 3.01 |
-| Intentos por ítem aprobado | 0.125 | **0.097** | 0.153 |
-| Similitud por pares (diversidad) | 0.519 | 0.501 | 0.502 |
-| Bloom accuracy | 0.889 | **0.917** | 0.861 |
-| Tokens por ítem (estimado) | 2.227 | **2.137** | 2.287 |
-| Llamadas por ítem aprobado | 2.28 | **2.23** | 2.34 |
-| Robustez entre clones (σ) | 0.837 | 0.732 | 0.332 |
+| Approval rate | **1.000 ± 0.00** | 0.944 ± 0.09 | 0.917 ± 0.08 |
+| Quality score mean | 5.62 ± 1.38 | 5.11 ± 0.79 | **5.84 ± 1.11** |
+| Intra-run quality sigma | 3.72 | 3.93 | 3.84 |
+| Attempts per item | **0.000** | 0.069 | 0.083 |
+| Pairwise similarity (diversity) | 0.502 | 0.502 | 0.513 |
+| Bloom accuracy | **1.000** | 0.944 | 0.917 |
+| RAG faithfulness (lexical) | 0.000 | 0.024 | 0.034 |
+| Tokens per item | **1,995** | 2,156 | 2,249 |
+| Calls per item | **2.00** | 2.14 | 2.20 |
+| Robustness across clones (sigma) | 0.359 | **0.110** | 0.153 |
 
-## Hallazgos
+## Findings
 
-1. **T=0.7 (configuración de producción) es el óptimo del barrido**: mejor
-   aprobación (0.917), mejor quality (6.51), menos reintentos (0.097/ítem),
-   mejor alineación Bloom (0.917) y menor coste por ítem. La relación
-   calidad-temperatura es **no monótona en forma de U invertida suave**
-   (0.889 → 0.917 → 0.861), confirmando H2: existe un óptimo intermedio.
+1. **Monotonic degradation with temperature on spec alignment**: approval
+   1.000 -> 0.944 -> 0.917 and Bloom accuracy 1.000 -> 0.944 -> 0.917. The
+   lower the generator temperature, the tighter the adherence to the
+   requested spec (Bloom level, difficulty, question type). T=0.3 never
+   needed a regeneration attempt (attempts=0.000).
 
-2. **T=1.0 degrada la alineación spec-ítem** (Bloom accuracy 0.861 vs
-   0.917): a mayor temperatura el modelo se desvía más del spec pedido
-   (cambia tipo de pregunta o nivel cognitivo). Es el mecanismo que
-   explica los rechazos por difficulty/type mismatch.
+2. **T=0.3 dominates efficiency** (fewest calls 2.00, fewest tokens 1,995,
+   zero retries) while also having the best approval. Under the round-11
+   blueprint (English clones, regenerated topics), the round-10 sweet spot
+   at T=0.7 shifts toward T=0.3: quality_mean differences (5.62 vs 5.11 vs
+   5.84) are within one sigma and do not offset the alignment loss.
 
-3. **Diversidad insensible a la temperatura** (0.50–0.52 en los tres
-   brazos): la similitud por pares está dominada por el vocabulario
-   compartido del dominio (mismo material), no por la creatividad del
-   modelo. Para diversidad real valdría medir con embeddings de ítems
-   distintos (future work: métrica de distinción semántica por pares).
+3. **T=1.0 degrades coverage slightly** (topic_coverage 0.972 vs 1.000) and
+   costs the most per item (2,249 tokens, 2.20 calls). No reason to raise
+   the generator temperature.
 
-4. **Robustez entre clones MEJORA con temperatura alta** (σ: 0.84 → 0.73 →
-   0.33): contraintuitivo; con pocas repeticiones (3/clon) puede ser ruido
-   muestral. No concluir sin más réplicas.
+4. **Diversity is insensitive to temperature** (pairwise similarity
+   0.502-0.513 in all arms): shared domain vocabulary dominates, same
+   conclusion as round 10.
 
-5. **Coste ~plano** (2.13–2.29 llamadas/ítem, 2.14–2.29k tokens/ítem): el
-   coste no es un criterio de decisión entre temperaturas; sí lo son
-   aprobación y alineación.
+5. **Cross-clone robustness is best at T=0.7** (sigma 0.110 vs 0.359 at
+   T=0.3 and 0.153 at T=1.0) and self-consistency is 1.0 in all arms. With
+   only 3 repeats per clone, treat the robustness ranking as indicative.
 
-## Implicación de configuración
+## Judge caveat (applies to this round)
 
-`llm_temperature=0.7` queda **validado como óptimo empírico** del
-generador para este dominio y blueprint.
+The in-run LLM faithfulness judge produced num_judged=0 in all 82 campaign
+runs (harness passed un-correlated retrieval records; fixed in harness.py
+after the campaign). `rag_faithfulness` here is the lexical cross-encoder
+metric only. The post-hoc judge was deliberately NOT run for this campaign:
+the audit-row windowing has a +-1 row uncertainty (E04 79 vs 80, E01 213 vs
+214), which would silently misalign statement<->chunks pairs.
+
+## Configuration implication
+
+The production generator temperature is re-validated as being on the flat
+top of the curve: T=0.7 keeps the best cross-clone stability with
+approval >= 0.94; T=0.3 is the efficiency-optimal alternative if future
+rounds prioritise cost. No production change is mandatory from this sweep.

@@ -20,9 +20,10 @@ de 12 preguntas nuevas en ingles via pipeline real y aprobacion humana
 12/12; regeneracion completa del set de evaluacion (subjects.yaml,
 experiments.yaml, raws archivadas); smoke dry-run; campana real de 82 runs.
 
-No incluye: fix de BUG-029 (deps docx/pptx, requiere codigo + rebuild),
-BUG-026/027/024/025 (abiertos, fuera de alcance), extension E03 de ronda 10
-(queda opcional post-campana), cambios a AGENTS.md o scope.
+No incluye: BUG-026/027/024/025 (abiertos, fuera de alcance), extension
+E03 de ronda 10 (queda opcional post-campana), cambios a AGENTS.md o scope.
+Nota de cierre: BUG-029 entro en alcance por el rechazo adversarial (deps
+docx/pptx no declaradas) y quedo corregido dentro de esta ronda.
 
 ## Diseno
 
@@ -50,7 +51,9 @@ E03=10, E04=18). Raws de ronda 10 archivadas (gitignore; agregados
 versionados permanecen en git). Smoke dry-run OK (6 familias de metricas,
 nombres en ingles); polucion del smoke purgada con FK-order. Campana real
 lanzada en background (scripts/run_eval_campaign_r11.ps1, orden por costo
-E04->E03->E01->E02, PYTHONIOENCODING=utf-8).
+E04->E03->E01->E02, PYTHONIOENCODING=utf-8). El harness gajo dos refuerzos
+de robustez (commit 41d368c): bootstrap de .env y reanudacion por runs
+ya completados; el runner de campana es crash-proof y auto-bootstrapping.
 
 ## Pasos atomicos
 
@@ -75,6 +78,21 @@ harness; los examenes de control son desechables.
 - Suite Playwright: 15/15 PASS (10.8 s); L2 estricto (toHaveLength(0)).
 - Examenes de control: 2/2 compilan con PDFs (con/sin respuestas) + ZIP
   en data/agent_outputs.
-- Adversarial docx: 400 + chunks intactos (51/51) -> BUG-029 nuevo.
-- Campana 82 runs: lanzada (en curso al cierre); agregados + informes
-  pendientes al finalizar.
+- Adversarial docx: 400 + chunks intactos (51/51) -> BUG-029 nuevo;
+  corregido en la misma ronda: deps declaradas (pymupdf, python-docx,
+  python-pptx, openpyxl) en core f0fc306 y exam-app 2fd4491, imagen
+  reconstruida, verificacion en vivo 200/200/200 (4 docx + 40 pptx +
+  85 chunks reindex completo) con scripts/qa_r11_docx_index.py.
+- Campana 82 runs: COMPLETADA 82/82 (E04 18, E03 10, E01 27, E02 27;
+  0 fallidos; resume de corridas de verificacion en vivo = SKIP sin
+  re-costo). Agregados + reportes + FINDINGS generados para E01-E04.
+- Hallazgo J1 (juez in-run): num_judged=0 en 82/82; causa: harness pasaba
+  retrieval sin correlacionar (statement vacio) y el juez descarta en
+  silencio; corregido en harness.py (judge recibe
+  _correlate_statements(...)). Post-hoc abortado por ventana +-1 fila
+  (E04 79 vs 80; E01 213 vs 214): riesgo de desalinear pares
+  statement<->chunks. rag_faithfulness (cross-encoder) si cubre 82/82.
+- Ingles (HITL): 621 items escaneados (scripts/qa_r11_english_check.py):
+  0 cuerpos en espanol; 13/621 nombres propios/glosas del material y
+  3/621 subtopic con eco del temario (metadato); evaluador rechazo 5 items
+  language_not_english en la campana (defensa activa).

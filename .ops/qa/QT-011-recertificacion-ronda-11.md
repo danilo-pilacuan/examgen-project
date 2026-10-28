@@ -61,6 +61,11 @@ generadas por pipeline real.
 - Campana REAL lanzada en segundo plano (E04->E03->E01->E02, 82 runs); el
   agregado y el informe por experimento se ejecutan al finalizar
   (analysis.aggregate + reporting.report).
+- Defecto detectado tras la campana (J1): el juez LLM in-run no juzgo ningun
+  registro (num_judged=0 en 82/82). Causa raiz: harness pasaba al juez los
+  registros de retrieval SIN correlacionar (statement vacio) y el juez los
+  descarta en silencio. Correlacion corregida en harness.py; la metrica
+  rag_faithfulness de cross-encoder si se computo en las 82 corridas.
 
 ## Caso que debe ser rechazado (adversarial)
 
@@ -78,8 +83,25 @@ generadas por pipeline real.
 - HITL-2: PASS (12/12 verified_by_human=t en BD; 403 verificado en ronda 9
   I3 y re-confirmado por guardrail del servicio del banco).
 - E1-EN: PASS (2 examenes de control compilan con PDFs + ZIP).
-- Adversarial docx: 400 esperado y chunks intactos (51/51) -> BUG-029.
-- Campana 82 runs: en curso al cierre del documento; agregados pendientes.
+- Adversarial docx: 400 esperado y chunks intactos (51/51) -> BUG-029;
+  tras reconstruir la imagen con las deps declaradas, verificacion en vivo
+  docx 200 (4 chunks), pptx 200 (40 chunks), reindex completo 200 (85
+  chunks = 41 PDF + 4 docx + 40 pptx). BUG-029 -> corregido (script
+  scripts/qa_r11_docx_index.py).
+- Campana 82 runs: COMPLETADA (82/82, 0 fallidos, exit 0; E04 18, E03 10,
+  E01 27, E02 27). Agregados y reportes generados para E01-E04 (report.md
+  + aggregate.json + FINDINGS.md por experimento). Hallazgo J1: juez in-run
+  num_judged=0 (correlacion faltante, corregida en harness.py); el juez
+  post-hoc se aborto deliberadamente: la ventana de filas de auditoria
+  tiene incertidumbre de +-1 fila (E04 79 vs 80; E01 213 vs 214) que
+  desalinearia pares statement<->chunks de forma silenciosa. La metrica
+  rag_faithfulness (cross-encoder) si cubre las 82 corridas.
+- Ingles (HITL de campana): escaneo determinista de 621 items entregados
+  (scripts/qa_r11_english_check.py): 0 items con cuerpo en espanol;
+  13/621 con nombres propios o glosas del material (Maria, Cafe Aroma,
+  Project Lupulo, "(Estudio de Mercado)"), 3/621 con subtopic que repite el
+  temario en espanol (metadato, no cuerpo). El evaluador rechazo 5 items
+  por language_not_english durante la campana (defensa activa).
 
 Estado: ejecutado (verificacion del propietario pendiente; nunca
 auto-asignada por el agente). Datos de control: qa-r11@usfq.test.

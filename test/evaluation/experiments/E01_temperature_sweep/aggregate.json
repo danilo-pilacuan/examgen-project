@@ -11,33 +11,33 @@
       "num_runs": 9,
       "metrics": {
         "approval_rate": {
-          "mean": 0.8889,
-          "std": 0.1375,
+          "mean": 1.0,
+          "std": 0.0,
           "n": 9
         },
         "quality_mean": {
-          "mean": 6.3921,
-          "std": 1.2218,
+          "mean": 5.6193,
+          "std": 1.3765,
           "n": 9
         },
         "quality_std": {
-          "mean": 3.3735,
-          "std": 1.1269,
+          "mean": 3.723,
+          "std": 0.5268,
           "n": 9
         },
         "attempts_per_item": {
-          "mean": 0.125,
-          "std": 0.1667,
+          "mean": 0.0,
+          "std": 0.0,
           "n": 9
         },
         "pairwise_sim_mean": {
-          "mean": 0.5195,
-          "std": 0.0151,
+          "mean": 0.5017,
+          "std": 0.0171,
           "n": 9
         },
         "topic_coverage": {
-          "mean": 0.9444,
-          "std": 0.1039,
+          "mean": 1.0,
+          "std": 0.0,
           "n": 9
         },
         "bloom_coverage": {
@@ -46,49 +46,49 @@
           "n": 9
         },
         "rag_faithfulness": {
-          "mean": 0.243,
-          "std": 0.275,
+          "mean": 0.0,
+          "std": 0.0,
           "n": 9
         },
         "rag_retrieval_score": {
-          "mean": 0.4684,
-          "std": 0.0037,
+          "mean": 0.4888,
+          "std": 0.0,
           "n": 9
         },
         "bloom_accuracy": {
-          "mean": 0.8889,
-          "std": 0.1375,
+          "mean": 1.0,
+          "std": 0.0,
           "n": 9
         },
         "difficulty_accuracy": {
-          "mean": 0.8889,
-          "std": 0.1375,
+          "mean": 1.0,
+          "std": 0.0,
           "n": 9
         },
         "calls_per_item": {
-          "mean": 2.2762,
-          "std": 0.3852,
+          "mean": 2.0,
+          "std": 0.0,
           "n": 9
         },
         "tokens_per_item": {
-          "mean": 2227.4444,
-          "std": 444.0348,
+          "mean": 1995.3333,
+          "std": 137.0093,
           "n": 9
         },
         "latency_mean_ms": {
-          "mean": 18162.7778,
-          "std": 8289.3056,
+          "mean": 4280.6667,
+          "std": 490.9318,
           "n": 9
         }
       },
       "self_consistency": 1.0,
       "robustness_cross_subject": {
         "per_subject_mean": {
-          "eva": 7.5729,
-          "maria": 5.8633,
-          "sofia": 5.74
+          "adam": 5.1583,
+          "bella": 6.0337,
+          "carlos": 5.6658
         },
-        "between_subject_std": 0.8365
+        "between_subject_std": 0.3589
       },
       "status_counts": {
         "completed": 9
@@ -103,84 +103,84 @@
       "num_runs": 9,
       "metrics": {
         "approval_rate": {
-          "mean": 0.9167,
-          "std": 0.1318,
+          "mean": 0.9444,
+          "std": 0.0856,
           "n": 9
         },
         "quality_mean": {
-          "mean": 6.5046,
-          "std": 1.5476,
+          "mean": 5.1137,
+          "std": 0.7885,
           "n": 9
         },
         "quality_std": {
-          "mean": 3.0888,
-          "std": 1.1169,
+          "mean": 3.9321,
+          "std": 0.2998,
           "n": 9
         },
         "attempts_per_item": {
-          "mean": 0.0972,
-          "std": 0.1643,
+          "mean": 0.0694,
+          "std": 0.1195,
           "n": 9
         },
         "pairwise_sim_mean": {
-          "mean": 0.5012,
-          "std": 0.0266,
+          "mean": 0.5018,
+          "std": 0.011,
           "n": 9
         },
         "topic_coverage": {
-          "mean": 0.9444,
-          "std": 0.1039,
+          "mean": 1.0,
+          "std": 0.0,
           "n": 9
         },
         "bloom_coverage": {
-          "mean": 0.6482,
-          "std": 0.0524,
+          "mean": 0.6667,
+          "std": 0.0,
           "n": 9
         },
         "rag_faithfulness": {
-          "mean": 0.1617,
-          "std": 0.2305,
+          "mean": 0.0237,
+          "std": 0.0337,
           "n": 9
         },
         "rag_retrieval_score": {
-          "mean": 0.469,
-          "std": 0.003,
+          "mean": 0.4888,
+          "std": 0.0,
           "n": 9
         },
         "bloom_accuracy": {
-          "mean": 0.9167,
-          "std": 0.1318,
+          "mean": 0.9444,
+          "std": 0.0856,
           "n": 9
         },
         "difficulty_accuracy": {
-          "mean": 0.9167,
-          "std": 0.1318,
+          "mean": 0.9444,
+          "std": 0.0856,
           "n": 9
         },
         "calls_per_item": {
-          "mean": 2.2328,
-          "std": 0.356,
+          "mean": 2.1376,
+          "std": 0.2205,
           "n": 9
         },
         "tokens_per_item": {
-          "mean": 2136.6667,
-          "std": 412.393,
+          "mean": 2156.1111,
+          "std": 273.6642,
           "n": 9
         },
         "latency_mean_ms": {
-          "mean": 10014.5556,
-          "std": 6425.708,
+          "mean": 4534,
+          "std": 349.1354,
           "n": 9
         }
       },
       "self_consistency": 1.0,
       "robustness_cross_subject": {
         "per_subject_mean": {
-          "eva": 7.4642,
-          "maria": 6.36,
-          "sofia": 5.6896
+          "adam": 5.2192,
+          "bella": 4.9612,
+          "carlos": 5.1608
         },
-        "between_subject_std": 0.7317
+        "between_subject_std": 0.1104
       },
       "status_counts": {
         "completed": 9
@@ -195,33 +195,33 @@
       "num_runs": 9,
       "metrics": {
         "approval_rate": {
-          "mean": 0.8611,
-          "std": 0.1094,
+          "mean": 0.9167,
+          "std": 0.0833,
           "n": 9
         },
         "quality_mean": {
-          "mean": 6.4263,
-          "std": 1.6325,
+          "mean": 5.8393,
+          "std": 1.1065,
           "n": 9
         },
         "quality_std": {
-          "mean": 3.0082,
-          "std": 1.5386,
+          "mean": 3.8361,
+          "std": 0.5233,
           "n": 9
         },
         "attempts_per_item": {
-          "mean": 0.1528,
-          "std": 0.1288,
+          "mean": 0.0833,
+          "std": 0.0833,
           "n": 9
         },
         "pairwise_sim_mean": {
-          "mean": 0.5024,
-          "std": 0.0223,
+          "mean": 0.5133,
+          "std": 0.0199,
           "n": 9
         },
         "topic_coverage": {
-          "mean": 0.9444,
-          "std": 0.1039,
+          "mean": 0.9722,
+          "std": 0.0786,
           "n": 9
         },
         "bloom_coverage": {
@@ -230,49 +230,49 @@
           "n": 9
         },
         "rag_faithfulness": {
-          "mean": 0.3214,
-          "std": 0.244,
+          "mean": 0.0335,
+          "std": 0.0325,
           "n": 9
         },
         "rag_retrieval_score": {
-          "mean": 0.4683,
-          "std": 0.0011,
+          "mean": 0.4883,
+          "std": 0.0021,
           "n": 9
         },
         "bloom_accuracy": {
-          "mean": 0.8611,
-          "std": 0.1094,
+          "mean": 0.9167,
+          "std": 0.0833,
           "n": 9
         },
         "difficulty_accuracy": {
-          "mean": 0.8611,
-          "std": 0.1094,
+          "mean": 0.9167,
+          "std": 0.0833,
           "n": 9
         },
         "calls_per_item": {
-          "mean": 2.3413,
-          "std": 0.2786,
+          "mean": 2.1991,
+          "std": 0.2024,
           "n": 9
         },
         "tokens_per_item": {
-          "mean": 2286.6667,
-          "std": 251.6642,
+          "mean": 2249.1111,
+          "std": 233.8482,
           "n": 9
         },
         "latency_mean_ms": {
-          "mean": 7064.6667,
-          "std": 1271.1376,
+          "mean": 4918,
+          "std": 553.1028,
           "n": 9
         }
       },
       "self_consistency": 1.0,
       "robustness_cross_subject": {
         "per_subject_mean": {
-          "eva": 6.0417,
-          "maria": 6.385,
-          "sofia": 6.8521
+          "adam": 5.7004,
+          "bella": 6.0521,
+          "carlos": 5.7654
         },
-        "between_subject_std": 0.3321
+        "between_subject_std": 0.1528
       },
       "status_counts": {
         "completed": 9

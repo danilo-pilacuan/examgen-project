@@ -243,15 +243,16 @@ BUG-028 ejecutada: opcion (c) purga + regeneracion.
 | EVAL-1 | Evaluacion | subjects.yaml regenerado: 5 clones en ingles adam/bella/carlos/diana/esteban ("Applied Economics - X"), mismo material_glob | PASS | QT-011 |
 | EVAL-2 | Evaluacion | experiments.yaml regenerado: topics_weight en ingles (Market Study 0.3, Financial Flows 0.3, Economic and Financial Analysis 0.25, Pricing 0.15; suma 1.0); 82 runs validados (E01=27, E02=27, E03=10, E04=18) | PASS | QT-011 |
 | EVAL-3 | Evaluacion | Smoke dry-run: 6 familias de metricas computadas, nombres en ingles; polucion del smoke purgada (FK-order) | PASS | QT-011 |
-| EVAL-4 | Evaluacion | Campana REAL 82 runs lanzada en background (E04->E03->E01->E02, scripts/run_eval_campaign_r11.ps1) | EN CURSO al cierre (agregados pendientes) | QT-011 |
+| EVAL-4 | Evaluacion | Campana REAL 82 runs completada (E04 18, E03 10, E01 27, E02 27; 0 fallidos, exit 0). BUG-029 corregido (docx/pptx indexan 200, 85 chunks). Defecto nuevo en el juez: num_judged=0 en las 82 corridas (juez recibia registros sin correlacionar); correlacion corregida en harness.py para futuras corridas. Agregados + reportes generados para E01-E04. Spot-check ingles (HITL): 621 items escaneados, 0 en espanol en cuerpo; 13/621 con nombres propios o glosas del material (Maria, Cafe Aroma, "(Estudio de Mercado)"), 3/621 subtopic con eco del temario; evaluador rechazo 5 items language_not_english | DONE (juez post-hoc abortado por ventana +-1 fila: ver hallazgo J1) | QT-011 |
 | ADV-1 | Adversarial | Indexar solo docx (Economia Aplicada) con clear=true: debe fallar y NO perder chunks | 400 "Could not extract text" + chunks intactos 51/51 -> BUG-029 (No module named 'docx'; python-docx/python-pptx no declarados) | BUG-029/QT-011 |
 
 Resultado ronda 11: certificacion funcional PASS (DB + HITL + suite 15/15 +
 examenes de control en ingles); BUG-028 -> corregido (purga y regeneracion
-verificadas: 0 preguntas en espanol en BD); BUG-029 nuevo (medio, deps no
-declaradas en la imagen exam-app; la validacion previa conserva los chunks).
-Campana de evaluacion regenerada y lanzada; agregados e informes por
-experimento al finalizar.
+verificadas: 0 preguntas en espanol en BD); BUG-029 -> corregido (deps
+declaradas, imagen reconstruida, indexacion docx/pptx verificada en vivo
+200/200/200 con 85 chunks). Campana 82/82 completada; agregados e informes
+por experimento generados; defecto del juez in-run (num_judged=0) corregido
+en harness; ingles verificado por escaneo (621 items) y lectura HITL.
 
 ## Regresion
 
