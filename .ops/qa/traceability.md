@@ -6,7 +6,7 @@ title: Matriz de trazabilidad REQ -> BL -> IMPL -> QT
 description: Cobertura con estado y evidencia; la fuente de la cadena de trazabilidad.
 estado: vigente
 dueno: rol:propietario
-fecha: 2026-10-27
+fecha: 2026-10-28
 relaciona: [qa-test-plan, templates-base]
 status: stable
 sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.md, title: copilot-instructions }]
@@ -36,6 +36,7 @@ sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.
 | REQ-001 | BL-017 | IMPL-024 | QT-007 | ejecutado; ronda 7 recertificacion funcional+integracion: BUG-023 confirmado (listado localStorage, reporte del propietario), BUG-022 critico (hilos sin propiedad, DEC-004), BUG-024/025 nuevos; C25-C40 11 PASS/3 FAIL/2 nota |
 | REQ-001 | BL-017 | IMPL-025 | QT-008 | ejecutado; ronda 8 fix DEC-004(a): chat_threads + ownership 403 + listado server-side con badges; API 12/12 PASS (scripts/verify-threads-r8.ps1) + Playwright PASS; BUG-022/023 corregidos (verificado final pendiente del propietario) |
 | REQ-001 | BL-017 | IMPL-026 | QT-009 | ejecutado; ronda 9 recertificacion (Playwright + integracion + examenes E1-E5): 22 PASS / 2 FAIL; BUG-026 y BUG-027 nuevos; QA_R9_Cert como evidencia; verificacion final pendiente del propietario |
+| REQ-001 | BL-010 | IMPL-027 | QT-010 | ejecutado; ronda 10: suite Playwright versionada en projects/frontend/e2e (15 tests F/I/L) 15/15 PASS + contrato de idioma (prompts exigen ingles, E1-EN PASS con QA_R10_English_Gen 100% en ingles); BUG-028 nuevo (banco heredado en espanol, decision pendiente); verificacion final pendiente del propietario |
 
 ## QT y su estado
 
@@ -50,16 +51,20 @@ sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.
 | QT-007 | Recertificacion ronda 7 (funcionales Playwright + integracion) | pendiente | test-plan ronda 7; BUG-022/023/024/025; pendiente del propietario |
 | QT-008 | Hilos server-side con ownership y badges (ronda 8) | pendiente | IMPL-025; 12/12 API PASS + Playwright PASS; pendiente del propietario |
 | QT-009 | Recertificacion ronda 9 (funcionales Playwright + integracion + certificacion examenes) | ejecutado | test-plan ronda 9; IMPL-026; agente actua como verificador humano en navegador; BUG-026/BUG-027 nuevos; pendiente del propietario |
+| QT-010 | Ronda 10: suite e2e versionada BL-010 + certificacion contrato de idioma | ejecutado | test-plan ronda 10; IMPL-027; `npx playwright test` 15/15 PASS en projects/frontend; E1-EN QA_R10_English_Gen 100% en ingles; BUG-028 nuevo; pendiente del propietario |
 
-Pendientes conocidos: suite versionada BL-010 (Playwright e2e); BUG-019/020/021
-abiertos (hallazgos ronda 6) con decisiones DEC-001/002/003 pendientes del owner;
-C2 caso extremo (>100 paginas reales) bloqueado por BUG-020. BUG-016 y BUG-018
-verificados en ronda 6 (navegador + sondas HTTP); quedan resueltos. Ronda 7 anade
-BUG-022 (critico, DEC-004), BUG-023 (bug reportado del historial, fix en BL-017),
+Pendientes conocidos: BUG-019/020/021 abiertos (hallazgos ronda 6) con
+decisiones DEC-001/002/003 pendientes del owner; C2 caso extremo (>100
+paginas reales) bloqueado por BUG-020. BUG-016 y BUG-018 verificados en
+ronda 6 (navegador + sondas HTTP); quedan resueltos. Ronda 7 anade BUG-022
+(critico, DEC-004), BUG-023 (bug reportado del historial, fix en BL-017),
 BUG-024 y BUG-025. Ronda 8 (IMPL-025): BUG-022/023 corregidos via BL-017
 (DEC-004 a); QT-008 pendiente de verificacion del propietario; purga del
 checkpointer huerfano queda como seguimiento. Ronda 9 (IMPL-026): BUG-026
 (estadisticas de cabecera tras restaurar asunto) y BUG-027 (pipeline publica
 examenes sin material ni banco, regression del criterio C6/BUG-004) abiertos;
 BUG-024/BUG-025 siguen abiertos; QT-009 pendiente de verificacion del
-propietario.
+propietario. Ronda 10 (IMPL-027): suite versionada BL-010 cerrada (pendiente
+del propietario); BUG-028 abierto (banco heredado en espanol, decision del
+propietario: regenerar/marcar/purgar); BUG-026/BUG-027/BUG-024/BUG-025 siguen
+abiertos.

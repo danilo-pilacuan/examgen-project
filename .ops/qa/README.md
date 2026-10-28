@@ -6,7 +6,7 @@ title: QA index
 description: Estrategia, plan de pruebas, matriz de trazabilidad y registro BUG.
 estado: vigente
 dueno: rol:propietario
-fecha: 2026-10-27
+fecha: 2026-10-28
 relaciona: [templates-defect]
 status: stable
 ---
@@ -16,16 +16,17 @@ status: stable
 - `strategy.md` - what "verified" means (browser-only rule) + validation rules.
 - `test-plan.md` - C1-C54 + F1-F14 + I1-I8 + E1-E5 + R1-R7 certification matrix per round.
 - `traceability.md` - REQ -> BL -> IMPL -> QT coverage with evidence.
-- `BUG-001..BUG-027.md` - defect register, flat in this folder (28 files).
+- `BUG-001..BUG-028.md` - defect register, flat in this folder (29 files).
 
-Round 9 (2026-10-27, IMPL-026, recertificacion + certificacion de examenes):
-funcionales Playwright (F1-F13) + integracion API (I1-I6) + examenes E1-E5.
-22 PASS / 2 FAIL. BUG-027 nuevo (alto): el pipeline publica examenes con 0
-chunks y 0 preguntas (preguntas genericas fuera de tema, "Sahara Desert");
-E1 reporta `indexed_chunks_count:0` pese a 41 chunks en BD. BUG-026 nuevo
-(menor): chips de cabecera 0/0 hasta re-seleccionar el asunto tras login o
-Activate. I4 sigue FAIL conocido (BUG-024, sin fix planificado). Hilos de
-control r9 purgados; examen QA_R9_Cert queda como evidencia.
+Round 10 (2026-10-28, IMPL-027, recertificacion + framework versionado
+BL-010 + contrato de idioma): suite Playwright versionada en
+projects/frontend/e2e (15 tests: F/I/L) -> 15/15 PASS. Contrato "todo el
+sistema en ingles" enforceado en prompts (generador/evaluador/verificador);
+E1-EN PASS (examen QA_R10_English_Gen 100% en ingles). BUG-028 nuevo
+(medio, dato): banco heredado con 933/1239 preguntas en espanol (dato
+semilla previo al contrato; decision del propietario pendiente). I4 sigue
+FAIL conocido (BUG-024, sin fix planificado). BUG-027 sigue abierto (fuera
+de alcance esta ronda). Examenes de control: QA_R9_Cert y QA_R10_English_Gen.
 
 Round 8 (2026-10-27, IMPL-025, fix DEC-004): hilos de chat server-side
 (BL-017): tabla `chat_threads` + GET/PATCH/DELETE /api/chat/threads +

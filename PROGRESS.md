@@ -6,6 +6,37 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
+## 2026-10-28 (ronda QA 10 - framework e2e versionado + contrato de idioma)
+
+* **Hecho:** ronda 10 ejecutada a pedido del propietario: recertificar lo
+  esencial, crear el framework de pruebas versionado y verificar que TODO el
+  sistema este en ingles (UI, preguntas y respuestas). (1) Suite Playwright
+  versionada BL-010 creada en `projects/frontend/e2e`
+  (playwright.config.ts + helpers.ts con login UI/fixture authedPage +
+  3 specs: functional F1-F12, integration I1/I5/I8/I-bonus, language
+  L1/L1b/L2 informativo = 15 tests) con deps (@playwright/test 1.64.1 +
+  chromium) y .env.example; resultado 15/15 PASS contra el stack Docker
+  en 3 corridas (la ultima tras el rebuild del backend). Cuenta de control
+  qa-r10@usfq.test creada en BD con el hash pbkdf2 del backend. (2)
+  Contrato de idioma enforceado en codigo: prompts de generator_node y
+  evaluator_node (rechazo language_not_english), generate_question del
+  chat y verifier.py exigen escribir pregunta/opciones/respuesta/explicacion
+  en ENGLISH independientemente del idioma del material o la materia;
+  exam-app reconstruido (docker compose build) y verificado dentro del
+  contenedor (grep 'in ENGLISH': 1/2/1). (3) E1-EN PASS: POST
+  /exams/generate sobre Eva (material RAG en espanol) -> examen
+  QA_R10_English_Gen con 3 items 100% en ingles (verificado en BD),
+  0 rechazos, PDFs + ZIP + JSON en /app/output: el enforce funciona con
+  contexto cross-language. (4) L2 informativo: banco heredado 197/200 en
+  espanol; censo completo 933/1239 -> BUG-028 nuevo (dato, no codigo;
+  decision del propietario: regenerar/marcar/purgar). .ops: test-plan
+  Ronda 10, QT-010, IMPL-027, traceability, BL-010 -> ejecutado, README qa,
+  BUG-028, handoff.
+* **Falta:** verificado del propietario (QT-010/IMPL-027/BL-010/BUG-028);
+  decision sobre el banco heredado en espanol (BUG-028); fix de BUG-027 y
+  BUG-026 (requieren codigo + rebuild); commit + push.
+* **Decision:** ninguna nueva (BUG-028 abierto para el propietario).
+
 ## 2026-10-27 (ronda QA 9 - recertificacion + certificacion de examenes)
 
 * **Hecho:** recertificacion QA ronda 9 ejecutada a pedido del propietario

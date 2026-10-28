@@ -3,10 +3,10 @@ id: qa-test-plan
 tipo: Guide
 type: Guide
 title: Plan de pruebas y matriz de certificacion
-description: Checks C1-C54, F1-F14, I1-I8, E1-E5 (P0-P2) y regresion R1-R7 con estado de certificacion por ronda.
+description: Checks C1-C54, F1-F14, I1-I8, E1-E5 (P0-P2) y regresion R1-R7 con estado de certificacion por ronda; ronda 10 usa la suite Playwright versionada BL-010.
 estado: vigente
 dueno: rol:propietario
-fecha: 2026-10-27
+fecha: 2026-10-28
 relaciona: [qa-strategy, REQ-001]
 status: stable
 sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.md, title: copilot-instructions }]
@@ -177,6 +177,48 @@ indexado y sin banco, con preguntas genericas fuera de tema; E1 detecta
 ademas "indexed_chunks_count:0" en la respuesta pese a tener 41 chunks).
 BUG-026 nuevo (menor): estadisticas de cabecera 0/0 hasta re-seleccion manual
 del asunto tras restauracion.
+
+## Ronda 10 (recertificacion QA 2026-10-28, IMPL-027, QT-010)
+
+Mandato del propietario: recertificar lo esencial Y estrenar el framework de
+pruebas versionado BL-010 (Playwright e2e en projects/frontend/e2e); ademas
+verificar el contrato de idioma: TODO el sistema en ingles (UI, preguntas y
+respuestas generadas). Cuenta de control nueva: qa-r10 (creada en BD con hash
+pbkdf2 del backend). La suite queda versionada: `npx playwright test` en
+projects/frontend (15 tests: functional F, integration I, language L).
+
+Framework BL-010 (QT-010): playwright.config.ts (baseURL E2E_BASE_URL,
+1 worker, trace/screenshot on failure), e2e/helpers.ts (login UI + fixture
+authedPage), e2e/tests/functional.spec.ts (F1/F1b/F2/F3/F4/F5/F11/F12),
+e2e/tests/integration.spec.ts (I1/I5/I8/I-bonus), e2e/tests/language.spec.ts
+(L1/L1b/L2). Credenciales via E2E_EMAIL/E2E_PASSWORD (ver e2e/.env.example).
+
+| Check | Tipo | Descripcion | Resultado | Bug/QT |
+|---|---|---|---|---|
+| F1 | Funcional | Login UI en ingles: titulo, boton Sign in, html lang=en | PASS (292ms) | QT-010 |
+| F1b | Funcional | Login aterriza en chat con nombre del profesor | PASS ("QA Round 10" en header) | QT-010 |
+| F2 | Funcional | Banco: seleccion de materia, tabla, filtros | PASS (Eva: tabla visible, filtro easy reacciona) | QT-010 |
+| F3 | Funcional | Detalle inline expandible/cerrable | PASS (tr.detail-row abre y cierra) | QT-010 |
+| F4 | Funcional | Toggle verificacion desde fila | PASS (cambia a estado verificado) | QT-010 |
+| F5 | Funcional | Examenes: listado y boton ZIP habilitado | PASS (.exam-list con button.zip) | QT-010 |
+| F11 | Funcional (re) | Ruta anonima -> /login?redirect= | PASS (211ms) | QT-010 |
+| F12 | Funcional (re) | Guardrail DELETE pregunta inexistente -> 403/404 | PASS (404; guardrail de verificadas re-testeado en ronda 9) | QT-010 |
+| I1 | Integracion | API sin token -> 401 (/api/chat/threads, /subjects, /auth/me via nginx) | PASS (3/3 -> 401) | QT-010 |
+| I5 | Integracion | Auth: 422 password debil, 401 credenciales invalidas | PASS (422/401) | QT-010 |
+| I8 | Integracion | HEAD /output/ -> 200/404, nunca 405 | PASS (200) | QT-010 |
+| I-bonus | Integracion | Token de localStorage valido en /auth/me | PASS (200 + email correcto) | QT-010 |
+| L1 | Idioma | Perfil limpio: UI en ingles (html lang=en, textos EN) | PASS | QT-010 |
+| L1b | Idioma | Nav principal en ingles (Chat/Bank/Exams/Material/Subjects) | PASS | QT-010 |
+| L2 | Idioma | Informe idioma del banco (informativo, no falla) | INFORMATIVO (muestra=200, en espanol=197: banco heredado pre-contracto, ver BUG-028) | BUG-028/QT-010 |
+| E1-EN | Funcional | Generacion examen con prompts en ingles (backend reconstruido): POST /exams/generate | PASS (QA_R10_English_Gen: 3 items generados; statements, opciones, respuestas y explicaciones 100% en ingles; 2 PDFs + ZIP en /output; pipeline aprobo los 3 items sin rechazo de idioma) | QT-010 |
+
+Resultado ronda 10: 15/15 PASS en la suite Playwright versionada + E1-EN PASS.
+El contrato de idioma queda enforceado en codigo (prompts de generacion,
+evaluador y verificador exigen ingles; el evaluador rechaza items en otro
+idioma con rejection_reason=language_not_english). El banco heredado
+(933/1239 preguntas en espanol) queda registrado como BUG-028: dato semilla
+anterior al contrato, no defecto de codigo; decision pendiente del propietario
+(remediar/traducir o dejar como legado).
 
 ## Regresion
 
