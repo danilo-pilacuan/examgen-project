@@ -31,10 +31,11 @@
   espanol; censo completo 933/1239 -> BUG-028 nuevo (dato, no codigo;
   decision del propietario: regenerar/marcar/purgar). .ops: test-plan
   Ronda 10, QT-010, IMPL-027, traceability, BL-010 -> ejecutado, README qa,
-  BUG-028, handoff.
+  BUG-028, handoff. Commits publicados en origin: meta-repo 0435f6c,
+  agents-backend ea24a81, frontend 40ebdba (rama RC3/develop).
 * **Falta:** verificado del propietario (QT-010/IMPL-027/BL-010/BUG-028);
   decision sobre el banco heredado en espanol (BUG-028); fix de BUG-027 y
-  BUG-026 (requieren codigo + rebuild); commit + push.
+  BUG-026 (requieren codigo + rebuild).
 * **Decision:** ninguna nueva (BUG-028 abierto para el propietario).
 
 ## 2026-10-27 (ronda QA 9 - recertificacion + certificacion de examenes)
