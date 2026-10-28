@@ -4,7 +4,7 @@ tipo: Defect
 type: Defect
 title: El pipeline publica examenes sin material indexado ni banco (preguntas genericas fuera de tema)
 description: Con 0 chunks y 0 preguntas en la materia, /exams/generate genera preguntas genericas del conocimiento del LLM (p.ej. "Sahara Desert") y publica el examen con ZIP/PDF; ademas la respuesta reporta indexed_chunks_count:0 pese a haber chunks en BD.
-estado: abierto
+estado: corregido
 dueno: rol:propietario
 fecha: 2026-10-27
 relaciona: [QT-009, IMPL-026, BUG-004, C6, E1]
@@ -54,3 +54,32 @@ si pasan sus umbrales de calidad. La salvaguarda de BUG-004 solo cubre
 3. Verificacion: repetir E5 (0 chunks/0 preguntas -> rechazo); repetir E1
    (41 chunks -> `indexed_chunks_count: 41`); regredir C6 (sin items -> no
    publica).
+
+## Ejecucion del fix (2026-10-28, ronda 12)
+
+Implementado en ambos puntos prescritos:
+
+- exam-app 2474b2c (fix #1): `POST /exams/generate` ahora 404 si el
+  subject_id no existe (antes fingia nombre "Subject"), cuenta real de
+  `material_chunks` y `generated_questions` por materia, y 422 con mensaje
+  accionable en ingles si ambos son 0. Sin publicacion ni persistencia.
+- agents-backend e5cee07 (fix #2): `ingestor_node` con `raw_materials_paths`
+  vacio (camino API, RAG lee la BD) ahora devuelve el COUNT real de
+  `material_chunks` de la materia como `indexed_chunks_count` en vez del
+  0 constante.
+
+Verificacion en vivo (4/4 PASS, imagen reconstruida):
+
+- V1 (E5 repetido): materia 0 chunks/0 preguntas -> HTTP 422 con mensaje
+  accionable; no se publica nada. Post-fix la BD quedo sin filas ni
+  artefactos (repro purgado).
+- V2 (E1 repetido): Database Systems (28 chunks) -> HTTP 200,
+  `indexed_chunks_count: 28`, item RAG-grounded aprobado, PDFs/ZIP
+  publicados (artefactos de prueba purgados tras la verificacion).
+- V3: subject_id inexistente -> HTTP 404 "Subject not found".
+- V4/C6 regresion: la materia vacia quedo 0 preguntas / 0 examenes en BD.
+
+Regresion: suite e2e 16/16 PASS (15 versionadas + bug026). Nota: la fila
+de examen del repro pre-fix sobrevivio con `persist:false` -> BUG-021
+re-confirmado en vivo (2 ocurrencias en la ronda 12), DEC-003 sigue
+pendiente del propietario.

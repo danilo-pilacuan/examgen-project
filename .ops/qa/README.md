@@ -16,8 +16,21 @@ status: stable
 - `strategy.md` - what "verified" means (browser-only rule) + validation rules.
 - `test-plan.md` - C1-C54 + F1-F14 + I1-I8 + E1-E5 + R1-R7 certification matrix per round.
 - `traceability.md` - REQ -> BL -> IMPL -> QT coverage with evidence.
-- `QT-007..QT-011.md` - test case records (rounds 7-11), flat in this folder.
+- `QT-007..QT-012.md` - test case records (rounds 7-12), flat in this folder.
 - `BUG-001..BUG-029.md` - defect register, flat in this folder (30 files).
+
+Round 12 (2026-10-28, IMPL-029, mandato del propietario: continuar la ronda,
+credenciales en archivo, corregir bugs que no dañen la certificacion): suite
+e2e 16/16 PASS (15 versionadas + nueva bug026.spec.cjs). BUG-026 ->
+`corregido` (frontend c327682): watcher centralizado de activeSubjectId en
+AppHeader, 3/3 caminos verificados en vivo con conteos contra BD real.
+BUG-027 -> `corregido` (exam-app 2474b2c + agents-backend e5cee07, meta
+6ca1c13): repros en vivo confirmaron ambos claims (generacion de genericas
+con 0/0; contador siempre 0) y el fix quedo verificado en 4 chequeos
+(422 accionable en materia vacia, indexed_chunks_count real 28, 404 en
+materia inexistente, C6 limpio). BUG-021 re-confirmado en vivo 2 veces
+(persist:false persiste; DEC-003 pendiente). Artefactos de repro purgados.
+Verificacion final pendiente del propietario.
 
 Round 11 (2026-10-28, IMPL-028, mandato del propietario: recertificar lo
 primordial, regenerar el framework de pruebas, ingles en todo el sistema,

@@ -4,7 +4,7 @@ tipo: Defect
 type: Defect
 title: Estadisticas de cabecera 0/0 hasta re-seleccion manual del asunto activo
 description: Al restaurar el asunto activo (login o Activate en Materias) los chips "N questions / N chunks" muestran 0/0 y el panel dice "No subject selected" hasta re-seleccionar en el combobox.
-estado: abierto
+estado: corregido
 dueno: rol:propietario
 fecha: 2026-10-27
 relaciona: [QT-009, IMPL-026, BUG-009]
@@ -42,3 +42,18 @@ Centralizar la carga de estadisticas en un watcher de `activeSubjectId`
 `immediate: true`) en vez del handler del combobox. Verificacion: login ->
 chips correctos sin interaccion; "Activate" en Materias -> chips correctos;
 cambio por combobox sigue funcionando (regresion C10).
+
+## Ejecucion del fix (2026-10-28, ronda 12)
+
+Corregido en frontend c327682 (bump meta 299b118): `AppHeader.vue`
+centraliza la carga en un watcher de `activeSubjectId` con `immediate:
+true`; el handler del combobox queda solo como cambio de usuario.
+
+Verificacion en vivo (bug026.spec.cjs, nueva spec e2e; 3/3 caminos):
+
+- login -> chips correctos con cero interaccion (6q/28c Database Systems).
+- "Activate" en Materias -> chips correctos (6q/85c Economia Aplicada).
+- cambio por combobox -> chips correctos (regresion C10).
+
+Conteos validados contra la BD real (6 preguntas / 28 y 85 chunks).
+Regresion: suite e2e completa 16/16 PASS (15 versionadas + bug026).

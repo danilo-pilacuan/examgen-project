@@ -12,28 +12,36 @@ status: stable
 sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.md, title: copilot-instructions }]
 ---
 
-> **Ultima actualizacion:** 2026-10-28 (QA ronda 11 - recertificacion, BD desde cero, ingles e2e, set de metricas regenerado y campana 82/82 completada) | **Rama:** `RC3/develop` |
-> **Arbol:** ronda 11 ejecutada y cerrada (IMPL-028/QT-011, mandato del propietario: recertificar lo
-> primordial con el agente como verificador humano, regenerar el framework de pruebas,
-> asegurar ingles en TODO el sistema, regenerar el set de metricas y reconstruir la BD desde
-> cero). (1) BD reconstruida desde cero (alembic head b8c9d0e1f2a3, 13 tablas) y material
-> re-indexado (Database Systems 28 chunks; Economia Aplicada - QA11 51 chunks). (2) 12
-> preguntas nuevas 100% en ingles via pipeline real (6 por materia); revision humana HITL del
-> agente 12/12 APROBADAS y verified_by_human=true (12/12); falso positivo de mojibake
-> descartado (beta/por = simbolos matematicos UTF-8 reales; artefacto cp1252 de la consola).
-> (3) Suite Playwright 15/15 PASS (10.8 s) con credenciales qa-r11 y L2 endurecido a asercion
-> estricta. (4) 2 examenes de control en ingles (qa11_control_db, qa11_control_econ) con PDFs
-> + ZIP. (5) Set de metricas regenerado: subjects.yaml (5 clones en ingles), experiments.yaml
-> (topics en ingles, 82 runs) y campana REAL completada 82/82 (E04 18, E03 10, E01 27, E02 27;
-> 0 fallidos, exit 0); agregados + reportes + FINDINGS regenerados para los 4 experimentos.
-> (6) BUG-028 -> corregido (opcion (c): purga + regeneracion; 0 preguntas en espanol en BD).
-> BUG-029 -> corregido en esta ronda (deps declaradas en core f0fc306 y exam-app 2fd4491,
-> imagen reconstruida, repro en vivo 200/200/200 con 85 chunks via scripts/qa_r11_docx_index.py).
-> Hallazgo J1: el juez LLM in-run registro num_judged=0 en 82/82 (harness pasaba retrieval sin
-> correlacionar); correlacion corregida en harness.py (commit 3827e4d) y juez post-hoc abortado
-> por ventana de auditoria con incertidumbre de +-1 fila. Ingles de campana verificado con
-> escaneo de 621 items (scripts/qa_r11_english_check.py): 0 cuerpos en espanol.
-> BUG-026/027/024/025 siguen abiertos.
+> **Ultima actualizacion:** 2026-10-28 (QA ronda 12 - recertificacion, credenciales QA en archivo, BUG-026 y BUG-027 corregidos y verificados en vivo) | **Rama:** `RC3/develop` |
+> **Arbol:** ronda 12 ejecutada y cerrada (IMPL-029/QT-012, mandato del propietario: continuar la
+> ronda de QA, entregar credenciales en archivo de salida, reportar lo que falta y corregir los
+> bugs que no dañen la certificacion). (1) Credenciales QA entregadas en
+> qa-r11-credentials.qa-creds.txt (git-ignored). (2) Suite e2e 16/16 PASS dos veces (tras fix
+> BUG-026 y tras rebuild BUG-027; 15 versionadas + nueva bug026.spec.cjs, L2 estricto verde).
+> (3) BUG-026 -> corregido (frontend c327682, meta 299b118): AppHeader centraliza la carga de
+> estadisticas en un watcher de activeSubjectId (patron ExamsView, immediate: true); 3/3 caminos
+> verificados en vivo (login, Activate, combobox) con conteos contra BD real (6q/28c y 6q/85c).
+> (4) BUG-027 -> corregido (exam-app 2474b2c + agents-backend e5cee07, meta 6ca1c13): repros en
+> vivo confirmaron ambos claims (examenes genericos publicados con 0 chunks/0 preguntas;
+> indexed_chunks_count siempre 0 en el camino API); fix fail-fast en POST /exams/generate
+> (404 materia inexistente, 422 accionable si 0 chunks Y 0 preguntas) + ingestor_node devuelve
+> el COUNT real de material_chunks; verificacion V1-V4 en vivo tras rebuild (422 accionable;
+> 200 con indexed_chunks_count: 28 y item RAG-grounded; 404; C6 sin persistencia en materia
+> vacia). (5) BUG-021 re-confirmado en vivo 2 veces durante los repros (persist:false persiste
+> examen/PDFs/ZIP; DEC-003 sigue pendiente del propietario); artefactos de repro purgados
+> (materia, filas de examen, JSON/PDF/ZIP). BUG-024/025 y BUG-019/020 siguen abiertos.
+
+**Ronda 11 (contexto inmediato, 2026-10-28):** BD reconstruida desde cero
+(alembic head b8c9d0e1f2a3, 13 tablas) y material re-indexado (Database
+Systems 28 chunks; Economia Aplicada - QA11 51 chunks); 12 preguntas nuevas
+100% en ingles via pipeline real con revision humana HITL del agente 12/12
+(verified_by_human=true); suite 15/15 con L2 estricto; 2 examenes de control
+en ingles; set de metricas regenerado y campana REAL completada 82/82
+(agregados + reportes + FINDINGS, commit 9e6bd6c); BUG-028 corregido (purga
++ regeneracion), BUG-029 corregido (deps docx/pptx + rebuild, verificado
+200/200/200 con 85 chunks); hallazgo J1 (juez in-run num_judged=0) corregido
+en 3827e4d; ingles de campana verificado sobre 621 items (0 cuerpos en
+espanol).
 
 ## Contexto en 30 segundos
 
@@ -52,7 +60,7 @@ Exam Generator: MVP de tesis USFQ para que un profesor genere examenes LaTeX por
 |---|---|
 | Caso de uso central (materias, material, preguntas HITL, examenes, ZIP) | Verificado E2E (rondas 1-6; C2 PASS con PDF 5.4 MB real en ronda 6) |
 | Framework de evaluacion (etapa 15) | Ejecutado: 102 runs reales (ronda base); set regenerado en ronda 11 (ingles, 82 runs); hiperparametros validados T gen=0.7, top_k=3, T eval=0.2 |
-| BUG abiertos | Ronda 6: BUG-019 (HUMAN duplicado en checkpointer tras Retry), BUG-020 (indexacion sin limites/progreso/cancelacion, ~29 h para 8000 paginas), BUG-021 (persist=false persiste igualmente examen/PDFs/ZIP) con DEC-001/002/003 pendientes. Ronda 7: BUG-022 (CRITICO) y BUG-023 -> `corregido` en ronda 8 (IMPL-025, QT-008; pendiente verificado del propietario); BUG-024 (sin cabeceras de seguridad nginx), BUG-025 (mensaje 401 enganoso en login). Purga del checkpointer huerfano al borrar hilo: seguimiento separado. BUG-016 y BUG-018 RESUELTOS y verificados en ronda 6. Ronda 9: BUG-026 (stats cabecera 0/0), BUG-027 (examenes sin material). Ronda 11: BUG-029 nuevo (deps docx/pptx no declaradas; los chunks existentes se conservan tras un 400) |
+| BUG abiertos | Ronda 6: BUG-019 (HUMAN duplicado en checkpointer tras Retry), BUG-020 (indexacion sin limites/progreso/cancelacion, ~29 h para 8000 paginas), BUG-021 (persist=false persiste igualmente examen/PDFs/ZIP; re-confirmado en vivo 2 veces en ronda 12) con DEC-001/002/003 pendientes. Ronda 7: BUG-024 (sin cabeceras de seguridad nginx), BUG-025 (mensaje 401 enganoso en login). BUG-016 y BUG-018 RESUELTOS y verificados en ronda 6. Ronda 9: BUG-026 y BUG-027 -> `corregido` en ronda 12 (IMPL-029; pendiente verificado del propietario). Ronda 11: BUG-029 corregido y verificado en vivo (deps declaradas; 85 chunks) |
 | Backlog P2/P3 | BL-008 verificado en browser (ronda 6); BL-010 Playwright suite EJECUTADO en ronda 10 (IMPL-027); demas P2/P3 pendientes |
 | Etapa 01 (repos GitHub + CI) | Pendiente: repos locales listos, remotos no creados |
 | Migracion a .ops | Hecha: `implementaciones/` eliminado; todo vive en `.ops/` (94 docs OKF). IMPL-020 queda `borrador` hasta la revision del propietario |
@@ -60,27 +68,25 @@ Exam Generator: MVP de tesis USFQ para que un profesor genere examenes LaTeX por
 
 ## Trabajo pendiente (priorizado)
 
-1. Verificado del propietario de QT-011 / IMPL-028 / BUG-028 (corregido) /
-   BUG-029 (corregido) y del hallazgo J1: revisar evidencia (test-plan
-   Ronda 11, QT-011, IMPL-028, FINDINGS por experimento) y pasar a
-   `verificado` donde corresponda.
+1. Verificado del propietario de QT-011/QT-012 / IMPL-028/IMPL-029 /
+   BUG-028 (corregido) / BUG-029 (corregido) / BUG-026 (corregido) /
+   BUG-027 (corregido) y del hallazgo J1: revisar evidencia (test-plan
+   rondas 11-12, QT-011/QT-012, IMPL-028/IMPL-029, FINDINGS por
+   experimento) y pasar a `verificado` donde corresponda.
 2. Extension opcional de E03 a >= 4 repeticiones por clon (20 runs, ~35
    min) si la tesis defiende H5 con sigma entre clones; con 2 repeticiones
    el sigma (1.311) no es concluyente.
 3. Re-ejecutar una campana pequena (o la proxima ronda) para validar el juez
    in-run corregido (num_judged > 0) y, si se quiere juez post-hoc, anclar
    ventanas por run_id/thread_id en vez de ventanas de tiempo.
-4. Decidir y fixear BUG-027 (alto): fail-fast cuando la materia no tiene material indexado
-   ni banco (alineado con C6/BUG-004) y corregir `indexed_chunks_count` del response;
-   requiere codigo + rebuild del exam-app.
-5. Fix menor BUG-026: cargar estadisticas de AppHeader en un watcher de `activeSubjectId`
-   (patron ExamsView) en vez del handler del combobox; requiere codigo + rebuild frontend.
+4. Decidir y fixear BUG-021 (persist=false persiste; re-confirmado en ronda
+   12) y BUG-019/020: requiere DEC-001/002/003 del propietario + codigo.
+5. Fix menor BUG-025 (mensaje de login) y BUG-024 (cabeceras nginx + rebuild) (P2).
 6. Purga del contenido huerfano del checkpointer al borrar hilo (P2; seguimiento separado,
    el listado ya no expone huerfanos).
 7. Escrito de tesis, capitulo de experimentacion (usa `test/evaluation/` FINDINGS; sin codigo).
-8. Resolver DEC-001/002/003 (dueño): semantica de persist, dedupe HUMAN del Retry, limites de
-   indexacion; luego fix de BUG-019/020/021 (P1; requiere codigo).
-9. Fix menor BUG-025 (mensaje de login) y BUG-024 (cabeceras nginx + rebuild) (P2).
+8. (Fusionado en el punto 4: DEC-001/002/003 con BUG-019/020/021.)
+9. (Fusionado en el punto 5: BUG-024/025 siguen abiertos.)
 10. Comparativa cross-provider de modelos (P3; depende de acceso a otro modelo en el gateway).
 11. Etapa 01: crear repos remotos + CI del meta-repo (P3; requiere codigo).
 12. Resolver inconsistencia del instruccionado: validate.yml/copilot-instructions referencian infra DigitalMe ausente (tools/, mcp/, package.json raiz, AGENTS.md).

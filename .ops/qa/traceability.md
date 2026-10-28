@@ -52,7 +52,9 @@ sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.
 | QT-008 | Hilos server-side con ownership y badges (ronda 8) | pendiente | IMPL-025; 12/12 API PASS + Playwright PASS; pendiente del propietario |
 | QT-009 | Recertificacion ronda 9 (funcionales Playwright + integracion + certificacion examenes) | ejecutado | test-plan ronda 9; IMPL-026; agente actua como verificador humano en navegador; BUG-026/BUG-027 nuevos; pendiente del propietario |
 | QT-010 | Ronda 10: suite e2e versionada BL-010 + certificacion contrato de idioma | ejecutado | test-plan ronda 10; IMPL-027; `npx playwright test` 15/15 PASS en projects/frontend; E1-EN QA_R10_English_Gen 100% en ingles; BUG-028 nuevo; pendiente del propietario |
+| REQ-001 | BL-010 | IMPL-029 | QT-012 | ejecutado; ronda 12: regresion completa 16/16 (15 + bug026) sobre la BD r11; credenciales QA en archivo de salida git-ignored; BUG-026 corregido (frontend c327682, watcher activeSubjectId, 3/3 caminos en vivo); BUG-027 corregido (exam-app 2474b2c fail-fast 404/422 + agents-backend e5cee07 contador real; V1-V4 en vivo: 422 accionable, indexed_chunks_count 28, 404, C6 limpio); BUG-021 re-confirmado en vivo 2 veces (persist:false persiste; DEC-003 pendiente); repro purgado; pendiente del propietario |
 | QT-011 | Ronda 11: recertificacion + BD desde cero + HITL del agente + set de metricas regenerado | ejecutado | test-plan ronda 11; IMPL-028; 12/12 preguntas en ingles verificadas (HITL del agente con derecho otorgado); suite 15/15 con L2 estricto; campana 82/82 COMPLETADA (agregados+informes+FINDINGS r11); BUG-028 corregido, BUG-029 corregido y verificado en vivo (200/200/200, 85 chunks); hallazgo J1 (juez in-run num_judged=0) corregido en 3827e4d; ingles 621/621 items 0 cuerpos en espanol; pendiente del propietario |
+| QT-012 | Ronda 12: regresion completa + credenciales + cierre BUG-026/BUG-027 | ejecutado | test-plan ronda 12; IMPL-029; suite 16/16 (15 + bug026.spec.cjs); credenciales en qa-r11-credentials.qa-creds.txt; BUG-026 corregido (c327682, 3/3 caminos en vivo); BUG-027 corregido (2474b2c + e5cee07, V1-V4 en vivo: 422 accionable, contador real 28, 404, C6 limpio); BUG-021 re-confirmado (DEC-003 pendiente); pendiente del propietario |
 | REQ-001 | BL-010 | IMPL-028 | QT-011 | ejecutado; ronda 11: BD desde cero + 12 preguntas en ingles con HITL del agente 12/12 (verified_by_human=t) + suite 15/15 (L2 estricto) + set de metricas regenerado (campana 82/82 completada con agregados+informes) + 2 examenes de control en ingles; BUG-028 corregido (purga), BUG-029 corregido (deps + rebuild, verificado 200/200/200); J1 documentado y corregido (3827e4d); pendiente del propietario |
 
 Pendientes conocidos: BUG-019/020/021 abiertos (hallazgos ronda 6) con
@@ -77,4 +79,12 @@ num_judged=0 por retrieval sin correlacionar) corregido en 3827e4d; campana
 82/82 completada con agregados + informes + FINDINGS en 9e6bd6c; ingles
 verificado sobre 621 items (0 cuerpos en espanol); BUG-026/BUG-027/
 BUG-024/BUG-025 siguen abiertos; QT-011 pendiente de verificacion del
-propietario.
+propietario. Ronda 12 (IMPL-029): BUG-026 -> corregido (frontend c327682;
+3/3 caminos de cabecera verificados en vivo con conteos contra BD real);
+BUG-027 -> corregido (exam-app 2474b2c fail-fast 404/422 + agents-backend
+e5cee07 indexed_chunks_count real; verificado en vivo V1-V4: 422
+accionable con materia vacia, 200 con contador 28 y item RAG-grounded,
+404 en materia inexistente, C6 sin persistencia en materia vacia); suite
+16/16 PASS en ambos rebuilds; BUG-021 re-confirmado en vivo 2 veces
+(DEC-003 pendiente); artefactos de repro purgados; QT-012 pendiente de
+verificacion del propietario.

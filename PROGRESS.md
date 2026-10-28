@@ -6,6 +6,39 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
+## 2026-10-28 (ronda QA 12 - recertificacion, credenciales en archivo, BUG-026 y BUG-027 corregidos)
+
+* **Hecho:** cierre de la ronda 12. (1) Credenciales QA entregadas en
+  qa-r11-credentials.qa-creds.txt (git-ignored). (2) Suite e2e completa
+  16/16 PASS dos veces (tras fix BUG-026 y tras rebuild BUG-027; 15
+  versionadas + nueva bug026.spec.cjs; L2 estricto verde). (3) BUG-026 ->
+  corregido (frontend c327682, meta 299b118): AppHeader centraliza la
+  carga de estadisticas en un watcher de activeSubjectId (patron ExamsView,
+  immediate: true); 3/3 caminos verificados en vivo (login, Activate,
+  combobox) con conteos contra BD real (6q/28c y 6q/85c). (4) BUG-027 ->
+  corregido (exam-app 2474b2c + agents-backend e5cee07, meta 6ca1c13):
+  repros en vivo confirmaron ambos claims (examenes genericos publicados
+  con 0 chunks/0 preguntas; indexed_chunks_count siempre 0 en el camino
+  API); fix fail-fast en POST /exams/generate (404 materia inexistente,
+  422 accionable si 0 chunks Y 0 preguntas, alineado con C6/BUG-004 y E5)
+  + ingestor_node devuelve el COUNT real de material_chunks; verificacion
+  V1-V4 en vivo tras rebuild: 422 accionable en materia vacia; 200 con
+  indexed_chunks_count: 28 y item RAG-grounded en Database Systems; 404
+  en materia inexistente; C6 sin persistencia en materia vacia. (5)
+  BUG-021 re-confirmado en vivo 2 veces durante los repros (persist:false
+  persistio examen/PDFs/ZIP; DEC-003 sigue pendiente del propietario);
+  artefactos de repro purgados (materia de repro, filas de examen,
+  JSON/PDF/ZIP), materias de control y examenes qa11 intactos.
+* **Falta:** verificado del propietario (QT-011/QT-012, IMPL-028/IMPL-029,
+  BUG-026/027/028/029 y J1); BUG-024/025 abiertos (P2); BUG-019/020/021
+  con DEC-001/002/003 pendientes; extension opcional E03 >=4 repeticiones;
+  validar juez in-run corregido en la proxima campana (num_judged > 0).
+* **Decision:** BUG-026 y BUG-027 se fixearon en ronda 12 al no dañar la
+  certificacion (no alteran alcance de tesis ni resultados de campana ya
+  publicados); BUG-021 se deja abierto porque su fix requiere decision de
+  semantica de persist (DEC-003 del propietario).
+
+
 ## 2026-10-28 (ronda QA 11 - cierre: campana 82/82, BUG-029 corregido, juez J1 e ingles HITL)
 
 * **Hecho:** cierre de la ronda 11. (1) Campana REAL completada 82/82
