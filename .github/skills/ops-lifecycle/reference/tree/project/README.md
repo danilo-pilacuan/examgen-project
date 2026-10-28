@@ -2,24 +2,21 @@
 id: project-readme
 tipo: Guide
 type: Guide
-title: Project - plan, backlog y avance
-description: Plan de fases reajustado, backlog de epicas y resumen de avance; el log dia a dia vive en PROGRESS.md.
+title: Project index
+description: Plan por etapas, backlog BL y handoff de sesion del proyecto.
 estado: vigente
 dueno: rol:propietario
-fecha: 2026-06-15
-relaciona: [ops-readme, proj-plan, proj-backlog]
+fecha: 2026-10-28
+relaciona: [templates-base]
 status: stable
-verified: 2026-06-15T00:00:00Z
-sources: [{ id: agents-md, resource: ../../AGENTS.md, title: AGENTS.md v3 }]
 ---
 
-- **Proposito:** planificar las fases (seccion 11), mantener el backlog de epicas y resumir el avance por fase.
-- **Escribe:** rol:agente · **Aprueba:** rol:propietario (cambios de plan o alcance).
-- **Cuando:** al iniciar una fase, al desglosar una epica y al cerrar una fase (checklist en [../governance/definition-of-done.md](../governance/definition-of-done.md)).
+## Index
 
-## Documentos
+- `plan.md` - stage map (etapa -> IMPL -> estado), successor of implementaciones/README.
+- `backlog/` - BL-000..BL-022, one file per item (successor of cada README de ronda).
+- `handoff.md` - session entry point (read first in every session).
 
-- [plan.md](plan.md) - fases reajustadas al estado real de ejecucion; fases 0-9 verificadas, Fase 10 pendiente.
-- [backlog/index.md](backlog/index.md) - epicas por fase; los BL se desglosan al entrar en la fase.
-- [handoff.md](handoff.md) - contexto de arranque para nuevas sesiones: estado del producto, entorno, comandos y mapa de documentos.
-- Avance: el log tarea a tarea vive en [../../PROGRESS.md](../../PROGRESS.md) (regla 7, DEC-001 rechazada); este arbol no lo duplica.
+Read order: handoff -> root PROGRESS.md -> active phase spec in
+`.ops/implementations/`. BL items follow `templates/backlog-item.md`; the agent
+drafts and re-estimates; the owner approves scope/plan changes.
