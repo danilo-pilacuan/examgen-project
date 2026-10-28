@@ -32,9 +32,11 @@ experiments.yaml (topics en ingles, 82 runs) y campana real lanzada
 (E04->E03->E01->E02). BUG-028 -> `corregido` (opcion c del propietario:
 purga + regeneracion). BUG-029 nuevo (medio): indexacion docx/pptx falla
 en contenedor (No module named 'docx'; python-docx/python-pptx no
-declarados en manifests); la validacion previa conserva los chunks
-existentes (51/51 tras el 400). Verificacion final pendiente del
-propietario.
+declarados en manifests); La validacion previa conserva los chunks
+existentes (51/51 tras el 400). Corregido: deps declaradas en los 3
+manifests + rebuild exam-app; repro 200/200/200 con 4, 40 y 85 chunks
+reinsertados (85 total, 41 PDF + 4 docx + 40 pptx). Verificacion final
+pendiente del propietario.
 
 Round 8 (2026-10-27, IMPL-025, fix DEC-004): hilos de chat server-side
 (BL-017): tabla `chat_threads` + GET/PATCH/DELETE /api/chat/threads +

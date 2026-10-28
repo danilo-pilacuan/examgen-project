@@ -4,7 +4,7 @@ tipo: Defect
 type: Defect
 title: Indexacion docx/pptx falla en contenedor por dependencias no declaradas
 description: extract_file soporta .docx/.pptx pero python-docx/python-pptx no estan en la imagen de exam_app; el endpoint /subjects/{id}/index responde 400 y no reindexa nada.
-estado: abierto            # abierto | corregido | verificado
+estado: corregido          # abierto | corregido | verificado
 dueno: rol:propietario
 fecha: 2026-10-28
 relaciona: [QT-011]        # QT que lo detecto
@@ -37,8 +37,21 @@ porque la validacion (extract/embed) ocurre ANTES del borrado.
 
 ## Fix y verificacion
 
-Pendiente (P2, requiere codigo + rebuild de la imagen exam-app):
-declarar python-docx y python-pptx en exam-app/pyproject.toml (o en el
-Dockerfile), rebuild, y reintentar la indexacion docx verificando
-indexed_chunks > 0 y chunks en BD. Mientras tanto, los apuntes docx de
-Economia Aplicada quedan sin indexar (solo PDFs); mitiga usar PDFs.
+Fix aplicado (ronda 11): python-docx>=1.1.0 y python-pptx>=1.0.0
+declarados en requirements.txt (raiz) y en los pyproject de mvp-core y
+mvp-exam-app (pymupdf y openpyxl tambien formalizados ahi). Rebuild de
+la imagen exam-app y recreacion del contenedor.
+
+Verificacion real (2026-10-28, contenedor reconstruido):
+- Paquetes en contenedor: docx 1.2.0, pptx 1.0.2, PyMuPDF 1.28.5,
+  openpyxl 3.1.5.
+- POST /subjects/{id}/index con solo *.docx -> HTTP 200,
+  {"indexed_chunks": 4}; chunks en BD 51 -> 4 (clear=true borra y
+  reinserta, sin 400).
+- POST con solo *.pptx -> HTTP 200, {"indexed_chunks": 40}.
+- POST con *.pdf+*.docx+*.pptx -> HTTP 200, {"indexed_chunks": 85}
+  (41 PDF, 4 docx, 40 pptx), sin warnings en el log del contenedor.
+- Repro script: scripts/qa_r11_docx_index.py.
+
+Pendiente: verificacion humana (rol:propietario) para pasar a
+"verificado".
