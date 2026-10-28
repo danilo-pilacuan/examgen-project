@@ -17,9 +17,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 import time
+import traceback
 from pathlib import Path
 
 import yaml
@@ -31,6 +33,20 @@ if hasattr(sys.stdout, "reconfigure"):
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT))
+
+# Ensure API keys declared via api_key_env (e.g. OPENAI_API_KEY) are visible to
+# os.environ consumers: pydantic-settings reads .env lazily inside core.config,
+# but the evaluation registry and the LLM judge read os.environ directly. The
+# process environment wins; .env only fills what the shell did not provide.
+if not os.environ.get("OPENAI_API_KEY"):
+    _env_file = ROOT / ".env"
+    if _env_file.exists():
+        for _line in _env_file.read_text(encoding="utf-8").splitlines():
+            _line = _line.strip()
+            if not _line or _line.startswith("#") or "=" not in _line:
+                continue
+            _k, _v = _line.split("=", 1)
+            os.environ.setdefault(_k.strip(), _v.strip().strip("'\""))
 
 from test.evaluation.src.models_registry import get_profile, ModelProfile  # noqa: E402
 from test.evaluation.src import _patch  # noqa: E402
@@ -280,6 +296,20 @@ def run_once(
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+def load_runs_jsonl(path: Path) -> list[dict]:
+    """Loads existing run records from a runs.jsonl (empty if missing/broken)."""
+    if not path.exists():
+        return []
+    records: list[dict] = []
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            try:
+                records.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    return records
+
+
 def _apply_retrieval_overrides(blueprint: Any, overrides: dict) -> None:
     for key in RETRIEVAL_KEYS:
         if key in overrides:
@@ -549,26 +579,61 @@ def main() -> None:
     total = len(exp["arms"]) * len(subject_keys) * repeats
     done = 0
     print(f"🧪 Experiment {exp['id']} — {total} runs ({'DRY-RUN' if dry_run else 'REAL'})")
+    # Drop previously failed records upfront: they are retried by this run.
+    existing = load_runs_jsonl(runs_path)
+    failed_before = [r for r in existing if r.get("status") == "failed"]
+    if failed_before:
+        print(f"♻️ Retrying {len(failed_before)} previously failed run(s)", flush=True)
+        with open(runs_path, "w", encoding="utf-8") as f:
+            for r in existing:
+                if r.get("status") != "failed":
+                    f.write(json.dumps(r, ensure_ascii=False, default=str) + "\n")
+    existing_run_ids = {r.get("run_id") for r in existing if r.get("status") != "failed"}
+    failed: list[str] = []
     for arm_index, arm in enumerate(exp["arms"]):
         for subject_key in subject_keys:
             subject_def = subjects[subject_key]
             for repeat in range(1, repeats + 1):
                 done += 1
+                run_id = f"{exp['id']}_arm{arm_index}_r{repeat}_{subject_key}"
+                if run_id in existing_run_ids:
+                    print(f"  [{done}/{total}] arm={arm_index} subject={subject_key} repeat={repeat} SKIP (resume: {run_id} already in runs.jsonl)", flush=True)
+                    continue
                 print(f"  [{done}/{total}] arm={arm_index} subject={subject_key} repeat={repeat} ...", flush=True)
-                record = run_once(
-                    exp=exp,
-                    arm=arm,
-                    arm_index=arm_index,
-                    repeat=repeat,
-                    subject_key=subject_key,
-                    subject_def=subject_def,
-                    blueprint_preset=blueprints[exp["blueprint"]],
-                    dry_run=dry_run,
-                )
+                try:
+                    record = run_once(
+                        exp=exp,
+                        arm=arm,
+                        arm_index=arm_index,
+                        repeat=repeat,
+                        subject_key=subject_key,
+                        subject_def=subject_def,
+                        blueprint_preset=blueprints[exp["blueprint"]],
+                        dry_run=dry_run,
+                    )
+                except Exception as exc:
+                    # One unstable run must not kill the batch: log it as a
+                    # failed record and continue with the remaining combos.
+                    traceback.print_exc()
+                    failed.append(run_id)
+                    record = {
+                        "run_id": run_id,
+                        "experiment": exp["id"],
+                        "arm_index": arm_index,
+                        "arm_overrides": arm.get("overrides") or {},
+                        "model_profile": arm["model_profile"],
+                        "mode": "dry_run" if dry_run else "real",
+                        "repeat": repeat,
+                        "subject_key": subject_key,
+                        "status": "failed",
+                        "error_message": f"{type(exc).__name__}: {exc}",
+                    }
                 with open(runs_path, "a", encoding="utf-8") as f:
                     f.write(json.dumps(record, ensure_ascii=False, default=str) + "\n")
-                print(f"      status={record['status']} approved={record['state_digest']['approved_count']}")
+                print(f"      status={record['status']} approved={record.get('state_digest', {}).get('approved_count')}")
 
+    if failed:
+        print(f"⚠️ {len(failed)} failed run(s): {', '.join(failed)}")
     print(f"✅ Runs written to {runs_path}")
 
 
