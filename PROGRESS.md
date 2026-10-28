@@ -37,8 +37,8 @@
   el 400: la validacion va antes del borrado). .ops: test-plan Ronda 11,
   QT-011, IMPL-028, traceability, READMEs, BUG-028/BUG-029.
 * **Falta:** agregados + informes por experimento al terminar la campana
-  (analysis.aggregate + reporting.report; judge E03 opcional); push a
-  origin; verificado del propietario (QT-011/IMPL-028/BUG-028/BUG-029);
+  (analysis.aggregate + reporting.report; judge E03 opcional) en un commit
+  de seguimiento; verificado del propietario (QT-011/IMPL-028/BUG-028/BUG-029);
   fix BUG-029 (deps + rebuild, P2); BUG-026/027/024/025 siguen abiertos.
 * **Decision:** BUG-028 resuelto con la opcion (c) confirmada por el
   propietario en el mandato de la ronda 11.
