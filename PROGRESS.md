@@ -6,6 +6,46 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
+## 2026-10-28 (ronda QA 11 - cierre: campana 82/82, BUG-029 corregido, juez J1 e ingles HITL)
+
+* **Hecho:** cierre de la ronda 11. (1) Campana REAL completada 82/82
+  (E04 18, E03 10, E01 27, E02 27; 0 fallidos, exit 0; el runner crash-proof
+  resumo el crash previo como SKIP sin doble costo). (2) BUG-029 corregido
+  y verificado en vivo: deps declaradas (core f0fc306, exam-app 2fd4491),
+  imagen reconstruida, indexacion docx/pptx 200/200/200 (4 + 40 chunks;
+  reindex completo 85 = 41 PDF + 4 docx + 40 pptx) con
+  scripts/qa_r11_docx_index.py; commits meta ae940e2/d89ec30/41d368c/dc698ca
+  publicados. (3) Hallazgo J1 (defecto real del framework): el juez LLM
+  in-run registro num_judged=0 en 82/82 porque harness pasaba al juez los
+  registros de retrieval SIN correlacionar (statement vacio) y el juez
+  descarta en silencio; correlacion corregida en harness.py y windowing de
+  judge_experiment.py reforzado (commit 3827e4d). El juez post-hoc se
+  aborto deliberadamente: las ventanas de auditoria por timestamp derivan
+  +-1 fila (E04 79 llamadas vs 80 filas; E01 213 vs 214) y desalinearian
+  pares statement<->chunks; rag_faithfulness lexica si cubre 82/82.
+  (4) Agregados + reportes + FINDINGS regenerados con numeros r11 (commit
+  9e6bd6c): E01 T=0.3 domina eficiencia/alineacion (aprobacion 1.000,
+  Bloom 1.000) y T=0.7 conserva la mejor robustez entre clones; E02 k=8
+  dominado (aprobacion 0.875, 3x tokens), k=1 y k=3 empatan alineacion
+  0.986; E03 sigma entre clones 1.311 con solo 2 repeticiones (H5 no
+  concluyente; extension a >=4 recomendada); E04 aprobacion insensible a la
+  temperatura del evaluador (0.938-0.979) y T=0.2 la mas eficiente.
+  (5) Ingles de la campana verificado como HITL: escaneo determinista de
+  621 items entregados (scripts/qa_r11_english_check.py): 0 cuerpos en
+  espanol; 13/621 con nombres propios o glosas del material (Maria, Cafe
+  Aroma, "(Estudio de Mercado)"); 3/621 con subtopic que repite el temario
+  en espanol (metadato); el evaluador rechazo 5 items
+  language_not_english durante la campana (defensa activa).
+* **Falta:** verificado del propietario (QT-011/IMPL-028/BUG-028/BUG-029 y
+  J1); extension opcional de E03 a >=4 repeticiones por clon si la tesis
+  defiende H5; validar el juez corregido en la proxima campana
+  (num_judged > 0); BUG-026/027/024/025 siguen abiertos.
+* **Decision:** no correr el juez post-hoc sobre la campana r11: la
+  incertidumbre de +-1 fila en la ventana de auditoria corromperia en
+  silencio el apareamiento statement<->chunks; se prefiere documentar la
+  brecha y corregir la correlacion para corridas futuras.
+
+
 ## 2026-10-28 (ronda QA 11 - recertificacion, BD desde cero, ingles e2e y set de metricas)
 
 * **Hecho:** ronda 11 ejecutada a pedido del propietario (IMPL-028 / QT-011):
