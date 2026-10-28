@@ -12,24 +12,23 @@ status: stable
 sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.md, title: copilot-instructions }]
 ---
 
-> **Ultima actualizacion:** 2026-10-28 (QA ronda 12 - recertificacion, credenciales QA en archivo, BUG-026 y BUG-027 corregidos y verificados en vivo) | **Rama:** `RC3/develop` |
-> **Arbol:** ronda 12 ejecutada y cerrada (IMPL-029/QT-012, mandato del propietario: continuar la
-> ronda de QA, entregar credenciales en archivo de salida, reportar lo que falta y corregir los
-> bugs que no dañen la certificacion). (1) Credenciales QA entregadas en
-> qa-r11-credentials.qa-creds.txt (git-ignored). (2) Suite e2e 16/16 PASS dos veces (tras fix
-> BUG-026 y tras rebuild BUG-027; 15 versionadas + nueva bug026.spec.cjs, L2 estricto verde).
-> (3) BUG-026 -> corregido (frontend c327682, meta 299b118): AppHeader centraliza la carga de
-> estadisticas en un watcher de activeSubjectId (patron ExamsView, immediate: true); 3/3 caminos
-> verificados en vivo (login, Activate, combobox) con conteos contra BD real (6q/28c y 6q/85c).
-> (4) BUG-027 -> corregido (exam-app 2474b2c + agents-backend e5cee07, meta 6ca1c13): repros en
-> vivo confirmaron ambos claims (examenes genericos publicados con 0 chunks/0 preguntas;
-> indexed_chunks_count siempre 0 en el camino API); fix fail-fast en POST /exams/generate
-> (404 materia inexistente, 422 accionable si 0 chunks Y 0 preguntas) + ingestor_node devuelve
-> el COUNT real de material_chunks; verificacion V1-V4 en vivo tras rebuild (422 accionable;
-> 200 con indexed_chunks_count: 28 y item RAG-grounded; 404; C6 sin persistencia en materia
-> vacia). (5) BUG-021 re-confirmado en vivo 2 veces durante los repros (persist:false persiste
-> examen/PDFs/ZIP; DEC-003 sigue pendiente del propietario); artefactos de repro purgados
-> (materia, filas de examen, JSON/PDF/ZIP). BUG-024/025 y BUG-019/020 siguen abiertos.
+> **Ultima actualizacion:** 2026-10-28 (ronda 13 - extension de la ronda 12: descarga del banco
+> con auditoria prompt/thinking, BL-022/QT-013) | **Rama:** `RC3/develop` |
+> **Arbol:** ronda 13 ejecutada (mandato del propietario: anadir en el frontend, en la lista de
+> preguntas del bank, la descarga del banco donde tambien puedan verse los campos de pensamiento
+> y prompt). (1) exam-app 40e6750: GET /subjects/{id}/questions/export; como generated_questions
+> no guarda prompt/thinking, se correlaciona llm_responses (context pipeline:generator) por
+> statement exacto (la clave con que persistence.py y tools.py persisten question_text),
+> newest-first-wins; thinking null + thinking_capture_enabled:false cuando LLM_CAPTURE_THINKING
+> estuvo deshabilitado (estado vivo actual; 0/686 filas con thinking). (2) frontend f19813f:
+> boton Download bank en la fila de filtros (archivo question_bank_<subject>_<date>.json),
+> alerta de confirmacion con conteo + nota de thinking deshabilitado, bloques colapsables
+> Prompt/Thinking en el detalle de fila (busqueda por id sobre la ultima exportacion) con
+> fallback noPrompt; claves i18n EN/ES. (3) Verificado en vivo: API 218/218 prompts (Applied
+> Economics - Adam) y 6/6 (QA11); navegador real: descarga disparada + alerta "Bank downloaded:
+> 218 questions (JSON)" + nota. (4) e2e 18/18 PASS (16 previos + F7/F7b en download.spec.ts,
+> con parseo del JSON descargado). Bugs abiertos sin cambio: BUG-019/020/021 (DEC-001/002/003
+> pendientes del propietario), BUG-024/025. Verificacion final pendiente del propietario.
 
 **Ronda 11 (contexto inmediato, 2026-10-28):** BD reconstruida desde cero
 (alembic head b8c9d0e1f2a3, 13 tablas) y material re-indexado (Database

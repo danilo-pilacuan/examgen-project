@@ -6,6 +6,27 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
+## 2026-10-28 (ronda QA 13 - extension ronda 12: descarga del banco con auditoria prompt/thinking)
+
+* **Hecho:** BL-022/QT-013. (1) exam-app 40e6750: GET
+  /subjects/{id}/questions/export; correlacion de llm_responses
+  (pipeline:generator) por statement exacto con newest-first-wins (la clave
+  con que el pipeline persiste question_text); thinking null +
+  thinking_capture_enabled:false cuando LLM_CAPTURE_THINKING deshabilitado.
+  (2) frontend f19813f: boton Download bank (question_bank_<subject>_<date>.json),
+  alerta con conteo + nota de thinking, bloques colapsables Prompt/Thinking
+  en el detalle de fila con fallback noPrompt; i18n EN/ES. (3) Verificado en
+  vivo: API 218/218 prompts (Adam) y 6/6 (QA11); navegador real con descarga
+  y alerta "Bank downloaded: 218 questions (JSON)". (4) e2e 18/18 PASS
+  (16 previos + F7/F7b en download.spec.ts). Submodulos publicados en
+  RC3/develop.
+* **Falta:** verificacion final del propietario; thinking solo se capturara
+  en generaciones futuras si LLM_CAPTURE_THINKING=true (decision pendiente).
+* **Decision:** correlacion por statement exacto (misma clave de persistencia
+  del pipeline) en lugar de anadir columnas a generated_questions.
+* **Medicion:** Q_WITH_PROMPT=218/218 y 6/6; THINKING_FLAG=False;
+  suite 18/18 en 21.4 s.
+
 ## 2026-10-28 (ronda QA 12 - recertificacion, credenciales en archivo, BUG-026 y BUG-027 corregidos)
 
 * **Hecho:** cierre de la ronda 12. (1) Credenciales QA entregadas en

@@ -14,7 +14,7 @@ status: stable
 ## Index
 
 - `plan.md` - stage map (etapa -> IMPL -> estado), successor of implementaciones/README.
-- `backlog/` - BL-000..BL-021, one file per item (successor of cada README de ronda).
+- `backlog/` - BL-000..BL-022, one file per item (successor of cada README de ronda).
 - `handoff.md` - session entry point (read first in every session).
 
 Read order: handoff -> root PROGRESS.md -> active phase spec in

@@ -16,8 +16,17 @@ status: stable
 - `strategy.md` - what "verified" means (browser-only rule) + validation rules.
 - `test-plan.md` - C1-C54 + F1-F14 + I1-I8 + E1-E5 + R1-R7 certification matrix per round.
 - `traceability.md` - REQ -> BL -> IMPL -> QT coverage with evidence.
-- `QT-007..QT-012.md` - test case records (rounds 7-12), flat in this folder.
+- `QT-007..QT-013.md` - test case records (rounds 7-13), flat in this folder.
 - `BUG-001..BUG-029.md` - defect register, flat in this folder (30 files).
+
+Round 13 (2026-10-28, extension de la ronda 12, BL-022, mandato del
+propietario: anadir en el frontend la descarga del banco con campos de
+pensamiento y prompt): endpoint GET /subjects/{id}/questions/export (exam-app
+40e6750) correlaciona llm_responses por statement exacto; frontend f19813f
+boton Download bank + bloques Prompt/Thinking en el detalle; thinking null
+cuando LLM_CAPTURE_THINKING este deshabilitado (degradacion documentada).
+QT-013: API 218/218 prompts, UI verificada en vivo, e2e 18/18 PASS (F7/F7b
+nuevos en download.spec.ts). Verificacion final pendiente del propietario.
 
 Round 12 (2026-10-28, IMPL-029, mandato del propietario: continuar la ronda,
 credenciales en archivo, corregir bugs que no dañen la certificacion): suite
