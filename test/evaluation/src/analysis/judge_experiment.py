@@ -59,15 +59,26 @@ def main() -> None:
     runs = [json.loads(line) for line in runs_path.read_text(encoding="utf-8").splitlines() if line.strip()]
     print(f"judging {len(runs)} runs ({len(rows)} generator audit rows available)")
 
+    def _gen_count(run: dict) -> int:
+        # Generator call count stored per run by cost_metrics; fall back to
+        # total_llm_calls for legacy records without per-node latency.
+        nodes = ((run.get("metrics") or {}).get("cost") or {}).get("latency_by_node_ms") or {}
+        count = (nodes.get("generator") or {}).get("count")
+        if count is None:
+            count = run.get("state_digest", {}).get("total_llm_calls") or 0
+        return int(count)
+
+    # Runs are judged in chronological order and the campaign rows sit at the
+    # tail of the audit table: rows created before the campaign (e.g. seed
+    # bank generation) must not be consumed by the first run's window.
+    total_gen_calls = sum(_gen_count(run) for run in runs)
+    campaign_rows = rows[-total_gen_calls:] if len(rows) > total_gen_calls else rows
+
     consumed = 0
     judged_rows = []
     for run in runs:
-        n_calls = run.get("state_digest", {}).get("total_llm_calls") or 0
-        # E03 runs are single-arm sequential; approximate window by call count
-        # only if per-run isolation is impossible. The harness already stored
-        # records per run; use window of n generator calls in order.
-        window = rows[consumed:consumed + n_calls]
-        consumed += n_calls
+        window = campaign_rows[consumed:consumed + _gen_count(run)]
+        consumed += _gen_count(run)
         records = []
         for row in window:
             prompt = row.prompt or ""

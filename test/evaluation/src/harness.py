@@ -247,10 +247,16 @@ def run_once(
     # LLM-judge faithfulness (post-hoc, real mode only): judged support of each
     # statement against the chunks the generator actually saw. Same model as
     # the pipeline (self-judge) unless a separate judge profile is configured.
+    # The judge needs (statement, chunks) pairs: correlate the audit-derived
+    # retrieval records the same way rag_metrics does, otherwise the judge
+    # silently skips every record (statement is empty at this point) and
+    # num_judged lands as 0.
     judged: dict[str, Any] = {}
     if not dry_run and retrieval_records:
         try:
-            judged = faithfulness_judge.judge_faithfulness(retrieval_records)
+            judged = faithfulness_judge.judge_faithfulness(
+                _correlate_statements(retrieval_records, item_records)
+            )
         except Exception as exc:  # judge failure must not kill the run record
             print(f"      ⚠️ judge faithfulness failed: {exc}")
             judged = {"faithfulness_judge_mean": None, "judgement_errors": 1}
