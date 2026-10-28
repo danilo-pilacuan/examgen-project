@@ -1,28 +1,32 @@
-# Cloned subjects: SAME material, DIFFERENT names.
+﻿# Cloned subjects: SAME material, DIFFERENT names.
 # Purpose: isolate LLM variance from material variance. Every validation run
 # uses one or more clones; the material (files) is identical for all of them.
+#
+# QA Round 11 (2026-02): subjects and all generated content are English-only
+# (language contract). Spanish source material is allowed for the
+# cross-language proof: the pipeline must still output English items.
 #
 # Fields:
 #   id:            short key referenced by experiments.yaml
 #   name:          subject name registered in the DB (must be unique)
 #   material_glob: glob pattern(s) of the source material files
 subjects:
-  - id: eva
-    name: Economía Aplicada — Eva
+  - id: adam
+    name: Applied Economics - Adam
     material_glob: data/inputs/Economia_Aplicada/Apuntes/*.pdf
 
-  - id: maria
-    name: Economía Aplicada — María
+  - id: bella
+    name: Applied Economics - Bella
     material_glob: data/inputs/Economia_Aplicada/Apuntes/*.pdf
 
-  - id: sofia
-    name: Economía Aplicada — Sofía
+  - id: carlos
+    name: Applied Economics - Carlos
     material_glob: data/inputs/Economia_Aplicada/Apuntes/*.pdf
 
-  - id: lucia
-    name: Economía Aplicada — Lucía
+  - id: diana
+    name: Applied Economics - Diana
     material_glob: data/inputs/Economia_Aplicada/Apuntes/*.pdf
 
-  - id: pablo
-    name: Economía Aplicada — Pablo
+  - id: esteban
+    name: Applied Economics - Esteban
     material_glob: data/inputs/Economia_Aplicada/Apuntes/*.pdf

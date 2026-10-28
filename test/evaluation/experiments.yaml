@@ -17,7 +17,7 @@ experiments:
       Sensitivity of the generator to temperature (OFAT): 0.3 / 0.7 / 1.0.
       Measures quality, approval rate, diversity and cost per item.
     blueprint: baseline_8q
-    subjects: [eva, maria, sofia]
+    subjects: [adam, bella, carlos]
     repeats: 3
     arms:
       - model_profile: glm-flash-default
@@ -32,7 +32,7 @@ experiments:
       RAG retrieval depth (OFAT): top_k 1 / 3 / 8 with min_score fixed.
       Measures RAG quality (faithfulness, retrieval scores) vs cost (tokens per item).
     blueprint: baseline_8q
-    subjects: [eva, maria, sofia]
+    subjects: [adam, bella, carlos]
     repeats: 3
     arms:
       - model_profile: glm-flash-default
@@ -53,7 +53,7 @@ experiments:
       Robustness: identical config across the 5 cloned subjects (same material,
       different names). Measures cross-clone variance of every metric family.
     blueprint: baseline_8q
-    subjects: [eva, maria, sofia, lucia, pablo]
+    subjects: [adam, bella, carlos, diana, esteban]
     repeats: 2
     arms:
       - model_profile: glm-flash-default
@@ -64,7 +64,7 @@ experiments:
       Evaluator strictness (OFAT): evaluator temperature 0.0 / 0.2 / 0.6 with
       generator fixed. Measures approval rate and quality_score stability.
     blueprint: baseline_8q
-    subjects: [eva, maria]
+    subjects: [adam, bella]
     repeats: 3
     arms:
       - model_profile: glm-flash-default
@@ -95,10 +95,10 @@ blueprints:
       medium: 0.4
       hard: 0.2
     topics_weight:
-      Estudio de Mercado: 0.3
-      Flujos Financieros: 0.3
-      Análisis Económico-Financiero: 0.25
-      Fijación de Precios: 0.15
+      Market Study: 0.3
+      Financial Flows: 0.3
+      Economic and Financial Analysis: 0.25
+      Pricing: 0.15
     estimated_duration_minutes: 90
     retrieval:
       top_k: 3
