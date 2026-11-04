@@ -14,10 +14,10 @@ status: draft
 ## Purpose
 
 The rendered source is [`docs/graphs.md`](../../docs/graphs.md). It documents
-context, containers, agent components, the 15-tool capability surface, the
-tool invocation lifecycle, runtime flows, and the evaluation harness. The
-harness view is the primary thesis view because it explains how agent behavior
-becomes reproducible evidence.
+context, containers, agent components, every harness layer and its components,
+the 15-tool capability surface, the tool invocation lifecycle, runtime flows,
+and the evaluation harness. The harness view is the primary thesis view because
+it explains how agent behavior becomes reproducible evidence.
 
 The agent-specific views use an Agent Harness Reference Model rather than
 forcing all concerns into C4 levels: runtime loop, context/state providers,

@@ -52,6 +52,18 @@
   vistas de agente, manteniendo C4 solo para contexto y despliegue. Referencia
   conceptual: Microsoft Agent Harness.
 
+## 2026-11-04 (componentes por layer del harness)
+
+* **Hecho:** cada layer del harness tiene una grafica propia en
+  `docs/graphs.md`: runtime, contexto/estado, tools, policy/safety,
+  observabilidad/evaluacion y UX/transporte. Tools se descompone en 15
+  capacidades reales, servicios, stores y outputs; tambien se agrego su flujo
+  de guardrails y resultados.
+* **Falta:** revision del propietario sobre el nivel de detalle final y la
+  correspondencia entre tool y evidencia de QA.
+* **Decision:** mantener una vista general de planos y vistas especializadas
+  por layer para evitar que los componentes queden ocultos en un solo grafo.
+
 ## 2026-10-28 (ronda QA 12 - recertificacion, credenciales en archivo, BUG-026 y BUG-027 corregidos)
 
 * **Hecho:** cierre de la ronda 12. (1) Credenciales QA entregadas en

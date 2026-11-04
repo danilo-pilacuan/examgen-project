@@ -349,6 +349,216 @@ planes. The model proposes actions, but schemas, scope rules, approval, service
 ownership, event emission, audit capture, and evaluation determine what can be
 done and what can be claimed.
 
+### 4.1.1 Runtime layer - components
+
+```mermaid
+flowchart LR
+    user["User turn"] --> engine["LangGraphEngine<br/>exam-app"]
+    engine --> invoke["conversational_graph.invoke<br/>thread_id config"]
+    invoke --> assistant["assistant node<br/>_make_llm + SYSTEM_PROMPT"]
+    assistant --> route{"Last AI message<br/>has tool_calls?"}
+    route -->|"no"| finish["END<br/>return response"]
+    route -->|"yes"| tools_node["tools node<br/>_call_tools_node"]
+    tools_node --> invoke
+    assistant --> llm["get_llm<br/>GLM-5.3-Flash"]
+    tools_node --> messages["ToolMessage list"]
+    messages --> invoke
+    engine --> stream["SSE / WS event stream"]
+    stream --> user
+```
+
+### 4.1.2 Context and state layer - components
+
+```mermaid
+flowchart TB
+    prompt["SYSTEM_PROMPT<br/>scope, language, HITL, exam flow"]
+    messages["ConversationalState.messages<br/>turn history"]
+    subject["subject_id + subject_name<br/>active subject context"]
+    pending["pending_item + pending_subject_id<br/>generated question awaiting save"]
+    thread["thread_id<br/>conversation partition"]
+    checkpointer["PostgresSaver<br/>checkpoints table"]
+    memory["InMemorySaver<br/>fallback when Postgres unavailable"]
+    material["Subject files<br/>MATERIAL_ROOT"]
+    vectors[("material_chunks<br/>pgvector")]
+    retrieval["retrieve_chunks<br/>format_context"]
+
+    prompt --> messages
+    messages --> checkpointer
+    subject --> messages
+    pending --> checkpointer
+    thread --> checkpointer
+    checkpointer -.-> memory
+    material --> vectors
+    vectors --> retrieval
+    retrieval --> pending
+    retrieval --> messages
+```
+
+### 4.1.3 Tools layer - complete capability graph
+
+This is the detailed action surface of the conversational agent. Every leaf is
+an actual registered tool, and each branch shows its primary service or data
+boundary.
+
+```mermaid
+flowchart TB
+    call["LLM tool call<br/>name + JSON args"] --> registry["TOOLS list<br/>TOOL_BY_NAME"]
+    registry --> read["READ BANK / SUBJECT"]
+    registry --> question["QUESTION LIFECYCLE"]
+    registry --> material["MATERIAL / RAG"]
+    registry --> exam["EXAM / ARTIFACT"]
+    registry --> context["SUBJECT CONTEXT"]
+
+    read --> list_subjects["list_subjects"]
+    read --> search["search_questions"]
+    read --> list_material["list_subject_material"]
+    list_subjects --> db_read[("Subject + question tables")]
+    search --> bank_read["bank.list_questions"]
+    list_material --> chunk_read["MaterialChunk count + source files"]
+
+    question --> generate["generate_question"]
+    question --> save["save_question"]
+    question --> pending_save["save_pending_question"]
+    question --> verify["confirm_human_verification"]
+    question --> update["update_question_tool"]
+    question --> delete["delete_question_tool"]
+    generate --> rag["retrieve_chunks + generator_llm"]
+    generate --> pending_store["pending_store<br/>thread-scoped proposal"]
+    save --> bank_write["bank.create_question"]
+    pending_save --> bank_write
+    verify --> verify_write["bank.set_human_verification"]
+    update --> update_write["bank.update_question"]
+    delete --> delete_write["bank.delete_question"]
+    bank_write --> db_write[("generated_questions")]
+    verify_write --> db_write
+    update_write --> db_write
+    delete_write --> db_write
+
+    material --> add["add_material_file"]
+    material --> remove_material["delete_material_file_tool"]
+    add --> extract["extract_file_text"]
+    extract --> index["index_text_for_subject"]
+    index --> embeddings["embedding service"]
+    embeddings --> chunks[("material_chunks + embeddings")]
+    remove_material --> material_guard["exact source_file + delete policy"]
+    material_guard --> chunks
+    material_guard --> files[("MATERIAL_ROOT files")]
+
+    exam --> generate_exam["generate_exam_pdf"]
+    exam --> export["export_questions"]
+    generate_exam --> blueprint["ExamBlueprint + versions"]
+    blueprint --> batch["exam pipeline + LaTeX compiler"]
+    batch --> outputs[("PDF / ZIP output volume")]
+    export --> export_service["bank export serializer"]
+    export_service --> outputs
+
+    context --> register["register_subject"]
+    context --> select["select_subject"]
+    register --> subject_write[("subjects")]
+    select --> subject_event["SUBJECT_SELECTED event"]
+```
+
+### 4.1.4 Tool layer - guardrails, services, and outputs
+
+```mermaid
+flowchart LR
+    args["Tool args"] --> schema["_StrictModel<br/>extra=forbid"]
+    schema --> enums["Domain enums and bounds<br/>UUID, limit, difficulty, type"]
+    enums --> topic["_validate_exam_topic<br/>reject off-topic"]
+    topic --> classification{"Capability"}
+
+    classification -->|"read"| read_service["Read service<br/>list/search/material"]
+    classification -->|"generate"| generation["RAG + LLM<br/>one question"]
+    classification -->|"write"| approval["Human confirmation contract"]
+    classification -->|"material"| material_policy["Exact file + indexing policy"]
+    classification -->|"artifact"| artifact_policy["Export / compile policy"]
+
+    approval --> write_service["core.domain.bank.service"]
+    material_policy --> material_service["extract / index / delete"]
+    artifact_policy --> artifact_service["exam / export services"]
+
+    read_service --> result["Tool result"]
+    generation --> result
+    write_service --> result
+    material_service --> result
+    artifact_service --> result
+    result --> event["Typed EventType"]
+    result --> message["ToolMessage<br/>tool_call_id"]
+    event --> frontend["SSE / WS / Vue"]
+    message --> model["Next assistant turn"]
+```
+
+The distinction between the tool registry and the service layer is intentional:
+the model can request a capability, but domain services enforce ownership,
+verification restrictions, persistence, and material integrity.
+
+### 4.1.5 Policy and safety layer - components
+
+```mermaid
+flowchart TB
+    request["Tool request"] --> strict["_StrictModel<br/>reject extra fields"]
+    strict --> domain["Domain validation<br/>enums, ranges, UUIDs"]
+    domain --> topic["_validate_exam_topic<br/>hyper-specialization"]
+    topic --> verified{"Existing question<br/>verified by human?"}
+    verified -->|"yes"| immutable["Reject update/delete<br/>service SecurityError"]
+    verified -->|"no"| write_policy{"Write operation?"}
+    write_policy -->|"no"| allow["Allow scoped read/generate"]
+    write_policy -->|"yes"| confirm["Prompt-level confirmation<br/>verify_human flag"]
+    confirm --> write["Service-layer write"]
+    allow --> execute["Tool implementation"]
+    write --> execute
+    execute --> errors{"Failure?"}
+    errors -->|"validation"| actionable["Actionable ToolMessage"]
+    errors -->|"unknown tool"| unknown["Explicit unknown-tool result"]
+    errors -->|"execution"| failure["Explicit error result"]
+    errors -->|"no"| success["Result + typed event"]
+```
+
+### 4.1.6 Observability and evaluation layer - components
+
+```mermaid
+flowchart TB
+    turn["Agent turn"] --> llm_audit["record_llm_response<br/>prompt, answer, thinking flag,<br/>model, latency, thread_id"]
+    tool["Tool execution"] --> event_bus["EventBus<br/>thread-partitioned buffer"]
+    event_bus --> ui_stream["SSE / WS stream<br/>typed frontend events"]
+    pipeline["Batch pipeline"] --> telemetry["LLMTelemetry<br/>node, latency, chars, usage"]
+    pipeline --> state["State digest<br/>approved, rejected, retries,<br/>chunks, total calls"]
+    pipeline --> retrieval["Retrieval records<br/>statement + chunks"]
+
+    llm_audit --> audit_db[("llm_responses")]
+    event_bus --> event_log["Frontend activity<br/>question, material, artifact"]
+    telemetry --> metrics["quality / diversity / RAG / Bloom / cost"]
+    state --> metrics
+    retrieval --> correlation["_correlate_statements"]
+    correlation --> judge["faithfulness judge"]
+    metrics --> record["runs.jsonl"]
+    judge --> record
+    audit_db --> export["Prompt / thinking export"]
+    record --> reports["aggregate.py + report.py"]
+    reports --> findings["FINDINGS.md<br/>thesis evidence"]
+```
+
+### 4.1.7 UX and transport layer - components
+
+```mermaid
+flowchart LR
+    vue["Vue ChatPanel<br/>MessageList + ToolActivity"] --> sse["useChatStream<br/>SSE"]
+    vue --> ws["api/ws.ts<br/>WebSocket"]
+    sse --> app["exam-app<br/>LangGraphEngine.stream"]
+    ws --> app
+    app --> bus["AgentEventBus<br/>set_event_context(thread_id)"]
+    bus --> conv_graph["conversational_graph"]
+    conv_graph --> typed["AgentEvent<br/>version + type + payload"]
+    typed --> bus
+    bus --> sse
+    conv_graph --> final["token / done / error / cancelled"]
+    final --> vue
+```
+
+Each layer now has a corresponding component diagram. The tools layer is
+deliberately split into capability, guardrail, service, persistence, and output
+views so that a tool is not represented as an opaque box.
+
 ### 4.2 Harness control loop and evidence checkpoints
 
 ```mermaid

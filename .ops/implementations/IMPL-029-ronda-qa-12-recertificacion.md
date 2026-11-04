@@ -69,3 +69,5 @@ pipeline LangGraph -> telemetria -> metricas -> `runs.jsonl` -> evidencia.
 La vista se amplio con un modelo especializado de harness: runtime loop,
 proveedores de contexto/estado, catalogo de 15 tools, ciclo de invocacion,
 politicas de aprobacion, eventos, auditoria y puntos de evidencia.
+Cada layer tiene ahora su grafica de componentes: runtime, contexto/estado,
+tools, policy/safety, observabilidad/evaluacion y UX/transporte.
