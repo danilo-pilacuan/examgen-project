@@ -27,6 +27,18 @@
 * **Medicion:** Q_WITH_PROMPT=218/218 y 6/6; THINKING_FLAG=False;
   suite 18/18 en 21.4 s.
 
+## 2026-11-04 (graficos de infraestructura y harnessing)
+
+* **Hecho:** se creo `docs/graphs.md` con niveles C4-like de contexto,
+  contenedores, componentes, flujos runtime y una vista detallada del harness
+  del agente. El diagrama principal conecta `experiments.yaml`, perfiles,
+  patches, stubs/real adapters, LangGraph, telemetria, metricas, juez y
+  `runs.jsonl`; tambien se agrego su puntero en `.ops/architecture/graphs.md`.
+* **Falta:** revision del propietario sobre los limites de confianza y la
+  exactitud de los puertos/documentacion de despliegue.
+* **Decision:** Mermaid sobre Structurizr porque ya es el formato usado en la
+  documentacion y permite revisar el source junto al codigo del harness.
+
 ## 2026-10-28 (ronda QA 12 - recertificacion, credenciales en archivo, BUG-026 y BUG-027 corregidos)
 
 * **Hecho:** cierre de la ronda 12. (1) Credenciales QA entregadas en

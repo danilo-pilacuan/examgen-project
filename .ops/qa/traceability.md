@@ -58,6 +58,12 @@ sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.
 | REQ-001 | BL-022 | IMPL-029 | QT-013 | ejecutado; ronda 13 (extension r12): export del banco con auditoria prompt/thinking; exam-app 40e6750 endpoint GET /subjects/{id}/questions/export (correlacion llm_responses por statement, newest-first); frontend f19813f boton Download bank + bloques Prompt/Thinking en detalle + i18n EN/ES; QT-013 en vivo: API 218/218 prompts (Adam) y 6/6 (QA11), thinking null con flag false, descarga real en navegador con alerta de confirmacion; e2e 18/18 PASS (F7/F7b en download.spec.ts); pendiente del propietario |
 | REQ-001 | BL-010 | IMPL-028 | QT-011 | ejecutado; ronda 11: BD desde cero + 12 preguntas en ingles con HITL del agente 12/12 (verified_by_human=t) + suite 15/15 (L2 estricto) + set de metricas regenerado (campana 82/82 completada con agregados+informes) + 2 examenes de control en ingles; BUG-028 corregido (purga), BUG-029 corregido (deps + rebuild, verificado 200/200/200); J1 documentado y corregido (3827e4d); pendiente del propietario |
 
+## Artefactos transversales
+
+| Artefacto | Relacion | Evidencia |
+|---|---|---|
+| `docs/graphs.md` | REQ-001, REQ-002 | Vistas C4-like de infraestructura y agente; el harnessing es la vista principal y enlaza configuracion, modos dry-run/real, telemetria, metricas y `runs.jsonl`. |
+
 Pendientes conocidos: BUG-019/020/021 abiertos (hallazgos ronda 6) con
 decisiones DEC-001/002/003 pendientes del owner; C2 caso extremo (>100
 paginas reales) bloqueado por BUG-020. BUG-016 y BUG-018 verificados en

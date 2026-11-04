@@ -59,3 +59,10 @@ de imagen; la BD no cambia de schema y los artefactos de repro se purgaron.
   2 ocurrencias re-confirmadas) + JSON/PDF/ZIP de repro eliminados; las
   materias de control y sus 2 examenes qa11 quedaron intactos (6q/28c y
   6q/85c; banco 6/6).
+
+## Artefacto de arquitectura
+
+Se agrego `docs/graphs.md` con vistas Mermaid tipo C4 de contexto, contenedores,
+componentes y flujos. La vista principal modela el harness del agente:
+configuracion de experimentos -> perfiles y patches -> modo dry-run/real ->
+pipeline LangGraph -> telemetria -> metricas -> `runs.jsonl` -> evidencia.

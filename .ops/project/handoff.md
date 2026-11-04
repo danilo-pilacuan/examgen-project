@@ -6,15 +6,21 @@ title: Handoff entre sesiones
 description: Punto de entrada de cada sesion; estado exacto donde se quedo el trabajo.
 estado: vigente
 dueno: rol:propietario
-fecha: 2026-10-28
+fecha: 2026-11-04
 relaciona: [plan, ops-readme]
 status: stable
 sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.md, title: copilot-instructions }]
 ---
 
-> **Ultima actualizacion:** 2026-10-28 (ronda 13 - extension de la ronda 12: descarga del banco
-> con auditoria prompt/thinking, BL-022/QT-013) | **Rama:** `RC3/develop` |
-> **Arbol:** ronda 13 ejecutada (mandato del propietario: anadir en el frontend, en la lista de
+> **Ultima actualizacion:** 2026-11-04 (graficos de infraestructura y harnessing; revision de
+> diagramas pendiente del propietario) | **Rama:** `RC3/develop` |
+> **Arbol:** se agrego `docs/graphs.md` con vistas C4-like de contexto, contenedores, componentes,
+> flujos runtime y, como vista principal, el harness del agente. Se agrego el puntero operativo
+> `.ops/architecture/graphs.md`; no se tocaron los cambios no relacionados en el arbol.
+>
+> **Sesion anterior:** 2026-10-28 (ronda 13 - extension de la ronda 12: descarga del banco
+> con auditoria prompt/thinking, BL-022/QT-013). El arbol anterior registro ronda 13 ejecutada
+> (mandato del propietario: anadir en el frontend, en la lista de
 > preguntas del bank, la descarga del banco donde tambien puedan verse los campos de pensamiento
 > y prompt). (1) exam-app 40e6750: GET /subjects/{id}/questions/export; como generated_questions
 > no guarda prompt/thinking, se correlaciona llm_responses (context pipeline:generator) por
