@@ -66,3 +66,6 @@ Se agrego `docs/graphs.md` con vistas Mermaid tipo C4 de contexto, contenedores,
 componentes y flujos. La vista principal modela el harness del agente:
 configuracion de experimentos -> perfiles y patches -> modo dry-run/real ->
 pipeline LangGraph -> telemetria -> metricas -> `runs.jsonl` -> evidencia.
+La vista se amplio con un modelo especializado de harness: runtime loop,
+proveedores de contexto/estado, catalogo de 15 tools, ciclo de invocacion,
+politicas de aprobacion, eventos, auditoria y puntos de evidencia.

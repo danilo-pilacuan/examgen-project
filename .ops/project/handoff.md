@@ -12,11 +12,11 @@ status: stable
 sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.md, title: copilot-instructions }]
 ---
 
-> **Ultima actualizacion:** 2026-11-04 (graficos de infraestructura y harnessing; revision de
+> **Ultima actualizacion:** 2026-11-04 (modelo especializado de harness y tools; revision de
 > diagramas pendiente del propietario) | **Rama:** `RC3/develop` |
-> **Arbol:** se agrego `docs/graphs.md` con vistas C4-like de contexto, contenedores, componentes,
-> flujos runtime y, como vista principal, el harness del agente. Se agrego el puntero operativo
-> `.ops/architecture/graphs.md`; no se tocaron los cambios no relacionados en el arbol.
+> **Arbol:** se amplio `docs/graphs.md` con el Agent Harness Reference Model, el catalogo de
+> 15 tools, el ciclo de invocacion y los checkpoints de evidencia. Se mantiene el puntero
+> operativo `.ops/architecture/graphs.md`; no se tocaron los cambios no relacionados en el arbol.
 >
 > **Sesion anterior:** 2026-10-28 (ronda 13 - extension de la ronda 12: descarga del banco
 > con auditoria prompt/thinking, BL-022/QT-013). El arbol anterior registro ronda 13 ejecutada

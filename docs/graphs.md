@@ -3,7 +3,11 @@
 This document is the visual source of truth for the MVP infrastructure. It uses
 Mermaid because the repository already renders Mermaid diagrams in its technical
 documentation and the diagrams can be reviewed without a separate modeling server.
-The model is C4-like: context, containers, components, and operational flows.
+The model is C4-like where useful, but the agent views use an
+**Agent Harness Reference Model**. That model separates the agent runtime,
+context/state providers, tool execution, approval policy, observability, and
+evaluation evidence. This is more useful here than forcing every concern into
+only context/container/component levels.
 
 ## Reading order
 
@@ -79,14 +83,18 @@ flowchart TD
     start([User turn]) --> assistant["assistant node<br/>LLM + system prompt"]
     assistant --> decision{"Tool calls?"}
     decision -->|"no"| response["Assistant response"]
-    decision -->|"yes"| tools["tools node"]
+    decision -->|"yes"| harness["Agent harness<br/>tool loop + policy boundary"]
+    harness --> tools["tools node"]
     tools --> validate["Pydantic args schemas<br/>topic guardrail"]
-    validate --> readwrite{"Read or write tool?"}
-    readwrite -->|"read"| read["Scoped bank/material tools"]
-    readwrite -->|"write"| write["Save/update/delete/generate tools"]
-    read --> assistant
-    write --> confirmation["Prompt-level human confirmation<br/>for write and verification actions"]
-    confirmation --> assistant
+    validate --> catalog{"Tool capability"}
+    catalog -->|"read"| read["Read tools"]
+    catalog -->|"write"| write["Write tools"]
+    catalog -->|"artifact"| artifact["Artifact tools"]
+    read --> result["Tool result + typed event"]
+    write --> confirmation["Human confirmation policy<br/>prompt contract for writes"]
+    confirmation --> result
+    artifact --> result
+    result --> assistant
     assistant -.-> checkpoint[("Postgres checkpointer<br/>thread history + pending state")]
     tools -.-> events["Typed agent events<br/>EventBus"]
     events --> stream["exam-app SSE / WS"]
@@ -95,8 +103,83 @@ flowchart TD
 
 The conversational graph is a ReAct loop. The checkpointer preserves thread
 state, while the event bus exposes tool activity without coupling the agent to
-the Vue client. Write tools are explicitly identifiable and their confirmation
-policy is part of the prompt contract.
+the Vue client. The harness boundary is the place where tool schemas, scope,
+confirmation, result handling, and evidence must remain explicit.
+
+### 3.1.1 Tool capability map
+
+The tool registry is the agent's action surface. The grouping below is based on
+the actual `TOOLS` list and `WRITE_TOOLS` set in
+`projects/agents-backend/src/agents_backend/conversational/graph.py`.
+
+```mermaid
+flowchart TB
+    model["LLM tool call<br/>name + typed args"] --> registry["TOOL_BY_NAME<br/>registry"]
+    registry --> read["READ / inspect"]
+    registry --> generate["GENERATE / propose"]
+    registry --> write["WRITE / mutate"]
+    registry --> material["MATERIAL / RAG"]
+    registry --> subject["SUBJECT / context"]
+    registry --> artifact["ARTIFACT / export"]
+
+    read --> list_subjects["list_subjects"]
+    read --> search_questions["search_questions"]
+    read --> list_material["list_subject_material"]
+
+    generate --> generate_question["generate_question<br/>one question per call"]
+    generate --> generate_exam["generate_exam_pdf<br/>blueprint -> ZIP"]
+
+    write --> save_question["save_question"]
+    write --> save_pending["save_pending_question"]
+    write --> verify["confirm_human_verification"]
+    write --> update["update_question_tool"]
+    write --> delete_question["delete_question_tool"]
+
+    material --> add_material["add_material_file<br/>index + embeddings"]
+    material --> delete_material["delete_material_file<br/>remove file + chunks"]
+
+    subject --> register["register_subject"]
+    subject --> select["select_subject<br/>frontend event"]
+
+    artifact --> export["export_questions<br/>CSV / XLSX / JSON"]
+```
+
+Tool classes are not interchangeable. Read tools query existing state; generate
+tools create a proposal or a package; write tools mutate durable state; material
+tools change the RAG corpus; subject tools change the active context; artifact
+tools create a downloadable result. This distinction is the basis for approval,
+audit, and test coverage.
+
+### 3.1.2 Tool invocation lifecycle
+
+```mermaid
+sequenceDiagram
+    participant M as Model
+    participant H as Harness boundary
+    participant S as Args schema
+    participant P as Policy / guardrails
+    participant T as Tool implementation
+    participant D as Service + database
+    participant V as Event bus / audit
+    participant U as UI
+
+    M->>H: Tool call(name, args, tool_call_id)
+    H->>S: Validate typed arguments
+    S-->>H: Valid args or actionable validation error
+    H->>P: Classify read, generate, write, material, artifact
+    P-->>H: Allow, reject, or require confirmation
+    H->>T: Invoke scoped tool
+    T->>D: Read or mutate through service layer
+    T->>V: Emit typed event and result metadata
+    V-->>U: Tool activity / artifact / state update
+    H-->>M: ToolMessage(result, tool_call_id)
+    M->>H: Continue loop or answer user
+```
+
+The current implementation performs confirmation at the prompt contract for
+OpenWebUI compatibility, while the harness boundary remains the architectural
+location of the policy. Validation failures become actionable `ToolMessage`
+results; unknown tools and execution failures do not silently look successful.
 
 ### 3.2 Batch generation context
 
@@ -159,6 +242,13 @@ control plane around the agent, not another agent. It selects a profile,
 controls the experimental arm, runs the same pipeline in dry or real mode,
 captures telemetry, and emits evidence that can be audited after the run.
 
+The design follows the Agent Harness Reference Model: runtime loop, context
+providers, capability/tool providers, middleware/policy, UX/event streaming,
+and an evaluation plane. Microsoft's Agent Harness documentation uses the same
+separation for function invocation, session context, approvals, observability,
+and bounded loops; this project maps those concepts to LangGraph, typed tools,
+Postgres, EventBus, and the evaluation harness.
+
 ```mermaid
 flowchart TB
     config["experiments.yaml<br/>arms, repeats, blueprints"]
@@ -199,6 +289,92 @@ flowchart TB
     record --> reports
     reports --> qa
 ```
+
+### 4.1 Agent harness planes
+
+```mermaid
+flowchart LR
+    subgraph runtime["Agent runtime plane"]
+        model["LLM client"]
+        loop["LangGraph loop<br/>assistant -> tools -> assistant"]
+        tool_registry["Tool registry<br/>15 capabilities"]
+        tool_exec["Tool executor<br/>ValidationError / unknown tool / exception"]
+        model --> loop
+        loop --> tool_registry
+        tool_registry --> tool_exec
+        tool_exec --> loop
+    end
+
+    subgraph context["Context and state providers"]
+        prompt["System prompt<br/>scope + HITL contract"]
+        thread["Thread state<br/>messages + pending item"]
+        checkpoint["Postgres checkpointer"]
+        rag["Subject material + pgvector"]
+        prompt --> loop
+        thread <--> checkpoint
+        rag --> tool_exec
+    end
+
+    subgraph policy["Policy and safety plane"]
+        schemas["Pydantic args schemas"]
+        scope["Topic scope rejection"]
+        approval["Write confirmation<br/>human-in-the-loop"]
+        integrity["Service layer + ownership"]
+        schemas --> tool_exec
+        scope --> tool_exec
+        approval --> tool_exec
+        integrity --> tool_exec
+    end
+
+    subgraph evidence["Observability and evaluation plane"]
+        events["Typed EventBus<br/>tool activity"]
+        audit["LLM audit<br/>prompt, answer, latency"]
+        harness["Evaluation harness<br/>dry-run / real"]
+        metrics["Metrics + judge"]
+        records["runs.jsonl<br/>reproducible record"]
+        tool_exec --> events
+        loop --> audit
+        harness --> metrics
+        audit --> records
+        events --> records
+        metrics --> records
+    end
+
+    events --> ux["SSE / WS / Vue UI"]
+    records --> report["Aggregate reports<br/>thesis evidence"]
+```
+
+The critical boundary is between the runtime plane and the policy/evidence
+planes. The model proposes actions, but schemas, scope rules, approval, service
+ownership, event emission, audit capture, and evaluation determine what can be
+done and what can be claimed.
+
+### 4.2 Harness control loop and evidence checkpoints
+
+```mermaid
+flowchart TD
+    input["Experiment definition<br/>arm, repeat, subject clone, blueprint"] --> setup["Setup checkpoint<br/>load profile + overrides"]
+    setup --> mode{"Execution mode"}
+    mode -->|"dry_run"| deterministic["Stub LLM + StubEmbedder<br/>deterministic, no gateway cost"]
+    mode -->|"real"| external["Gateway + real embedder<br/>production-like behavior"]
+    deterministic --> execute["Invoke same LangGraph pipeline"]
+    external --> execute
+    execute --> call_trace["Per-call trace<br/>node, latency, chars, usage"]
+    execute --> state_trace["State digest<br/>approved, rejected, retries,<br/>chunks, total calls"]
+    execute --> retrieval_trace["Retrieval trace<br/>chunks correlated to statement"]
+    call_trace --> metrics["Metric computation"]
+    state_trace --> metrics
+    retrieval_trace --> judge["Faithfulness judge<br/>only with correlated pairs"]
+    metrics --> record["Append complete runs.jsonl record"]
+    judge --> record
+    record --> report["Aggregate / report / FINDINGS"]
+    report --> decision["Research decision<br/>claim, limitation, or next run"]
+```
+
+Each checkpoint answers a different audit question: what was configured, what
+was executed, what the agent did, what evidence it saw, how it was scored, and
+which conclusion is justified. A report without these checkpoints is not
+reproducible harness evidence.
 
 ### Harness invariants
 
@@ -296,3 +472,10 @@ Primary sources:
 - `projects/agents-backend/src/agents_backend/conversational/graph.py`.
 - `projects/agents-backend/src/agents_backend/exam_pipeline/graph.py`.
 - `test/evaluation/src/harness.py`.
+
+External model reference:
+
+- Microsoft Learn, [Agent Harness](https://learn.microsoft.com/en-us/agent-framework/concepts/harness),
+  accessed 2026-11-04. Used as a conceptual reference for separating model/tool
+  invocation, context providers, approval policy, observability, and bounded
+  execution; this repository implements its own LangGraph-based variant.

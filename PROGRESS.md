@@ -39,6 +39,19 @@
 * **Decision:** Mermaid sobre Structurizr porque ya es el formato usado en la
   documentacion y permite revisar el source junto al codigo del harness.
 
+## 2026-11-04 (modelo especializado de harness y tools)
+
+* **Hecho:** se amplio `docs/graphs.md` con un Agent Harness Reference Model:
+  runtime loop, proveedores de contexto/estado, politica y seguridad,
+  observabilidad/evaluacion, catalogo visual de las 15 tools, ciclo completo de
+  invocacion y checkpoints del harness. Se documentaron categorias read,
+  generate, write, material, subject y artifact.
+* **Falta:** revision del propietario sobre el modelo conceptual y sus limites
+  frente a la implementacion actual de confirmacion por prompt.
+* **Decision:** usar el modelo de harness como estructura principal de las
+  vistas de agente, manteniendo C4 solo para contexto y despliegue. Referencia
+  conceptual: Microsoft Agent Harness.
+
 ## 2026-10-28 (ronda QA 12 - recertificacion, credenciales en archivo, BUG-026 y BUG-027 corregidos)
 
 * **Hecho:** cierre de la ronda 12. (1) Credenciales QA entregadas en
