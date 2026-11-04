@@ -12,12 +12,12 @@ status: stable
 sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.md, title: copilot-instructions }]
 ---
 
-> **Ultima actualizacion:** 2026-11-04 (componentes por layer del harness; revision de
+> **Ultima actualizacion:** 2026-11-04 (sublayers funcionales del harness; revision de
 > diagramas pendiente del propietario) | **Rama:** `RC3/develop` |
-> **Arbol:** se amplio `docs/graphs.md` con graficas propias para runtime, contexto/estado,
-> tools, policy/safety, observabilidad/evaluacion y UX/transporte; tools incluye 15 capacidades,
-> servicios, stores y outputs. Se mantiene el puntero operativo `.ops/architecture/graphs.md`;
-> no se tocaron los cambios no relacionados en el arbol.
+> **Arbol:** se amplio `docs/graphs.md` con sublayers operativos para runtime, contexto,
+> tools, policy, observabilidad y evaluacion. Tools incluye contrato, seleccion, ejecucion,
+> efectos, feedback y rutas de capacidades; se agrego matriz de evidencia. Se mantiene el
+> puntero operativo `.ops/architecture/graphs.md`; no se tocaron los cambios no relacionados.
 >
 > **Sesion anterior:** 2026-10-28 (ronda 13 - extension de la ronda 12: descarga del banco
 > con auditoria prompt/thinking, BL-022/QT-013). El arbol anterior registro ronda 13 ejecutada

@@ -559,6 +559,185 @@ Each layer now has a corresponding component diagram. The tools layer is
 deliberately split into capability, guardrail, service, persistence, and output
 views so that a tool is not represented as an opaque box.
 
+## 4.1.8 Sublayer map
+
+The layers above describe responsibilities. These sublayer graphs describe the
+internal sequence inside each responsibility. They are intentionally more
+operational than C4: each sublayer names the contract, state, decision, side
+effect, and feedback boundary.
+
+### Runtime sublayers
+
+```mermaid
+flowchart LR
+    transport["Transport sublayer<br/>SSE / WS / REST"] --> engine["Engine sublayer<br/>LangGraphEngine"]
+    engine --> session["Session sublayer<br/>thread_id + config"]
+    session --> state_graph["Graph sublayer<br/>StateGraph invoke"]
+    state_graph --> model["Model sublayer<br/>get_llm + bind_tools"]
+    model --> decision["Routing sublayer<br/>tool_calls or END"]
+    decision -->|"tool_calls"| executor["Execution sublayer<br/>tools node"]
+    executor --> loop["Loopback sublayer<br/>ToolMessage -> assistant"]
+    loop --> model
+    decision -->|"answer"| response["Response sublayer<br/>token / done / error"]
+```
+
+### Context sublayers
+
+```mermaid
+flowchart TB
+    instruction["Instruction sublayer<br/>SYSTEM_PROMPT"] --> conversation["Conversation sublayer<br/>messages"]
+    conversation --> session_state["Session sublayer<br/>subject + pending item"]
+    session_state --> persistence["Persistence sublayer<br/>PostgresSaver checkpoints"]
+    persistence --> recovery["Recovery sublayer<br/>resume by thread_id"]
+
+    material["Corpus sublayer<br/>files under MATERIAL_ROOT"] --> indexing["Index sublayer<br/>extract + embeddings"]
+    indexing --> retrieval["Retrieval sublayer<br/>retrieve_chunks"]
+    retrieval --> context_window["Context-window sublayer<br/>format_context"]
+    context_window --> model_input["Model input"]
+    conversation --> model_input
+    instruction --> model_input
+```
+
+### Tools sublayers
+
+```mermaid
+flowchart TB
+    subgraph contract["1. Contract sublayer"]
+        schema["Pydantic args_schema"]
+        strict["extra=forbid"]
+        enums["Enums, ranges, UUIDs"]
+        schema --> strict --> enums
+    end
+    subgraph selection["2. Selection sublayer"]
+        names["Tool name"]
+        registry["TOOL_BY_NAME"]
+        capability["Capability class"]
+        names --> registry --> capability
+    end
+    subgraph execution["3. Execution sublayer"]
+        invoke["tool.invoke(args)"]
+        handler["@tool function"]
+        errors["ValidationError / exception mapping"]
+        invoke --> handler --> errors
+    end
+    subgraph effects["4. Effects sublayer"]
+        domain["Domain service"]
+        db["Database"]
+        rag["RAG / embedding"]
+        artifact["File or artifact output"]
+        domain --> db
+        domain --> rag
+        domain --> artifact
+    end
+    subgraph feedback["5. Feedback sublayer"]
+        message["ToolMessage"]
+        event["AgentEvent"]
+        pending["Pending store / graph state"]
+        message --> pending
+        event --> pending
+    end
+    contract --> selection
+    selection --> execution
+    execution --> effects
+    effects --> feedback
+    feedback --> selection
+```
+
+This is the tools layer's most important decomposition: a tool is not only a
+Python function. It is a typed contract, a registry selection, a guarded
+execution, an effect boundary, and a feedback message/event.
+
+### Tool sublayers by capability
+
+```mermaid
+flowchart LR
+    request["Tool request"] --> read_path["Read path"]
+    request --> generation_path["Generation path"]
+    request --> write_path["Write path"]
+    request --> corpus_path["Corpus path"]
+    request --> artifact_path["Artifact path"]
+
+    read_path --> read_contract["SearchQuestionsInput<br/>ListSubjectsInput<br/>ListMaterialInput"]
+    read_contract --> read_service["bank.list_questions<br/>SessionLocal reads"]
+    read_service --> read_result["Table / subject / material result"]
+
+    generation_path --> gen_contract["GenerateQuestionInput"]
+    gen_contract --> gen_rag["retrieve_chunks<br/>generator_llm"]
+    gen_rag --> gen_pending["pending_store<br/>thread-scoped proposal"]
+    gen_pending --> gen_result["QUESTION_GENERATED event"]
+
+    write_path --> write_contract["Save / update / delete schemas"]
+    write_contract --> write_policy["HITL + verified-question guard"]
+    write_policy --> write_service["core.domain.bank.service"]
+    write_service --> write_db[("Question bank")]
+    write_db --> write_result["QUESTION_SAVED event"]
+
+    corpus_path --> corpus_contract["AddMaterialFileInput<br/>DeleteMaterialFileInput"]
+    corpus_contract --> corpus_policy["Exact source_file + file policy"]
+    corpus_policy --> corpus_service["extract / index / delete"]
+    corpus_service --> corpus_db[("Chunks + vectors + files")]
+    corpus_db --> corpus_result["MATERIAL_INDEXED event"]
+
+    artifact_path --> artifact_contract["GenerateExamPdfInput<br/>ExportQuestionsInput"]
+    artifact_contract --> artifact_service["Exam pipeline / serializer"]
+    artifact_service --> artifact_output[("PDF / ZIP / CSV / XLSX / JSON")]
+    artifact_output --> artifact_result["ARTIFACT_READY event"]
+```
+
+### Policy sublayers
+
+```mermaid
+flowchart TB
+    input["Raw model arguments"] --> syntax["Syntax sublayer<br/>JSON + Pydantic"]
+    syntax --> domain["Domain sublayer<br/>enums + value limits"]
+    domain --> scope["Scope sublayer<br/>hyper-specialized topic guard"]
+    scope --> ownership["Ownership sublayer<br/>subject / question access"]
+    ownership --> integrity["Integrity sublayer<br/>verified question immutable"]
+    integrity --> consent["Consent sublayer<br/>human confirmation"]
+    consent --> transaction["Mutation sublayer<br/>service-layer write"]
+    transaction --> result["Explicit result or error"]
+```
+
+### Observability sublayers
+
+```mermaid
+flowchart LR
+    action["Model or tool action"] --> capture["Capture sublayer<br/>latency, prompt, answer, event"]
+    capture --> correlation["Correlation sublayer<br/>thread_id, tool_call_id, run_id"]
+    correlation --> transport["Transport sublayer<br/>EventBus, SSE, WS"]
+    correlation --> storage["Storage sublayer<br/>llm_responses, runs.jsonl"]
+    storage --> analysis["Analysis sublayer<br/>metrics, judge, aggregate"]
+    transport --> ui["UX sublayer<br/>ToolActivity + artifacts"]
+    analysis --> findings["Evidence sublayer<br/>reports + FINDINGS"]
+```
+
+### Evaluation harness sublayers
+
+```mermaid
+flowchart TB
+    definition["Definition sublayer<br/>experiments.yaml + subjects.yaml"] --> profile["Profile sublayer<br/>models_registry"]
+    profile --> adapter["Adapter sublayer<br/>_patch + stubs or real"]
+    adapter --> setup["Fixture sublayer<br/>clone registration + indexing"]
+    setup --> run["Execution sublayer<br/>same exam LangGraph"]
+    run --> trace["Trace sublayer<br/>calls + state + retrieval"]
+    trace --> score["Scoring sublayer<br/>quality, diversity, RAG, Bloom, cost"]
+    trace --> judge["Judge sublayer<br/>correlated faithfulness"]
+    score --> record["Record sublayer<br/>one runs.jsonl line"]
+    judge --> record
+    record --> report["Reporting sublayer<br/>aggregate + FINDINGS"]
+```
+
+### Sublayer evidence matrix
+
+| Layer | Sublayers | Primary evidence |
+|---|---|---|
+| Runtime | transport, session, graph, model, routing, execution, response | `LangGraphEngine`, `conversational_graph`, `ToolMessage` |
+| Context | instruction, conversation, session, persistence, corpus, retrieval | `SYSTEM_PROMPT`, `ConversationalState`, checkpointer, `retrieve_chunks` |
+| Tools | contract, selection, execution, effects, feedback | `args_schema`, `TOOL_BY_NAME`, service calls, events |
+| Policy | syntax, domain, scope, ownership, integrity, consent, mutation | `_StrictModel`, topic guard, `SecurityError`, HITL contract |
+| Observability | capture, correlation, transport, storage, analysis, UX | `record_llm_response`, EventBus, `llm_responses`, `runs.jsonl` |
+| Evaluation | definition, profile, adapter, fixture, execution, trace, score, judge, report | `harness.py`, `_patch.py`, metrics, `FINDINGS.md` |
+
 ### 4.2 Harness control loop and evidence checkpoints
 
 ```mermaid

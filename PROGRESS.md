@@ -64,6 +64,18 @@
 * **Decision:** mantener una vista general de planos y vistas especializadas
   por layer para evitar que los componentes queden ocultos en un solo grafo.
 
+## 2026-11-04 (sublayers funcionales)
+
+* **Hecho:** se agrego a `docs/graphs.md` un mapa de sublayers para runtime,
+  contexto, tools, policy, observabilidad y evaluacion. Tools se descompone en
+  contrato, seleccion, ejecucion, efectos y feedback, con rutas separadas para
+  lectura, generacion, escritura, corpus y artefactos. Se agrego una matriz de
+  evidencia por layer/sublayer.
+* **Falta:** revision del propietario sobre el nivel de granularidad y los
+  limites entre sublayers de runtime y transporte.
+* **Decision:** documentar sublayers como secuencias operativas, no como
+  jerarquia C4 estricta.
+
 ## 2026-10-28 (ronda QA 12 - recertificacion, credenciales en archivo, BUG-026 y BUG-027 corregidos)
 
 * **Hecho:** cierre de la ronda 12. (1) Credenciales QA entregadas en
