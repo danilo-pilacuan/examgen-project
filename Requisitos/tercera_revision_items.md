@@ -43,6 +43,9 @@
   rechazo (blueprint con tipo invalido debe fallar 422).
 - **Esfuerzo:** medio. **Decision:** [x] implementar - version EXTENDIDA con distribucion
   custom de Bloom/dificultad y retrieval (2026-11-05, IMPL-030/QT-014) / [ ] posponer
+- **Refinamiento ronda 2 (2026-11-06, BL-024/IMPL-031):** feedback de Felipe - Bloom como
+  checkboxes (no select de presets) y panel avanzado con "cuantas preguntas por tema"
+  (selectores numericos); rediseno frontend-only sin cambios de backend (QT-015, BUG-030).
 
 ### A3. Comentario en el .env: donde cambiar endpoint y API key
 

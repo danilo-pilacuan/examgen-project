@@ -46,6 +46,7 @@ status: stable
 | IMPL-028 | QA ronda 11 - recertificacion, BD desde cero, ingles e2e y set de metricas | ejecutado |
 | IMPL-029 | QA ronda 12 - recertificacion funcional, credenciales, BUG-026/027 corregidos | ejecutado |
 | IMPL-030 | Tercera revision - fechas de verificacion y tipos de pregunta restringibles | ejecutado |
+| IMPL-031 | Exams - Bloom/dificultad como checkboxes y blueprint por tema (ronda 15) | ejecutado |
 
 Naming `IMPL-NNN-slug.md`; global numbering; one file per spec. The active phase
 spec is the one linked from `project/handoff.md`. The agent updates estado to the

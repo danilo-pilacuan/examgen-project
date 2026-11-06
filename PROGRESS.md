@@ -6,6 +6,27 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
+## 2026-11-06 (ronda 15 - rediseno Exams: Bloom/dificultad checkboxes y blueprint por tema)
+
+* **Hecho:** BL-024/IMPL-031/QT-015/BUG-030. Feedback ronda 2 de la tercera
+  revision de Felipe: los selects de presets eran confusos y el panel avanzado
+  no era intuitivo. ExamsView.vue frontend-only: checkbox groups de Bloom
+  (6 niveles reales) y dificultad (3) con distribucion uniforme de lo marcado
+  (levelsToDist, resto a la primera clave), selectores numericos por tema real
+  del banco (0-50) convertidos a topics_weight (applyTopicCounts), guards en
+  generate() (0 tipos, suma > total), removidos presets y grids de peso custom;
+  i18n EN/ES (7 claves nuevas, 3 removidas). Contrato backend sin cambios.
+  BUG-030: interpolacion i18n sin {sum,total} -> hint "(of )"; corregido en
+  template + generate(), rebuild, hint "(of 10)" verificado. QA Playwright:
+  rechazo suma 60 > total 10 con 0 llamadas API; E2E real POST 200 (2
+  preguntas, ZIP). vue-tsc + build verdes; imagen Docker reconstruida.
+  Docs .ops: BL-024, IMPL-031, QT-015, BUG-030 + indexes/traceability.
+* **Falta:** commit + push del submodulo frontend; verificado del propietario
+  (QT-015/BUG-030 y pendientes previos).
+* **Decision:** rediseno frontend-only; el backend recibe el mismo contrato
+  (distribuciones uniformes y topics_weight derivado de conteos), sin cambios
+  de schema ni planner.
+
 ## 2026-11-05 (tercera revision Felipe: A1 fechas de verificacion + A2 extendido tipos de pregunta)
 
 * **Hecho:** BL-023/IMPL-030/QT-014. Analisis de la revision en

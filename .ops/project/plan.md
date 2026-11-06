@@ -6,7 +6,7 @@ title: Plan de etapas y mapa de estados del proyecto
 description: Sucesor del README de etapas de implementaciones; estados verificados.
 estado: vigente
 dueno: rol:propietario
-fecha: 2026-10-26
+fecha: 2026-11-06
 relaciona: [REQ-001, ops-readme]
 status: stable
 sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.md, title: copilot-instructions }]
@@ -38,6 +38,8 @@ lectura de etapas QA: 13 -> 14 -> 15 -> 16 -> 17 -> 19.
 | 14 | IMPL-017 | Informe de estado RC1 (Tag_RC1) | ejecutado |
 | 15 | IMPL-018 | Framework de evaluacion del agente (RC2) | ejecutado |
 | 16 | IMPL-019 | QA ronda 4 scroll + Playwright | ejecutado |
+| 19a | IMPL-030 | Tercera revision: fechas + tipos restringibles (A1/A2) | ejecutado |
+| 19b | IMPL-031 | Ronda 15: Bloom/dificultad checkboxes y blueprint por tema | ejecutado |
 
 Progreso global: 19 de 20 etapas ejecutadas; abiertos 1 BUG (BUG-016, menor) y el
 backlog BL-001..BL-021. La migracion a `.ops` es IMPL-020 (borrador). Detalle en

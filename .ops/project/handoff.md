@@ -6,40 +6,33 @@ title: Handoff entre sesiones
 description: Punto de entrada de cada sesion; estado exacto donde se quedo el trabajo.
 estado: vigente
 dueno: rol:propietario
-fecha: 2026-11-05
+fecha: 2026-11-06
 relaciona: [plan, ops-readme]
 status: stable
 sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.md, title: copilot-instructions }]
 ---
 
-> **Ultima actualizacion:** 2026-11-05 (tercera revision Felipe: A1 fechas de
-> verificacion + A2 extendido tipos de pregunta; verificacion en navegador pendiente
-> del propietario) | **Rama:** `RC3/develop` |
-> **Arbol:** codigo implementado y validado estaticamente en 4 submodulos (core,
-> exam-app, agents-backend, frontend): migracion `c9d0e1f2a3b4` (verified_at),
-> sellado en service, DTOs, planner con filtro/fallback, checkboxes + panel
-> avanzado en ExamsView, i18n EN/ES. Docs .ops creados (BL-023, IMPL-030, QT-014)
-> e indexes actualizados. Commits publicados en origin: core e4f8ea5 + 5c53ca0,
-> exam-app c38f871, agents-backend 57209b1, frontend fd6595a + ffaaada, meta
-> e968a41 (verificados con git ls-remote).
+> **Ultima actualizacion:** 2026-11-06 (ronda 15 - rediseno Exams tras feedback
+> de Felipe: Bloom/dificultad como checkboxes y blueprint por tema; BUG-030
+> corregido; commit del submodulo frontend pendiente) | **Rama:** `RC3/develop` |
+> **Arbol:** ExamsView.vue redisenado (checkbox groups de Bloom 6 niveles y
+> dificultad 3 con distribucion uniforme, selectores numericos por tema real con
+> guard de suma contra el total; removidos presets y grids de peso custom; i18n
+> EN/ES actualizada). Contrato del backend sin cambios. QA Playwright verde:
+> rechazo suma 60 > total 10 con 0 llamadas API y E2E real POST 200 (2 preguntas
+> con ZIP). BUG-030 (interpolacion i18n sin {sum,total}, hint "(of )") corregido
+> en la misma ronda. Docs .ops: BL-024, IMPL-031, QT-015, BUG-030 + indexes.
+> Pendiente: commit + push del submodulo frontend y verificado del propietario
+> (QT-015/BUG-030).
 >
-> **Sesion anterior:** 2026-10-28 (ronda 13 - extension de la ronda 12: descarga del banco
-> con auditoria prompt/thinking, BL-022/QT-013). El arbol anterior registro ronda 13 ejecutada
-> (mandato del propietario: anadir en el frontend, en la lista de
-> preguntas del bank, la descarga del banco donde tambien puedan verse los campos de pensamiento
-> y prompt). (1) exam-app 40e6750: GET /subjects/{id}/questions/export; como generated_questions
-> no guarda prompt/thinking, se correlaciona llm_responses (context pipeline:generator) por
-> statement exacto (la clave con que persistence.py y tools.py persisten question_text),
-> newest-first-wins; thinking null + thinking_capture_enabled:false cuando LLM_CAPTURE_THINKING
-> estuvo deshabilitado (estado vivo actual; 0/686 filas con thinking). (2) frontend f19813f:
-> boton Download bank en la fila de filtros (archivo question_bank_<subject>_<date>.json),
-> alerta de confirmacion con conteo + nota de thinking deshabilitado, bloques colapsables
-> Prompt/Thinking en el detalle de fila (busqueda por id sobre la ultima exportacion) con
-> fallback noPrompt; claves i18n EN/ES. (3) Verificado en vivo: API 218/218 prompts (Applied
-> Economics - Adam) y 6/6 (QA11); navegador real: descarga disparada + alerta "Bank downloaded:
-> 218 questions (JSON)" + nota. (4) e2e 18/18 PASS (16 previos + F7/F7b en download.spec.ts,
-> con parseo del JSON descargado). Bugs abiertos sin cambio: BUG-019/020/021 (DEC-001/002/003
-> pendientes del propietario), BUG-024/025. Verificacion final pendiente del propietario.
+> **Sesion anterior:** 2026-11-05 (tercera revision Felipe: A1 fechas de
+> verificacion + A2 extendido tipos de pregunta). A1: migracion `c9d0e1f2a3b4`
+> (verified_at), sellado en service, DTOs, 2 columnas de fecha en BankView. A2
+> extendido: allowed_question_types en ExamBlueprint (default 6 tipos, lista
+> vacia 422), planner con filtro + fallback, checkboxes + panel avanzado en
+> ExamsView, i18n EN/ES. Docs: BL-023, IMPL-030, QT-014. Commits publicados en
+> origin: core e4f8ea5 + 5c53ca0, exam-app c38f871, agents-backend 57209b1,
+> frontend fd6595a + ffaaada, meta e968a41.
 
 **Ronda 11 (contexto inmediato, 2026-10-28):** BD reconstruida desde cero
 (alembic head b8c9d0e1f2a3, 13 tablas) y material re-indexado (Database
@@ -78,21 +71,22 @@ Exam Generator: MVP de tesis USFQ para que un profesor genere examenes LaTeX por
 
 ## Trabajo pendiente (priorizado)
 
-1. Verificado del propietario de QT-011/QT-012 / IMPL-028/IMPL-029 /
-   BUG-028 (corregido) / BUG-029 (corregido) / BUG-026 (corregido) /
-   BUG-027 (corregido) y del hallazgo J1: revisar evidencia (test-plan
-   rondas 11-12, QT-011/QT-012, IMPL-028/IMPL-029, FINDINGS por
-   experimento) y pasar a `verificado` donde corresponda.
-2. Extension opcional de E03 a >= 4 repeticiones por clon (20 runs, ~35
+1. Commit + push del submodulo frontend con el rediseno de la ronda 15
+   (ExamsView.vue + i18n; ya reconstruido y verificado en navegador).
+2. Verificado del propietario de QT-015/BUG-030 (ronda 15) y de los
+   pendientes previos: QT-011/QT-012/QT-013/QT-014, IMPL-028/029/030,
+   BUG-026/027/028/029 (corregidos) y hallazgo J1: revisar evidencia
+   (QT/IMPL, test-plan, FINDINGS) y pasar a `verificado` donde corresponda.
+3. Extension opcional de E03 a >= 4 repeticiones por clon (20 runs, ~35
    min) si la tesis defiende H5 con sigma entre clones; con 2 repeticiones
    el sigma (1.311) no es concluyente.
-3. Re-ejecutar una campana pequena (o la proxima ronda) para validar el juez
+4. Re-ejecutar una campana pequena (o la proxima ronda) para validar el juez
    in-run corregido (num_judged > 0) y, si se quiere juez post-hoc, anclar
    ventanas por run_id/thread_id en vez de ventanas de tiempo.
-4. Decidir y fixear BUG-021 (persist=false persiste; re-confirmado en ronda
+5. Decidir y fixear BUG-021 (persist=false persiste; re-confirmado en ronda
    12) y BUG-019/020: requiere DEC-001/002/003 del propietario + codigo.
-5. Fix menor BUG-025 (mensaje de login) y BUG-024 (cabeceras nginx + rebuild) (P2).
-6. Purga del contenido huerfano del checkpointer al borrar hilo (P2; seguimiento separado,
+6. Fix menor BUG-025 (mensaje de login) y BUG-024 (cabeceras nginx + rebuild) (P2).
+7. Purga del contenido huerfano del checkpointer al borrar hilo (P2; seguimiento separado,
    el listado ya no expone huerfanos).
 7. Escrito de tesis, capitulo de experimentacion (usa `test/evaluation/` FINDINGS; sin codigo).
 8. (Fusionado en el punto 4: DEC-001/002/003 con BUG-019/020/021.)
@@ -112,6 +106,12 @@ Exam Generator: MVP de tesis USFQ para que un profesor genere examenes LaTeX por
 - Juez de faithfulness: `judge_faithfulness` descarta en silencio registros con statement vacio; pasar SIEMPRE registros correlacionados (`_correlate_statements(retrieval_records, item_records)`), igual que hace rag_metrics (hallazgo J1, corregido en 3827e4d).
 - Alineacion de filas de auditoria (llm_responses) a runs: NO usar ventanas por timestamp para aparear statement<->chunks; hay +-1 fila de deriva (llamadas que cruzan la frontera del run). Para juez post-hoc futuro, anclar por thread_id/run_id. El conteo fiable por run vive en `metrics.cost.latency_by_node_ms.generator.count` (fallback `state_digest.total_llm_calls`, que cuenta generador+evaluador).
 - `total_llm_calls` (16) != llamadas de generador (8): cuenta generador+evaluador; no usarlo como ventana de generador.
+- vue-i18n: todo placeholder de una clave exige su objeto de parametros en la
+  llamada t(); faltantes renderizan cadena vacia sin error visible (BUG-030).
+- Generacion de examenes: los logs de nginx/uvicorn NO muestran el POST hasta
+  que responde (2-4 min con LLM); diagnosticar por el boton del form, no por logs.
+- `docker compose up -d --build frontend` devuelve exit 1 cosmico por stderr de
+  docker en PowerShell; verificar con `docker ps` + curl 200, no con exit code.
 - git push desde PowerShell lanza NativeCommandError por stderr: es cosmético; verificar con `git ls-remote`.
 
 ## Historial de sesiones
@@ -132,3 +132,4 @@ Exam Generator: MVP de tesis USFQ para que un profesor genere examenes LaTeX por
 | 2026-10-28 (ronda 11) | Recertificacion + BD desde cero + ingles e2e + set de metricas regenerado (IMPL-028/QT-011, mandato del propietario, agente con derecho HITL): BD drop + alembic head b8c9d0e1f2a3; 12 preguntas nuevas en ingles via pipeline real (2 materias x 6), revision humana 12/12 APROBADAS y verified_by_human=true via PUT /questions/{id}/verification; falso positivo mojibake (beta/por) descartado con cliente Python + regex BD (artefacto cp1252 de PS 5.1). Suite 15/15 PASS (10.8 s) con qa-r11 y L2 estricto. 2 examenes de control en ingles (qa11_control_db/econ) con PDFs + ZIP. subjects.yaml/experiments.yaml regenerados (ingles, 82 runs), raws r10 archivadas, smoke dry-run OK + purga de su polucion, campana REAL lanzada en background (E04->E03->E01->E02). BUG-028 -> corregido (opcion c: purga). BUG-029 nuevo (deps docx/pptx; chunks se conservan tras 400). .ops actualizado (test-plan ronda 11, QT-011, IMPL-028, traceability, READMEs, BUG-028/029, handoff, PROGRESS). Commits publicados: meta eeb6df3 (3 commits de la ronda), frontend 3b45000 |
 | 2026-10-28 (ronda 11 - cierre) | Campana 82/82 COMPLETADA (0 fallidos, exit 0; E04 18, E03 10, E01 27, E02 27; resume SKIP de las corridas de verificacion en vivo). BUG-029 corregido: deps declaradas (core f0fc306, exam-app 2fd4491), imagen reconstruida, repro en vivo 200/200/200 (4 docx + 40 pptx + 85 chunks reindex) con scripts/qa_r11_docx_index.py; commits ae940e2/d89ec30/41d368c/dc698ca publicados. Hallazgo J1: juez in-run num_judged=0 en 82/82 (retrieval sin correlacionar); corregido en harness.py + windowing de judge_experiment.py reforzado (commit 3827e4d); juez post-hoc ABORTADO por deriva de +-1 fila en ventanas de tiempo (E04 79 vs 80; E01 213 vs 214). Agregados + reportes + FINDINGS regenerados con numeros r11 (commit 9e6bd6c): E01 T=0.3 domina eficiencia/alineacion (aprobacion 1.000) con T=0.7 mejor robustez entre clones; E02 k=8 dominado, k=3 y k=1 empatan alineacion 0.986; E03 sigma entre clones 1.311 con 2 repeticiones (H5 no concluyente; extension a >=4 recomendada); E04 aprobacion insensible a T evaluador, T=0.2 mas eficiente. Ingles de campana verificado: 621 items escaneados (scripts/qa_r11_english_check.py), 0 cuerpos en espanol, 13/621 nombres propios/glosas del material, 3/621 subtopic con eco del temario, 5 rechazos language_not_english por el evaluador (defensa activa). Pendiente: verificado del propietario (QT-011/IMPL-028/BUG-028/BUG-029/J1) |
 | 2026-11-05 (tercera revision) | Analisis de Requisitos/tercera_revision_Felipe.md -> Requisitos/tercera_revision_items.md (A1-A4, B1-B2, C1-C5); el propietario aprobo A1 y A2 (extendido). Implementado en 4 submodulos: A1 verified_at (migracion c9d0e1f2a3b4, sellado en bank/service.py con _utcnow, DTOs exam-app, 2 columnas de fecha en BankView) y A2 extendido (allowed_question_types en ExamBlueprint con rechazo de lista vacia, planner con filtro por Bloom + fallback, checkboxes + panel avanzado de distribucion custom y retrieval en ExamsView, i18n EN/ES). Validacion estatica verde: tsc, vue-tsc (corrigio 2x TS1345 en ExamsView), vite build 4.74 s, py_compile 7 archivos, AST checks, caso de rechazo (lista vacia -> ValidationError), dedup, fallback del planner, head unico de Alembic. Docs .ops: BL-023, IMPL-030, QT-014 + indexes/traceability/READMEs. Commits publicados en origin RC3/develop: core e4f8ea5 + 5c53ca0, exam-app c38f871, agents-backend 57209b1, frontend fd6595a + ffaaada, meta e968a41. Pendiente: verificacion en navegador (rebuild Docker + alembic upgrade head) y suite e2e, del propietario |
+| 2026-11-06 (ronda 15) | Feedback ronda 2 de la tercera revision (mandato del propietario: Bloom no select y blueprint por tema) implementado frontend-only (IMPL-031/BL-024): checkbox groups de Bloom (6 niveles) y dificultad (3) con distribucion uniforme (levelsToDist, resto a la primera clave) y selectores numericos por tema real del banco (0-50, topics por watch de activeSubjectId) convertidos a topics_weight (applyTopicCounts, fallback general 1.0); removidos presets y grids de peso custom; i18n EN/ES (7 claves nuevas, 3 removidas). BUG-030 detectado y corregido: interpolacion i18n sin {sum,total} -> hint "(of )"; fix en template + generate(), rebuild y hint "(of 10)" verificado. QA Playwright (materia Economia Aplicada - QA11): rechazo suma 60 > total 10 con 0 llamadas API; E2E real total 2 / Econometrics 2 / 3 niveles Bloom desmarcados -> POST 200 tras ~4 min, examen con ZIP. Docs .ops: BL-024, IMPL-031, QT-015, BUG-030 + indexes/traceability/handoff/PROGRESS. Pendiente: commit + push del submodulo frontend; verificado del propietario |

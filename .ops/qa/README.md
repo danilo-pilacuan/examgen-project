@@ -16,8 +16,20 @@ status: stable
 - `strategy.md` - what "verified" means (browser-only rule) + validation rules.
 - `test-plan.md` - C1-C54 + F1-F14 + I1-I8 + E1-E5 + R1-R7 certification matrix per round.
 - `traceability.md` - REQ -> BL -> IMPL -> QT coverage with evidence.
-- `QT-007..QT-014.md` - test case records (rounds 7-13 + tercera revision), flat in this folder.
-- `BUG-001..BUG-029.md` - defect register, flat in this folder (30 files).
+- `QT-007..QT-015.md` - test case records (rounds 7-14 + rediseno Exams), flat in this folder.
+- `BUG-001..BUG-030.md` - defect register, flat in this folder (31 files).
+
+Round 15 (2026-11-06, feedback ronda 2 de la tercera revision, BL-024/
+IMPL-031/QT-015/BUG-030, mandato del propietario: Bloom no debe ser select y
+el panel avanzado debe pedir cuantas preguntas por tema): rediseno frontend-
+only de ExamsView - checkbox groups de Bloom (6 niveles) y dificultad (3)
+con distribucion uniforme de lo marcado, y selectores numericos por tema
+real (banco de la materia activa) que convierten conteos a topics_weight;
+removidos presets y grids de distribucion custom. BUG-030 (medio) ->
+`corregido`: interpolacion i18n sin {sum,total} renderizaba hint "(of )";
+fix en template + generate() y rebuild. QA Playwright: rechazo suma 60 >
+total 10 con 0 llamadas API y E2E real POST 200 (2 preguntas, ZIP). Solo
+falta el commit del submodulo frontend; verificacion pendiente del propietario.
 
 Round 14 (2026-11-05, tercera revision Felipe, BL-023/IMPL-030/QT-014,
 mandato del propietario: implementar A1 y A2 - A2 en version extendida):
