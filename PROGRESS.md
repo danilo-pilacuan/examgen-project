@@ -19,12 +19,13 @@
   i18n EN/ES. Validacion estatica verde: tsc, vue-tsc (fix 2x TS1345), vite
   build, py_compile, AST checks, caso de rechazo, head unico de Alembic.
 * **Falta:** verificacion en navegador (rebuild Docker + `alembic upgrade
-  head`) y suite e2e, pendientes del propietario; commits/push al cierre.
+  head`) y suite e2e, pendientes del propietario.
 * **Decision:** A2 implementado en version extendida (distribucion custom +
   retrieval) a pedido del propietario; A3/A4/B1/B2/C1-C5 pospuestos.
 * **Medicion:** DEFAULT_OK (6 tipos), REJECT_OK (ValidationError), DEDUP_OK,
   FALLBACK_OK/OK2, PY_COMPILE_OK, HEADS ['c9d0e1f2a3b4'], vue-tsc exit 0,
-  build 4.74 s.
+  build 4.74 s. Commits publicados: core e4f8ea5 + 5c53ca0, exam-app c38f871,
+  agents-backend 57209b1, frontend fd6595a + ffaaada, meta e968a41.
 
 ## 2026-10-28 (ronda QA 13 - extension ronda 12: descarga del banco con auditoria prompt/thinking)
 

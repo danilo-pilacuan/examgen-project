@@ -59,5 +59,7 @@ git revert de los commits por submodulo y `alembic downgrade b8c9d0e1f2a3`
   default 6 tipos OK; dedup preserva orden; fallback del planner verificado
   (FALLBACK_OK/FALLBACK_OK2). Head unico de Alembic: c9d0e1f2a3b4.
 - Lint de archivos cambiados limpio (el error de bug026.spec.cjs es preexistente).
+- Commits publicados en origin RC3/develop: core e4f8ea5 + 5c53ca0, exam-app
+  c38f871, agents-backend 57209b1, frontend fd6595a + ffaaada, meta e968a41.
 - Pendiente del propietario: verificacion en navegador (rebuild Docker +
   alembic upgrade head) y suite e2e.

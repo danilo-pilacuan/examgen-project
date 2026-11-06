@@ -45,5 +45,8 @@ de la verificacion final: stack Docker rebuilt + alembic upgrade head.
 - tsc exit 0; vue-tsc exit 0 (tras fix 2x TS1345); vite build 4.74 s; lint de
   archivos cambiados limpio; AST checks STATIC/EXAM_APP/AGENTS_BACKEND/I18N/
   VIEWS OK.
-- Pendiente del propietario: verificacion en navegador real (rebuild Docker +
-  alembic upgrade head) y suite e2e; nunca auto-asignada por el agente.
+- Commits: exam-app c38f871, agents-backend 57209b1, frontend fd6595a + ffaaada,
+  core e4f8ea5 + 5c53ca0, meta e968a41; publicados en RC3/develop.
+
+Estado: ejecutado (verificacion del propietario pendiente; nunca
+auto-asignada por el agente). Datos de control: qa-r11@usfq.test.
