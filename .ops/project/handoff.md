@@ -14,16 +14,21 @@ sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.
 
 > **Ultima actualizacion:** 2026-11-06 (ronda 15 - rediseno Exams tras feedback
 > de Felipe: Bloom/dificultad como checkboxes y blueprint por tema; BUG-030
-> corregido; commit del submodulo frontend pendiente) | **Rama:** `RC3/develop` |
-> **Arbol:** ExamsView.vue redisenado (checkbox groups de Bloom 6 niveles y
-> dificultad 3 con distribucion uniforme, selectores numericos por tema real con
-> guard de suma contra el total; removidos presets y grids de peso custom; i18n
-> EN/ES actualizada). Contrato del backend sin cambios. QA Playwright verde:
-> rechazo suma 60 > total 10 con 0 llamadas API y E2E real POST 200 (2 preguntas
-> con ZIP). BUG-030 (interpolacion i18n sin {sum,total}, hint "(of )") corregido
-> en la misma ronda. Docs .ops: BL-024, IMPL-031, QT-015, BUG-030 + indexes.
-> Pendiente: commit + push del submodulo frontend y verificado del propietario
-> (QT-015/BUG-030).
+> corregido; BUG-031 corregido: fecha verified_at no reflejaba al verificar en
+> Bank sin recargar, el store ahora adopta la respuesta del PUT en bank.ts; QA
+> Playwright del toggle verificado en ambos sentidos; commit del submodulo
+> frontend pendiente) | **Rama:** `RC3/develop` | **Arbol:** ExamsView.vue
+> redisenado (checkbox groups de Bloom 6 niveles y dificultad 3 con
+> distribucion uniforme, selectores numericos por tema real con guard de suma
+> contra el total; removidos presets y grids de peso custom; i18n EN/ES
+> actualizada) + stores/bank.ts (setHumanVerification adopta el QuestionOut
+> completo). Contrato del backend sin cambios. QA Playwright verde: rechazo
+> suma 60 > total 10 con 0 llamadas API, E2E real POST 200 (2 preguntas con
+> ZIP) y toggle de verificacion instantaneo en ambos sentidos. BUG-030
+> (interpolacion i18n sin {sum,total}, hint "(of )") y BUG-031 (fecha sin
+> refrescar) corregidos en la misma ronda. Docs .ops: BL-024, IMPL-031,
+> QT-015, BUG-030, BUG-031 + indexes. Pendiente: commit + push del submodulo
+> frontend y verificado del propietario (QT-015/BUG-030/BUG-031).
 >
 > **Sesion anterior:** 2026-11-05 (tercera revision Felipe: A1 fechas de
 > verificacion + A2 extendido tipos de pregunta). A1: migracion `c9d0e1f2a3b4`
@@ -72,8 +77,9 @@ Exam Generator: MVP de tesis USFQ para que un profesor genere examenes LaTeX por
 ## Trabajo pendiente (priorizado)
 
 1. Commit + push del submodulo frontend con el rediseno de la ronda 15
-   (ExamsView.vue + i18n; ya reconstruido y verificado en navegador).
-2. Verificado del propietario de QT-015/BUG-030 (ronda 15) y de los
+   (ExamsView.vue + i18n + fix BUG-031 en stores/bank.ts; ya reconstruido y
+   verificado en navegador).
+2. Verificado del propietario de QT-015/BUG-030/BUG-031 (ronda 15) y de los
    pendientes previos: QT-011/QT-012/QT-013/QT-014, IMPL-028/029/030,
    BUG-026/027/028/029 (corregidos) y hallazgo J1: revisar evidencia
    (QT/IMPL, test-plan, FINDINGS) y pasar a `verificado` donde corresponda.

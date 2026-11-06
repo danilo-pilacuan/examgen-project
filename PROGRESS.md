@@ -20,9 +20,15 @@
   template + generate(), rebuild, hint "(of 10)" verificado. QA Playwright:
   rechazo suma 60 > total 10 con 0 llamadas API; E2E real POST 200 (2
   preguntas, ZIP). vue-tsc + build verdes; imagen Docker reconstruida.
-  Docs .ops: BL-024, IMPL-031, QT-015, BUG-030 + indexes/traceability.
-* **Falta:** commit + push del submodulo frontend; verificado del propietario
-  (QT-015/BUG-030 y pendientes previos).
+  BUG-031 (reporte del propietario): la fecha verified_at no se reflejaba
+  al verificar en Bank sin recargar la tabla; setHumanVerification en
+  stores/bank.ts descartaba la respuesta del PUT y parcheaba solo
+  verified_by_human - fix adopta el QuestionOut completo por indice. QA
+  Playwright en ambos sentidos sin recarga (Verify muestra la fecha al
+  instante, Remove la limpia). Docs .ops: BL-024, IMPL-031, QT-015,
+  BUG-030, BUG-031 + indexes/traceability.
+* **Falta:** commit + push del submodulo frontend (rediseno + fix BUG-031);
+  verificado del propietario (QT-015/BUG-030/BUG-031 y pendientes previos).
 * **Decision:** rediseno frontend-only; el backend recibe el mismo contrato
   (distribuciones uniformes y topics_weight derivado de conteos), sin cambios
   de schema ni planner.
