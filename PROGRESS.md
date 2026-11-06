@@ -6,6 +6,26 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
+## 2026-11-05 (tercera revision Felipe: A1 fechas de verificacion + A2 extendido tipos de pregunta)
+
+* **Hecho:** BL-023/IMPL-030/QT-014. Analisis de la revision en
+  `Requisitos/tercera_revision_items.md`; el propietario aprobo A1 y A2
+  (extendido). A1: columna `verified_at` (migracion `c9d0e1f2a3b4`), sellado en
+  `bank/service.py` (creacion con IA, verificacion humana, NULL al quitar),
+  DTOs exam-app y 2 columnas de fecha en BankView. A2 extendido:
+  `allowed_question_types` en ExamBlueprint (default 6 tipos, lista vacia
+  rechazada), planner con filtro por Bloom + fallback, checkboxes + panel
+  avanzado (distribucion custom Bloom/dificultad, retrieval) en ExamsView,
+  i18n EN/ES. Validacion estatica verde: tsc, vue-tsc (fix 2x TS1345), vite
+  build, py_compile, AST checks, caso de rechazo, head unico de Alembic.
+* **Falta:** verificacion en navegador (rebuild Docker + `alembic upgrade
+  head`) y suite e2e, pendientes del propietario; commits/push al cierre.
+* **Decision:** A2 implementado en version extendida (distribucion custom +
+  retrieval) a pedido del propietario; A3/A4/B1/B2/C1-C5 pospuestos.
+* **Medicion:** DEFAULT_OK (6 tipos), REJECT_OK (ValidationError), DEDUP_OK,
+  FALLBACK_OK/OK2, PY_COMPILE_OK, HEADS ['c9d0e1f2a3b4'], vue-tsc exit 0,
+  build 4.74 s.
+
 ## 2026-10-28 (ronda QA 13 - extension ronda 12: descarga del banco con auditoria prompt/thinking)
 
 * **Hecho:** BL-022/QT-013. (1) exam-app 40e6750: GET

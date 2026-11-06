@@ -16,8 +16,17 @@ status: stable
 - `strategy.md` - what "verified" means (browser-only rule) + validation rules.
 - `test-plan.md` - C1-C54 + F1-F14 + I1-I8 + E1-E5 + R1-R7 certification matrix per round.
 - `traceability.md` - REQ -> BL -> IMPL -> QT coverage with evidence.
-- `QT-007..QT-013.md` - test case records (rounds 7-13), flat in this folder.
+- `QT-007..QT-014.md` - test case records (rounds 7-13 + tercera revision), flat in this folder.
 - `BUG-001..BUG-029.md` - defect register, flat in this folder (30 files).
+
+Round 14 (2026-11-05, tercera revision Felipe, BL-023/IMPL-030/QT-014,
+mandato del propietario: implementar A1 y A2 - A2 en version extendida):
+A1 verified_at (migracion c9d0e1f2a3b4, sellado en service, DTOs, 2 columnas
+de fecha en BankView) y A2 extendido (allowed_question_types en ExamBlueprint
+con rechazo 422 de lista vacia, planner con filtro + fallback, checkboxes +
+panel avanzado de Bloom/dificultad/retrieval en ExamsView, i18n EN/ES).
+Validacion estatica verde (tsc, vue-tsc, build, py_compile, AST, caso de
+rechazo, head unico); verificacion en navegador pendiente del propietario.
 
 Round 13 (2026-10-28, extension de la ronda 12, BL-022, mandato del
 propietario: anadir en el frontend la descarga del banco con campos de
