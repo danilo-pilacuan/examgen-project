@@ -82,6 +82,9 @@ docker rm -f exam_tunnel   # la URL queda muerta inmediatamente
 
 ## Levantamiento completo (recipe)
 
-La secuencia stack + túnel + alta de usuario de prueba + teardown, lista
-para copiar, está en
+Para levantar desde cero (clone fresco) con script automatizada o pasos
+manuales, ver [RECIPE.md](../RECIPE.md) y la única script multiplataforma
+[scripts/bring-up.py](../scripts/bring-up.py) (Python 3.7+, solo stdlib; si
+el host no tiene Python, el bootstrap de un intérprete portable temporal
+está documentado en el RECIPE); la versión .ops está en
 [.ops/operations/recipe-levantamiento.md](../.ops/operations/recipe-levantamiento.md).

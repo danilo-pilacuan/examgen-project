@@ -41,6 +41,10 @@ MVP_v1/
 ## 🚀 Uso rápido (frontend propio)
 
 ```bash
+# 0. (Recomendado) Levantar todo desde cero con la script automatizada:
+#    python scripts\bring-up.py        (Windows)  /  python3 scripts/bring-up.py
+#    (submódulos + .env con secretos + build + verificación + túnel público; ver RECIPE.md)
+
 # 1. Levantar toda la infraestructura
 cd docker && docker compose up -d --build
 #    (el entrypoint de exam-app aplica las migraciones Alembic al arrancar)
@@ -63,6 +67,7 @@ cd docker && docker compose up -d --build
 ## 🌐 Exponer al internet (demo / revisión externa)
 
 - Guía: [docs/exposicion-internet.md](docs/exposicion-internet.md) — cloudflared quick tunnel, sin credenciales.
+- Recipe desde clone fresco: [RECIPE.md](RECIPE.md) + una sola script multiplataforma: [scripts/bring-up.py](scripts/bring-up.py) (Python 3.7+, solo stdlib; si falta Python, el bootstrap portable está en el RECIPE).
 - Runbook: [.ops/operations/RUN-016-exposicion-publica-cloudflared.md](.ops/operations/RUN-016-exposicion-publica-cloudflared.md) y recipe de levantamiento: [.ops/operations/recipe-levantamiento.md](.ops/operations/recipe-levantamiento.md).
 
 ## 🧪 Pipeline batch (API tradicional)
