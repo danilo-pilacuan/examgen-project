@@ -6,29 +6,31 @@ title: Handoff entre sesiones
 description: Punto de entrada de cada sesion; estado exacto donde se quedo el trabajo.
 estado: vigente
 dueno: rol:propietario
-fecha: 2026-11-06
+fecha: 2026-11-08
 relaciona: [plan, ops-readme]
 status: stable
 sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.md, title: copilot-instructions }]
 ---
 
-> **Ultima actualizacion:** 2026-11-06 (ronda 15 - rediseno Exams tras feedback
-> de Felipe: Bloom/dificultad como checkboxes y blueprint por tema; BUG-030
-> corregido; BUG-031 corregido: fecha verified_at no reflejaba al verificar en
-> Bank sin recargar, el store ahora adopta la respuesta del PUT en bank.ts; QA
-> Playwright del toggle verificado en ambos sentidos; commit del submodulo
-> frontend pendiente) | **Rama:** `RC3/develop` | **Arbol:** ExamsView.vue
-> redisenado (checkbox groups de Bloom 6 niveles y dificultad 3 con
-> distribucion uniforme, selectores numericos por tema real con guard de suma
-> contra el total; removidos presets y grids de peso custom; i18n EN/ES
-> actualizada) + stores/bank.ts (setHumanVerification adopta el QuestionOut
-> completo). Contrato del backend sin cambios. QA Playwright verde: rechazo
-> suma 60 > total 10 con 0 llamadas API, E2E real POST 200 (2 preguntas con
-> ZIP) y toggle de verificacion instantaneo en ambos sentidos. BUG-030
-> (interpolacion i18n sin {sum,total}, hint "(of )") y BUG-031 (fecha sin
-> refrescar) corregidos en la misma ronda. Docs .ops: BL-024, IMPL-031,
-> QT-015, BUG-030, BUG-031 + indexes. Pendiente: commit + push del submodulo
-> frontend y verificado del propietario (QT-015/BUG-030/BUG-031).
+> **Ultima actualizacion:** 2026-11-08 (recuperacion de entorno: las imagenes
+> y contenedores Docker del stack se perdieron y se volvieron a crear con
+> `docker compose up -d --build`; el volumen `docker_postgres_data`
+> sobrevivio, asi que la BD completa (8 materias, 318 chunks, 647 preguntas,
+> 5 examenes, head c9d0e1f2a3b4) NO se perdio y NO hizo falta re-seed; el
+> material y los PDFs/ZIPs de data/ siguen intactos. Cambio puntual: el
+> puerto host del embedding-service paso de 8081 a 18081 en
+> docker/docker-compose.yml porque un servidor de dev ajeno (React Native,
+> C:\dev\trigger-hub) ocupa 8081; el lado contenedor sigue en 8081 y los
+> scripts en host deben usar EMBEDDING_URL=http://localhost:18081/v1/
+> embeddings. Flujo completo de creacion verificado E2E via API real:
+> login qa-r11 -> POST /exams/generate (2 preguntas, Economia Aplicada -
+> QA11) -> 200 en ~3 min, 2 items aprobados, Rebuild_Check_1 PDFs + ZIP
+> servidos por nginx) | **Rama:** `RC3/develop` | **Arbol:** docker/
+> docker-compose.yml modificado (puerto 18081) + docs/informe_
+> experimentos_r11.md sin commitear; submodulos limpios y publicados
+> (frontend 351b7b4 en origin, incluye el rediseno r15 y BUG-031 que estaba
+> pendiente de push). Base de datos conservada; indice de embedding-service
+> verificado (POST /v1/embeddings 200).
 >
 > **Sesion anterior:** 2026-11-05 (tercera revision Felipe: A1 fechas de
 > verificacion + A2 extendido tipos de pregunta). A1: migracion `c9d0e1f2a3b4`
@@ -76,13 +78,12 @@ Exam Generator: MVP de tesis USFQ para que un profesor genere examenes LaTeX por
 
 ## Trabajo pendiente (priorizado)
 
-1. Commit + push del submodulo frontend con el rediseno de la ronda 15
-   (ExamsView.vue + i18n + fix BUG-031 en stores/bank.ts; ya reconstruido y
-   verificado en navegador).
-2. Verificado del propietario de QT-015/BUG-030/BUG-031 (ronda 15) y de los
+1. Verificado del propietario de QT-015/BUG-030/BUG-031 (ronda 15) y de los
    pendientes previos: QT-011/QT-012/QT-013/QT-014, IMPL-028/029/030,
    BUG-026/027/028/029 (corregidos) y hallazgo J1: revisar evidencia
    (QT/IMPL, test-plan, FINDINGS) y pasar a `verificado` donde corresponda.
+2. Commit + push del meta-repo con el cambio de puerto del embedding-service
+   (18081) hecho en la recuperacion de entorno del 2026-11-08.
 3. Extension opcional de E03 a >= 4 repeticiones por clon (20 runs, ~35
    min) si la tesis defiende H5 con sigma entre clones; con 2 repeticiones
    el sigma (1.311) no es concluyente.
@@ -94,12 +95,10 @@ Exam Generator: MVP de tesis USFQ para que un profesor genere examenes LaTeX por
 6. Fix menor BUG-025 (mensaje de login) y BUG-024 (cabeceras nginx + rebuild) (P2).
 7. Purga del contenido huerfano del checkpointer al borrar hilo (P2; seguimiento separado,
    el listado ya no expone huerfanos).
-7. Escrito de tesis, capitulo de experimentacion (usa `test/evaluation/` FINDINGS; sin codigo).
-8. (Fusionado en el punto 4: DEC-001/002/003 con BUG-019/020/021.)
-9. (Fusionado en el punto 5: BUG-024/025 siguen abiertos.)
-10. Comparativa cross-provider de modelos (P3; depende de acceso a otro modelo en el gateway).
-11. Etapa 01: crear repos remotos + CI del meta-repo (P3; requiere codigo).
-12. Resolver inconsistencia del instruccionado: validate.yml/copilot-instructions referencian infra DigitalMe ausente (tools/, mcp/, package.json raiz, AGENTS.md).
+8. Escrito de tesis, capitulo de experimentacion (usa `test/evaluation/` FINDINGS; sin codigo).
+9. Comparativa cross-provider de modelos (P3; depende de acceso a otro modelo en el gateway).
+10. Etapa 01: crear repos remotos + CI del meta-repo (P3; requiere codigo).
+11. Resolver inconsistencia del instruccionado: validate.yml/copilot-instructions referencian infra DigitalMe ausente (tools/, mcp/, package.json raiz, AGENTS.md).
 
 ## Gotchas que NO hay que redescubrir
 
@@ -139,3 +138,4 @@ Exam Generator: MVP de tesis USFQ para que un profesor genere examenes LaTeX por
 | 2026-10-28 (ronda 11 - cierre) | Campana 82/82 COMPLETADA (0 fallidos, exit 0; E04 18, E03 10, E01 27, E02 27; resume SKIP de las corridas de verificacion en vivo). BUG-029 corregido: deps declaradas (core f0fc306, exam-app 2fd4491), imagen reconstruida, repro en vivo 200/200/200 (4 docx + 40 pptx + 85 chunks reindex) con scripts/qa_r11_docx_index.py; commits ae940e2/d89ec30/41d368c/dc698ca publicados. Hallazgo J1: juez in-run num_judged=0 en 82/82 (retrieval sin correlacionar); corregido en harness.py + windowing de judge_experiment.py reforzado (commit 3827e4d); juez post-hoc ABORTADO por deriva de +-1 fila en ventanas de tiempo (E04 79 vs 80; E01 213 vs 214). Agregados + reportes + FINDINGS regenerados con numeros r11 (commit 9e6bd6c): E01 T=0.3 domina eficiencia/alineacion (aprobacion 1.000) con T=0.7 mejor robustez entre clones; E02 k=8 dominado, k=3 y k=1 empatan alineacion 0.986; E03 sigma entre clones 1.311 con 2 repeticiones (H5 no concluyente; extension a >=4 recomendada); E04 aprobacion insensible a T evaluador, T=0.2 mas eficiente. Ingles de campana verificado: 621 items escaneados (scripts/qa_r11_english_check.py), 0 cuerpos en espanol, 13/621 nombres propios/glosas del material, 3/621 subtopic con eco del temario, 5 rechazos language_not_english por el evaluador (defensa activa). Pendiente: verificado del propietario (QT-011/IMPL-028/BUG-028/BUG-029/J1) |
 | 2026-11-05 (tercera revision) | Analisis de Requisitos/tercera_revision_Felipe.md -> Requisitos/tercera_revision_items.md (A1-A4, B1-B2, C1-C5); el propietario aprobo A1 y A2 (extendido). Implementado en 4 submodulos: A1 verified_at (migracion c9d0e1f2a3b4, sellado en bank/service.py con _utcnow, DTOs exam-app, 2 columnas de fecha en BankView) y A2 extendido (allowed_question_types en ExamBlueprint con rechazo de lista vacia, planner con filtro por Bloom + fallback, checkboxes + panel avanzado de distribucion custom y retrieval en ExamsView, i18n EN/ES). Validacion estatica verde: tsc, vue-tsc (corrigio 2x TS1345 en ExamsView), vite build 4.74 s, py_compile 7 archivos, AST checks, caso de rechazo (lista vacia -> ValidationError), dedup, fallback del planner, head unico de Alembic. Docs .ops: BL-023, IMPL-030, QT-014 + indexes/traceability/READMEs. Commits publicados en origin RC3/develop: core e4f8ea5 + 5c53ca0, exam-app c38f871, agents-backend 57209b1, frontend fd6595a + ffaaada, meta e968a41. Pendiente: verificacion en navegador (rebuild Docker + alembic upgrade head) y suite e2e, del propietario |
 | 2026-11-06 (ronda 15) | Feedback ronda 2 de la tercera revision (mandato del propietario: Bloom no select y blueprint por tema) implementado frontend-only (IMPL-031/BL-024): checkbox groups de Bloom (6 niveles) y dificultad (3) con distribucion uniforme (levelsToDist, resto a la primera clave) y selectores numericos por tema real del banco (0-50, topics por watch de activeSubjectId) convertidos a topics_weight (applyTopicCounts, fallback general 1.0); removidos presets y grids de peso custom; i18n EN/ES (7 claves nuevas, 3 removidas). BUG-030 detectado y corregido: interpolacion i18n sin {sum,total} -> hint "(of )"; fix en template + generate(), rebuild y hint "(of 10)" verificado. QA Playwright (materia Economia Aplicada - QA11): rechazo suma 60 > total 10 con 0 llamadas API; E2E real total 2 / Econometrics 2 / 3 niveles Bloom desmarcados -> POST 200 tras ~4 min, examen con ZIP. Docs .ops: BL-024, IMPL-031, QT-015, BUG-030 + indexes/traceability/handoff/PROGRESS. Pendiente: commit + push del submodulo frontend; verificado del propietario |
+| 2026-11-08 (recuperacion entorno) | Las imagenes y contenedores Docker del stack desaparecieron del host; se reconstruyeron con `docker compose -f docker/docker-compose.yml up -d --build` (pgvector, latex-compiler, embedding-service, exam-app, frontend) + open-webui con perfil legacy. El volumen `docker_postgres_data` sobrevivio: BD completa conservada (8 materias, 318 chunks, 647 preguntas, 5 examenes, alembic head c9d0e1f2a3b4, cuenta qa-r11), no fue necesario re-seed; data/inputs y data/agent_outputs intactos (894 archivos). Un proceso ajeno (React Native dev server, node C:\dev\trigger-hub) ocupa el puerto host 8081 -> el embedding-service se remapeo a 18081:8081 en docker/docker-compose.yml (lado contenedor sin cambios; scripts en host: EMBEDDING_URL=http://localhost:18081/v1/embeddings). Verificacion: health 200 en los 6 contenedores, login qa-r11 200, GET /subjects 200, POST /v1/embeddings 200, flujo completo POST /exams/generate 200 en ~3 min (2 preguntas multiple_choice aprobadas, 0 rechazos, 4 llamadas LLM, persist saved=2, Rebuild_Check_1 PDFs + ZIP creados y servidos por nginx 200). Pendiente: commit + push del cambio de puerto en el meta-repo |

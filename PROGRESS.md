@@ -6,6 +6,41 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
+## 2026-11-08 (recuperacion de entorno Docker: imagenes perdidas, stack reconstruido, flujo completo verificado)
+
+* **Hecho:** Las imagenes y contenedores del stack local se perdieron en el
+  host. Reconstruccion completa con `docker compose -f docker/
+  docker-compose.yml up -d --build` (exam-app, exam_frontend, exam_postgres_db
+  con pgvector, exam_latex_compiler, exam_embedding_service) + open-webui con
+  perfil legacy. El volumen `docker_postgres_data` sobrevivio a la perdida de
+  imagenes: la BD conservo sus 13 tablas, 8 materias, 318 material_chunks,
+  647 generated_questions, 5 examenes, el usuario qa-r11@usfq.test y el
+  alembic head c9d0e1f2a3b4, por lo que NO fue necesario volver a ejecutar
+  seeds ni re-indexar material (data/inputs y data/agent_outputs intactos,
+  894 archivos). Verificacion: health de los 6 contenedores, login
+  qa-r11 200, GET /subjects 200 (8), POST /v1/embeddings 200, proxy nginx
+  /subjects /exams /output 200. Flujo completo de creacion via API real:
+  POST /exams/generate sobre "Economia Aplicada - QA11" (blueprint 2
+  preguntas, bloom remember/understand 0.5/0.5, dificultad easy/medium
+  0.5/0.5, topic Estudio de Mercado 1.0) -> 200 en ~3 min: 2 items
+  multiple_choice aprobados, 0 rechazos, 4 llamadas LLM, persist
+  saved=2, compilacion en intento 1, artefactos Rebuild_Check_1.zip +
+  Rebuild_Check_1_A.pdf + Rebuild_Check_1_A_respondido.pdf creados en
+  data/agent_outputs y servidos por el frontend (/output 200). Cambio de
+  codigo: un servidor de dev ajeno (React Native, C:\dev\trigger-hub) ocupa
+  permanentemente el puerto host 8081 -> el embedding-service se remapeo a
+  18081:8081 en docker/docker-compose.yml (el lado contenedor sigue en
+  8081; la red interna usa http://embedding-service:8081 sin cambios; los
+  scripts en host deben exportar EMBEDDING_URL=http://localhost:18081/
+  v1/embeddings).
+* **Falta:** commit + push del meta-repo (docker-compose.yml + .ops);
+  verificado del propietario de los pendientes previos (QT-011..QT-015,
+  IMPL-028..031, BUG-026..031).
+* **Decision:** mantener los seeds intactos: la persistencia por volumen
+  demostro que no hace falta re-seed tras perder imagenes; el remapeo de
+  puerto host (18081) se elige sobre mover el dev server ajeno porque el
+  conflicto es del host y EMBEDDING_URL es configuracion pydantic-settings.
+
 ## 2026-11-06 (ronda 15 - rediseno Exams: Bloom/dificultad checkboxes y blueprint por tema)
 
 * **Hecho:** BL-024/IMPL-031/QT-015/BUG-030. Feedback ronda 2 de la tercera
