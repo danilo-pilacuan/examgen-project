@@ -35,8 +35,11 @@ services:
     environment:
       EMBEDDING_MODEL: BAAI/bge-m3
       EMBEDDING_DEVICE: cpu
+    # Host port 18081 (instead of the documented 8081): another local dev
+    # server occupies 8081. Container side stays 8081; host scripts must
+    # set EMBEDDING_URL=http://localhost:18081/v1/embeddings.
     ports:
-      - "8081:8081"
+      - "18081:8081"
 
   # Orchestrator app (FastAPI) — exposes the REST API + the OpenAI-compatible
   # conversational agent (/v1/chat/completions) for OpenWebUI.
