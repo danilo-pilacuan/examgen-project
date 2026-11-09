@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Bring-up entrypoint: exam-generator from a fresh clone.
 
-Implements RECIPE.md steps 1-5: clone submodules, write .env (asks for the
-LLM API key, generates AUTH_SECRET), build + start the Docker stack, run
-smoke checks, expose the system via a cloudflared quick tunnel and print
-the public URL.
+Implements RECIPE.md steps 1-5 plus a post-smoke submodule pin check
+(step 6): clone submodules, write .env (asks for the LLM API key,
+generates AUTH_SECRET), build + start the Docker stack, run smoke checks,
+expose the system via a cloudflared quick tunnel and print the public URL.
 
 Standard library only (Python 3.7+). Needs git and docker in PATH.
 Optional: OPENAI_API_KEY in the environment skips the interactive prompt.
@@ -13,7 +13,11 @@ Usage:
     python scripts/bring-up.py
     OPENAI_API_KEY=sk-... python scripts/bring-up.py
     python scripts/bring-up.py --no-tunnel
+    python scripts/bring-up.py --reuse-running   # adopt a foreign running
+                                                 # stack as-is (RECIPE 0A-3)
 
+Refuses to rebuild when running exam_* containers belong to another
+checkout; use --reuse-running to adopt them as-is (smoke + tunnel only).
 Idempotent; safe to re-run. No secrets are echoed or stored anywhere but
 the gitignored .env.
 """
@@ -114,6 +118,63 @@ def preflight():
         fail("docker compose (v2) not available; update Docker Desktop")
 
 
+# --- running-stack detection (RECIPE section 0A rule 3) ---
+
+STACK_SERVICES = ("exam_app", "exam_frontend", "exam_postgres_db",
+                  "exam_latex_compiler", "exam_embedding_service")
+
+
+def inspect_container(name):
+    """Return (state, config_files_label) or (None, None) if absent."""
+    r = sh(["docker", "inspect", "--format",
+            "{{.State.Status}}|{{index .Config.Labels"
+            " \"com.docker.compose.project.config_files\"}}", name],
+           check=False, capture=True)
+    if r.returncode != 0:
+        return None, None
+    out = r.stdout.strip()
+    state, _, cfg = out.partition("|")
+    return (state or None), (cfg or None)
+
+
+def running_stack_state():
+    """Classify running exam_* containers.
+
+    Returns (count_up, owner_config_files) where owner_config_files is the
+    com.docker.compose.project.config_files label shared by the up
+    containers, or None when absent or inconsistent.
+    """
+    count = 0
+    owners = set()
+    for name in STACK_SERVICES:
+        state, cfg = inspect_container(name)
+        if state in ("running", "restarting"):
+            count += 1
+            if cfg:
+                owners.add(cfg)
+    if len(owners) > 1:
+        return count, "INCONSISTENT"
+    return count, (next(iter(owners)) if owners else None)
+
+
+def running_stack_is_ours():
+    count, owner = running_stack_state()
+    if count == 0:
+        return False
+    if owner and os.path.normcase(os.path.abspath(
+            os.path.dirname(owner))) == os.path.normcase(
+            os.path.abspath(os.path.join(ROOT, "docker"))):
+        return True
+    return False
+
+
+def normalize_owner_path(owner):
+    """Return the checkout root implied by a config_files label, or None."""
+    if not owner or owner == "INCONSISTENT":
+        return None
+    return os.path.dirname(os.path.abspath(owner))
+
+
 def step1_submodules():
     step_header(1, "Cloning submodules (pinned SHAs)")
     sh(["git", "submodule", "update", "--init", "--recursive"])
@@ -148,8 +209,27 @@ def step2_secrets():
     log("    .env ready (gitignored)")
 
 
-def step3_stack():
+def step3_stack(args):
     step_header(3, "Building and starting containers (5-10 min first time)")
+    count, owner = running_stack_state()
+    if count and not running_stack_is_ours():
+        other = normalize_owner_path(owner)
+        if args.reuse_running:
+            log("    Stack already running from %s; reusing it as-is "
+                "(--reuse-running)" % (other or "an unknown checkout"))
+            return
+        msg = ("%d exam_* container(s) already running from another "
+               "checkout" % count)
+        if other:
+            msg += " (%s)" % other
+        msg += ("; refusing to touch them. Re-run with --reuse-running to"
+                " adopt the running stack as-is, or stop it first from its"
+                " own checkout: docker compose -f docker/docker-compose.yml"
+                " down")
+        fail(msg)
+    if count:
+        log("    Stack already running from this checkout; "
+            "refreshing with compose up")
     # A nonzero exit here can be cosmetic on some shells; health + smoke
     # checks below are the source of truth.
     sh(["docker", "compose", "-f", COMPOSE_FILE, "up", "-d", "--build"],
@@ -225,6 +305,34 @@ def step5_tunnel():
     log("=" * 60)
 
 
+def step6_submodules():
+    step_header(6, "Verifying submodules at pinned SHAs")
+    r = sh(["git", "submodule", "status", "--recursive"], check=False,
+           capture=True)
+    if r.returncode != 0:
+        fail("git submodule status failed: %s" % (r.stderr or "").strip())
+    lines = [ln for ln in (r.stdout or "").splitlines() if ln.strip()]
+    if not lines:
+        fail("git submodule status listed 0 submodules (expected 6); "
+             "run: git submodule update --init --recursive")
+    bad = []
+    for ln in lines:
+        flag, sha_path = ln[0], ln[1:].strip()
+        path = sha_path.split()[0] if sha_path else "?"
+        if flag == "+":
+            bad.append("- %s: checked out at a different SHA than pinned; "
+                       "fix: git submodule update --init --recursive" % path)
+        elif flag == "U":
+            bad.append("- %s: has merge conflicts; resolve them or run: "
+                       "git submodule update --init --recursive" % path)
+        elif flag == "-":
+            bad.append("- %s: not initialized; fix: git submodule update "
+                       "--init --recursive" % path)
+    if bad:
+        fail("submodules are not at their pinned state:\n" + "\n".join(bad))
+    log("    %d submodules OK (no +, - or U flags)" % len(lines))
+
+
 def main():
     global TOTAL
     init_console()
@@ -233,6 +341,10 @@ def main():
                     "via a cloudflared quick tunnel (RECIPE.md)")
     parser.add_argument("--no-tunnel", action="store_true",
                         help="skip the public cloudflared tunnel")
+    parser.add_argument("--reuse-running", action="store_true",
+                        help="adopt an already-running exam_* stack from "
+                             "another checkout as-is (RECIPE section 0A "
+                             "rule 3); no rebuild, no restart")
     args = parser.parse_args()
     TOTAL = 4 if args.no_tunnel else 5
 
@@ -241,8 +353,9 @@ def main():
     preflight()
     step1_submodules()
     step2_secrets()
-    step3_stack()
+    step3_stack(args)
     step4_smoke()
+    step6_submodules()
     if args.no_tunnel:
         log("")
         log("System is UP (local only). Teardown: "

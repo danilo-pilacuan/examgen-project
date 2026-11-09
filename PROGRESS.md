@@ -6,6 +6,31 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
+## 2026-11-09 (endurecimiento del RECIPE y de bring-up.py tras experimento con agente externo)
+
+* **Hecho:** Analisis de la transcripcion `aprendizajes_despliegue.md`
+  (agente externo en clon WSL no logro instalar y derivo a ~20 comandos
+  exploratorios). Causas corregidas en `RECIPE.md` (seccion 0A: 5 reglas
+  duras - sin exploracion, ejecutar donde Docker es nativo, deteccion de
+  stack en marcha, secretos jamas entre checkouts, exit 0 como unico
+  veredicto; troubleshooting nuevo: WSL vsock, puertos ocupados, stack
+  ajeno, submodulos desviados). En `scripts/bring-up.py`: deteccion de
+  contenedores exam_* por labels de compose
+  (`com.docker.compose.project.config_files`), aborto si pertenecen a otro
+  checkout salvo `--reuse-running` (adopta el stack ajeno sin tocarlo),
+  aviso si el stack es de este checkout, y paso 6 nuevo: verificacion de
+  los 6 submodulos en SHAs fijados (rechaza +, -, U con comando exacto de
+  arreglo). Validado en vivo: py_compile verde; ejecucion real contra el
+  stack de este checkout (deteccion "already running from this checkout",
+  smoke SPA 200 + /subjects 401, 6 submodulos OK); simulacion de checkout
+  ajeno (aborta exit 1 con mensaje accionable) y `--reuse-running`
+  (reutiliza). `.ops/operations/recipe-levantamiento.md` actualizado.
+* **Falta:** commit + push; verificacion del propietario de las nuevas
+  reglas 0A (el agente nunca se la asigna a si mismo).
+* **Decision:** la decision reutilizar-vs-reemplazar un stack de otro
+  checkout es siempre del usuario (la script solo aborta o adopta con
+  `--reuse-running`); el agente externo nunca decide por su cuenta.
+
 ## 2026-11-08 (recuperacion de entorno Docker: imagenes perdidas, stack reconstruido, flujo completo verificado)
 
 * **Hecho:** Las imagenes y contenedores del stack local se perdieron en el
