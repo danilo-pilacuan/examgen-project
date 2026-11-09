@@ -1,0 +1,282 @@
+{
+  "experiment": "E04_evaluator_temperature",
+  "total_runs": 18,
+  "arms": {
+    "arm_0": {
+      "model_profile": "glm-flash-default",
+      "model": "zai-org/GLM-5.3-Flash",
+      "overrides": {
+        "llm_temperature": 0.7,
+        "llm_temperature_evaluator": 0.0
+      },
+      "num_runs": 6,
+      "metrics": {
+        "approval_rate": {
+          "mean": 0.9375,
+          "std": 0.0955,
+          "n": 6
+        },
+        "quality_mean": {
+          "mean": 4.7056,
+          "std": 1.3126,
+          "n": 6
+        },
+        "quality_std": {
+          "mean": 4.0206,
+          "std": 0.3479,
+          "n": 6
+        },
+        "attempts_per_item": {
+          "mean": 0.0625,
+          "std": 0.0955,
+          "n": 6
+        },
+        "pairwise_sim_mean": {
+          "mean": 0.4921,
+          "std": 0.021,
+          "n": 6
+        },
+        "topic_coverage": {
+          "mean": 1.0,
+          "std": 0.0,
+          "n": 6
+        },
+        "bloom_coverage": {
+          "mean": 0.6667,
+          "std": 0.0,
+          "n": 6
+        },
+        "rag_faithfulness": {
+          "mean": 0.0252,
+          "std": 0.0356,
+          "n": 6
+        },
+        "rag_retrieval_score": {
+          "mean": 0.4888,
+          "std": 0.0,
+          "n": 6
+        },
+        "bloom_accuracy": {
+          "mean": 0.9375,
+          "std": 0.0955,
+          "n": 6
+        },
+        "difficulty_accuracy": {
+          "mean": 0.9375,
+          "std": 0.0955,
+          "n": 6
+        },
+        "calls_per_item": {
+          "mean": 2.1587,
+          "std": 0.25,
+          "n": 6
+        },
+        "tokens_per_item": {
+          "mean": 2248.6667,
+          "std": 198.8724,
+          "n": 6
+        },
+        "latency_mean_ms": {
+          "mean": 6777.1667,
+          "std": 2046.735,
+          "n": 6
+        }
+      },
+      "self_consistency": 1.0,
+      "robustness_cross_subject": {
+        "per_subject_mean": {
+          "adam": 5.2312,
+          "bella": 4.18
+        },
+        "between_subject_std": 0.5256
+      },
+      "status_counts": {
+        "completed": 6
+      }
+    },
+    "arm_1": {
+      "model_profile": "glm-flash-default",
+      "model": "zai-org/GLM-5.3-Flash",
+      "overrides": {
+        "llm_temperature": 0.7,
+        "llm_temperature_evaluator": 0.2
+      },
+      "num_runs": 6,
+      "metrics": {
+        "approval_rate": {
+          "mean": 0.9792,
+          "std": 0.0466,
+          "n": 6
+        },
+        "quality_mean": {
+          "mean": 4.3769,
+          "std": 1.0184,
+          "n": 6
+        },
+        "quality_std": {
+          "mean": 3.8051,
+          "std": 0.2112,
+          "n": 6
+        },
+        "attempts_per_item": {
+          "mean": 0.0208,
+          "std": 0.0466,
+          "n": 6
+        },
+        "pairwise_sim_mean": {
+          "mean": 0.5031,
+          "std": 0.0318,
+          "n": 6
+        },
+        "topic_coverage": {
+          "mean": 1.0,
+          "std": 0.0,
+          "n": 6
+        },
+        "bloom_coverage": {
+          "mean": 0.6667,
+          "std": 0.0,
+          "n": 6
+        },
+        "rag_faithfulness": {
+          "mean": 0.0208,
+          "std": 0.0466,
+          "n": 6
+        },
+        "rag_retrieval_score": {
+          "mean": 0.4897,
+          "std": 0.002,
+          "n": 6
+        },
+        "bloom_accuracy": {
+          "mean": 0.9792,
+          "std": 0.0466,
+          "n": 6
+        },
+        "difficulty_accuracy": {
+          "mean": 0.9792,
+          "std": 0.0466,
+          "n": 6
+        },
+        "calls_per_item": {
+          "mean": 2.0268,
+          "std": 0.1245,
+          "n": 6
+        },
+        "tokens_per_item": {
+          "mean": 2129.8333,
+          "std": 172.4678,
+          "n": 6
+        },
+        "latency_mean_ms": {
+          "mean": 6195.3333,
+          "std": 2115.7836,
+          "n": 6
+        }
+      },
+      "self_consistency": 1.0,
+      "robustness_cross_subject": {
+        "per_subject_mean": {
+          "adam": 5.0608,
+          "bella": 3.6929
+        },
+        "between_subject_std": 0.6839
+      },
+      "status_counts": {
+        "completed": 6
+      }
+    },
+    "arm_2": {
+      "model_profile": "glm-flash-default",
+      "model": "zai-org/GLM-5.3-Flash",
+      "overrides": {
+        "llm_temperature": 0.7,
+        "llm_temperature_evaluator": 0.6
+      },
+      "num_runs": 6,
+      "metrics": {
+        "approval_rate": {
+          "mean": 0.9375,
+          "std": 0.0955,
+          "n": 6
+        },
+        "quality_mean": {
+          "mean": 5.5519,
+          "std": 1.6343,
+          "n": 6
+        },
+        "quality_std": {
+          "mean": 3.1675,
+          "std": 0.2972,
+          "n": 6
+        },
+        "attempts_per_item": {
+          "mean": 0.0625,
+          "std": 0.0955,
+          "n": 6
+        },
+        "pairwise_sim_mean": {
+          "mean": 0.5202,
+          "std": 0.0288,
+          "n": 6
+        },
+        "topic_coverage": {
+          "mean": 0.9583,
+          "std": 0.0932,
+          "n": 6
+        },
+        "bloom_coverage": {
+          "mean": 0.6667,
+          "std": 0.0,
+          "n": 6
+        },
+        "rag_faithfulness": {
+          "mean": 0.0257,
+          "std": 0.0364,
+          "n": 6
+        },
+        "rag_retrieval_score": {
+          "mean": 0.4888,
+          "std": 0.0,
+          "n": 6
+        },
+        "bloom_accuracy": {
+          "mean": 0.9375,
+          "std": 0.0955,
+          "n": 6
+        },
+        "difficulty_accuracy": {
+          "mean": 0.9375,
+          "std": 0.0955,
+          "n": 6
+        },
+        "calls_per_item": {
+          "mean": 2.1587,
+          "std": 0.25,
+          "n": 6
+        },
+        "tokens_per_item": {
+          "mean": 2185.3333,
+          "std": 352.6087,
+          "n": 6
+        },
+        "latency_mean_ms": {
+          "mean": 5503,
+          "std": 1583.186,
+          "n": 6
+        }
+      },
+      "self_consistency": 1.0,
+      "robustness_cross_subject": {
+        "per_subject_mean": {
+          "adam": 5.9708,
+          "bella": 5.1329
+        },
+        "between_subject_std": 0.4189
+      },
+      "status_counts": {
+        "completed": 6
+      }
+    }
+  }
+}

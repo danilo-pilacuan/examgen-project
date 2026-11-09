@@ -131,6 +131,7 @@ composer.lock
 *.pfx
 secrets/
 credentials/
+*.qa-creds.txt
 
 # === Logs ===
 *.log

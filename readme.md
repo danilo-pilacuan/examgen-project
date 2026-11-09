@@ -35,12 +35,16 @@ MVP_v1/
 │
 ├── docs/                     # informe de avance y arquitectura objetivo (tesis)
 │
-└── implementaciones/         # planes de etapa y progreso
+└── .ops/                     # ciclo de vida OKF: plan, backlog, QA, handoff
 ```
 
 ## 🚀 Uso rápido (frontend propio)
 
 ```bash
+# 0. (Recomendado) Levantar todo desde cero con la script automatizada:
+#    python scripts\bring-up.py        (Windows)  /  python3 scripts/bring-up.py
+#    (submódulos + .env con secretos + build + verificación + túnel público; ver RECIPE.md)
+
 # 1. Levantar toda la infraestructura
 cd docker && docker compose up -d --build
 #    (el entrypoint de exam-app aplica las migraciones Alembic al arrancar)
@@ -59,6 +63,12 @@ cd docker && docker compose up -d --build
 ```
 
 > **Multi-profesor:** cada profesor ve solo sus materias y sesiones (JWT + `subjects.owner_id`). Las materias creadas antes de la auth quedan compartidas entre todos. Definir `AUTH_SECRET` en producción.
+
+## 🌐 Exponer al internet (demo / revisión externa)
+
+- Guía: [docs/exposicion-internet.md](docs/exposicion-internet.md) — cloudflared quick tunnel, sin credenciales.
+- Recipe desde clone fresco: [RECIPE.md](RECIPE.md) + una sola script multiplataforma: [scripts/bring-up.py](scripts/bring-up.py) (Python 3.7+, solo stdlib; si falta Python, el bootstrap portable está en el RECIPE).
+- Runbook: [.ops/operations/RUN-016-exposicion-publica-cloudflared.md](.ops/operations/RUN-016-exposicion-publica-cloudflared.md) y recipe de levantamiento: [.ops/operations/recipe-levantamiento.md](.ops/operations/recipe-levantamiento.md).
 
 ## 🧪 Pipeline batch (API tradicional)
 

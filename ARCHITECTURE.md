@@ -550,7 +550,7 @@ erDiagram
 
 ## 🚦 Estado del proyecto
 
-> **Etapas 0-8 completadas** (ver [implementaciones/](implementaciones/README.md) para el detalle por etapa). Release actual: **`Tag_V1.0.0`**.
+> **Etapas 0-8 completadas** (ver [.ops/](.ops/README.md) para el detalle por etapa). Release actual: **`Tag_V1.0.0`**.
 
 ### ✅ Implementado y validado
 

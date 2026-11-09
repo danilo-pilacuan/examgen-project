@@ -1,0 +1,81 @@
+name: validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Unit tests
+        run: node --experimental-strip-types --test tools/validate/test/scope.test.ts tools/validate/test/frontmatter-org.test.ts tools/validate/test/agentes.test.ts tools/validate/test/valid.test.ts tools/validate/test/invalid.test.ts tools/validate/test/fixtures.test.ts tools/validate/test/secretos.test.ts
+
+      - name: Validate repository (repo mode)
+        run: node --experimental-strip-types tools/validate/src/cli.ts --modo=repo
+
+      - name: Validate repository (propuesta mode)
+        run: node --experimental-strip-types tools/validate/src/cli.ts --modo=propuesta
+
+  mcp:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: digitalme
+          POSTGRES_PASSWORD: digitalme
+          POSTGRES_DB: digitalme
+        ports:
+          - 15432:5432
+        options: >-
+          --health-cmd "pg_isready -U digitalme -d digitalme"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Migrate schema and index fixtures
+        run: node --experimental-strip-types tools/index/src/cli.ts --migrate --indexar --fake --raiz=fixtures
+        env:
+          DATABASE_URL: postgresql://digitalme:digitalme@localhost:15432/digitalme
+
+      - name: MCP HTTP transport unit tests
+        run: node --experimental-strip-types --test mcp/test/http-transport.test.ts
+
+      - name: MCP server tests (RLS against real Postgres)
+        # --test-concurrency=1: all suites seed and clean the same tables
+        # with global deletes; parallel execution erases the other suite's
+        # seed (FK violations and empty searches under load).
+        run: node --experimental-strip-types --test --test-concurrency=1 mcp/test/mcp.test.ts mcp/test/agents.test.ts mcp/test/fase5.test.ts
+        env:
+          DATABASE_URL: postgresql://mcp_app:mcp_app@localhost:15432/digitalme
+          DATABASE_URL_ADMIN: postgresql://digitalme:digitalme@localhost:15432/digitalme
+
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

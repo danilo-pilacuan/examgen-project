@@ -1,12 +1,24 @@
 # 📊 Informe de Avance — Generador Conversacional con Agente IA para Exámenes
 
 > **Tesis:** USFQ — Cohorte 3 (2da corte) · **Proponente:** Felipe Grijalva · **Estudiante:** Danilo Pilacuán
-> **Fecha del informe:** 2026-09-17 · **Actualizado:** 2026-10-19 (etapas 0-9 del plan de implementación, release `Tag_V1.0.0` + etapa 9 de la 2.ª revisión)
+> **Fecha del informe:** 2026-09-17 · **Actualizado:** 2026-10-26 (RC2: framework de evaluación del agente, ramas `RC2/develop`)
 > **Fechas clave:** implementación completa en **noviembre** · defensa **14–21 de diciembre**
 
 Este informe resume **qué está implementado**, **qué falta** y **cómo funciona** el sistema (arquitectura + loop de agentes). Sirve como base para el seguimiento quincenal con el tutor y para el capítulo de implementación del escrito.
 
-> **Nota de actualización (2026-10-19, etapa 9 — 2.ª revisión):** se cerraron los ítems pendientes de la segunda revisión del proyecto: **auditoría cruda de LLM** (tabla `llm_responses` con prompt, raw answer y —opcional vía `LLM_CAPTURE_THINKING`— la cadena de pensamiento de cada llamada, chat y pipeline), **tool `delete_material_file`** (eliminar archivos del material desde el chat, con borrado de chunks y archivo físico), **descarga del JSON intermedio** (export del banco en JSON + JSON crudo blueprint+ítems adjunto junto al PDF del examen) y **regla LANGUAGE** en el prompt del sistema (el agente responde siempre en inglés). El endpoint de modelo en caliente quedó en backlog (el modelo ya es configurable por `.env` sin tocar código). Detalle en `implementaciones/09-raw-llm-audit-json-english.md`.
+- **Nota de actualización (2026-10-26, ronda QA 4 — etapa 16):** ronda de QA con navegador real
+  (Playwright) tras reporte del usuario: las listas que excedían el viewport no scrolleaban
+  (**BUG-17**, `overflow: hidden` en `.main-view` de `AppHeader.vue` → `overflow-y: auto`) y el
+  toggle de verificación del Bank respondía 404 vía nginx (**BUG-17b**, el rewrite del bloque
+  `/questions-api` eliminaba el prefijo en vez de conservarlo; una línea en `nginx.conf` +
+  rebuild del contenedor). Ambos corregidos y verificados en las 5 vistas + chat del agente.
+  Quedan en backlog ISS-17 (materia activa se pierde en hard reload) e ISS-18 (el conteo que da
+  el agente en el chat sale de su estado de sesión, no de la BD). Detalle en
+  `.ops/implementations/IMPL-019-qa-ronda4.md` y el backlog `.ops/project/backlog/`.
+
+> **Nota de actualización (2026-10-26, RC2 — framework de evaluación):** sobre las ramas `RC2/develop` (meta-repo + 6 submódulos) se construyó y ejecutó un **framework de evaluación y benchmarking del agente generador** (`test/evaluation/`): registro central multi-proveedor de modelos (`models.yaml`), 5 materias clonadas (mismo material, nombres distintos) como control experimental, 4 experimentos OFAT (temperatura del generador, top_k del RAG, robustez entre clones, temperatura del evaluador), 6 familias de métricas (calidad, diversidad, RAG, Bloom, coste, SOTA de agentes) y un **judge LLM de faithfulness**. **Campaña real ejecutada: 102 runs** con GLM-5.3-Flash vía gateway USFQ. **Las 5 hipótesis quedaron resueltas**: H1 capacidad (aprobación 0.90–0.96) ✅, H2 óptimo de temperatura del generador en 0.7 ✅, H3 diversidad << umbral anti-duplicados ✅, H4 top_k=3 óptimo (k=8 duplica coste sin ganar calidad) ✅, H5 robustez entre clones σ=0.665 < 1.0 ✅. La configuración de producción quedó **validada empíricamente** en sus 3 hiperparámetros. Este elemento de acción (#5 "investigar métricas de evaluación agente + RAG", descartado el 2026-10-18) **vuelve al alcance y está completo**. Detalle completo en `.ops/implementations/IMPL-018-framework-evaluacion.md` y `test/evaluation/README.md`.
+
+> **Nota de actualización (2026-10-19, etapa 9 — 2.ª revisión):** se cerraron los ítems pendientes de la segunda revisión del proyecto: **auditoría cruda de LLM** (tabla `llm_responses` con prompt, raw answer y —opcional vía `LLM_CAPTURE_THINKING`— la cadena de pensamiento de cada llamada, chat y pipeline), **tool `delete_material_file`** (eliminar archivos del material desde el chat, con borrado de chunks y archivo físico), **descarga del JSON intermedio** (export del banco en JSON + JSON crudo blueprint+ítems adjunto junto al PDF del examen) y **regla LANGUAGE** en el prompt del sistema (el agente responde siempre en inglés). El endpoint de modelo en caliente quedó en backlog (el modelo ya es configurable por `.env` sin tocar código). Detalle en `.ops/implementations/IMPL-012-auditoria-llm.md`.
 
 > **Nota de actualización (2026-10-19, `Tag_V1.0.0`):** además de lo anterior (frontend propio, monorepo, SSE/WS, i18n), el sistema incorpora **autenticación multi-profesor** (JWT con scoping por profesor: cada docente ve solo sus materias y sesiones; las materias previas quedan compartidas), una **nueva UX con navbar superior** y selector de materia **reactivo bidireccional** (elegir materia en el chat actualiza el selector y viceversa), y el **CRUD completo del banco de preguntas desde el chat** (crear, listar, actualizar y eliminar, con el guardrail de inmutabilidad de preguntas verificadas por humano). Las secciones siguientes reflejan el estado actual.
 
@@ -24,7 +36,7 @@ Este informe resume **qué está implementado**, **qué falta** y **cómo funcio
 | 2 | Evolucionar el MVP a interfaz conversacional (chat, sin frontend tradicional) | ✅ **Completo** | **Frontend propio (Vue 3)** con chat embebido (SSE + WS + widgets) en `projects/frontend/`; OpenWebUI queda como legado opcional (`/v1/chat/completions`) |
 | 3 | Campos de verificación humana y verificación por IA en la BD | ✅ **Completo** | `verified_by_human`, `verified_by_ai`, `ai_review_notes`, `ai_review_priority` en `generated_questions` (migración `c3d4e5f6a7b8`) |
 | 4 | Restricciones de seguridad del agente sobre la BD | ✅ **Completo** | Service layer (`projects/core/src/core/domain/bank/service.py`): preguntas verificadas por humano **inmutables** (`SecurityError` en update/delete) |
-| 5 | Investigar métricas de evaluación (agente + RAG) | ⛔ **Fuera de alcance actual** | Descartado por decisión del proyecto (2026-10-18): el análisis de métricas no se desarrolla por ahora |
+| 5 | Investigar métricas de evaluación (agente + RAG) | ✅ **Completo (RC2, 2026-10-26)** | **Re-integrado al alcance y ejecutado**: framework en `test/evaluation/` + 102 runs reales + hipótesis H1-H5 resueltas; ver `.ops/implementations/IMPL-018-framework-evaluacion.md` |
 | 6 | Analizar costos comparativos local vs. nube | ⛔ **Fuera de alcance actual** | Descartado por decisión del proyecto (2026-10-18): el despliegue es local (GPU interna) y el análisis de costos no se desarrolla por ahora |
 | 7 | Compartir repositorio (privado) con Felipe | ✅ Hecho | Fuera del código |
 | 8 | Seguimiento con Felipe cada 2 semanas | ✅ En curso | Este informe es parte del seguimiento |
@@ -71,16 +83,18 @@ Este informe resume **qué está implementado**, **qué falta** y **cómo funcio
 
 | Prioridad | Pendiente | Detalle | Cuándo |
 |---|---|---|---|
-| 🔴 Alta | **Publicar los 7 repos en GitHub** | Remotos + `.gitmodules` definitivo + CI por repo + pipeline de integración del meta-repo (etapa 1 del plan) | Inmediato |
-| 🟡 Media | **Escrito de la tesis** | Capítulos de implementación + experimentación (usar `ARCHITECTURE.md` y este informe como base) | Noviembre |
-| 🟡 Media | **Asignar `owner_id` a materias legacy** | Las materias creadas antes de la auth quedan compartidas; asignación retroactiva con `UPDATE subjects SET owner_id=...` si se quiere privacidad | Opcional |
+| 🔴 Alta | **Escrito de la tesis** | Capítulos de implementación + experimentación. Base lista: `ARCHITECTURE.md`, este informe, `.ops/implementations/IMPL-017-informe-rc1.md` (RC1) y `.ops/implementations/IMPL-018-framework-evaluacion.md` (RC2 con resultados de evaluación: 4 FINDINGS.md con tablas/plots, hipótesis H1-H5 resueltas, metodología OFAT) | Noviembre |
+| 🟡 Media | **Comparativa cross-provider (opcional)** | Añadir un proveedor nuevo en `models.yaml` + brazo con `model_profile` distinto y re-ejecutar E01-E04; el framework ya lo soporta sin tocar código. Requiere acceso a otro modelo en el gateway | Si hay acceso |
+| 🟢 Baja | **Asignar `owner_id` a materias legacy** | Las materias creadas antes de la auth quedan compartidas; asignación retroactiva con `UPDATE subjects SET owner_id=...` si se quiere privacidad | Opcional |
 | 🟢 Baja | **Endpoint de modelo en caliente** | El modelo ya es configurable por `.env`/compose (`LLM_MODEL` + `LLM_BASE_URL`, sin tocar código); el cambio sin reiniciar quedó en backlog (decisión con Felipe, 2026-10-19) | Backlog |
 | 🟢 Baja | **Deduplicación con embeddings reales** | Hoy usa solapamiento de tokens (placeholder); migrar a similitud coseno con pgvector | Backlog |
-| 🟢 Baja | Tests automatizados (`tests/` está vacío) | Al menos tests de schemas, service layer (seguridad) y render LaTeX | Noviembre |
+| 🟢 Baja | Tests automatizados (`tests/` está vacío) | Al menos tests de schemas, service layer (seguridad) y render LaTeX; el framework de evaluación podría añadir tests unitarios de métricas | Noviembre |
 | 🟢 Baja | Trazabilidad/monitoreo en producción | **Descartado por alcance** (decisión con Felipe) | — |
-| — | Análisis de métricas y costos | **Descartado por alcance** (decisión del proyecto, 2026-10-18) | — |
+| — | Análisis de costos local vs nube | **Descartado por alcance** (decisión del proyecto, 2026-10-18); el framework ya mide coste relativo (tokens/llamadas por ítem) | — |
 
 > **Ítems de la 2.ª revisión cerrados (etapa 9, 2026-10-19):** raw answer/thinking en BD (`llm_responses`), tool eliminar archivos (`delete_material_file`), descarga del JSON intermedio (banco + examen), inglés forzado en el prompt, aleatorización/versiones (ya existía), eliminar preguntas por ID (ya existía), visibilidad de tools (ya existía), dashboard (cubierto por las pantallas Materias/Banco).
+
+> **Estado de repos (2026-10-26):** los 7 repos están publicados en GitHub (meta-repo `examgen-project` + submódulos `examgen-*`) y todas las ramas activas en `RC2/develop` con upstream tracking. La publicación pendiente de la tabla §1.3 quedó resuelta (la CI por repo sigue en backlog).
 
 > **Riesgo de calendario:** la defensa es 14–21 de diciembre; todo el desarrollo debe cerrarse en noviembre para dejar noviembre–diciembre al escrito.
 

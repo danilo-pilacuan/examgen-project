@@ -1,0 +1,6 @@
+# Experiment outputs: raw runs are reproducible but heavy; keep aggregated
+# artifacts (aggregate.json, report.md, plots) versioned for the thesis.
+experiments/**/runs.jsonl
+experiments/**/runs_judged.jsonl
+experiments/**/_console*.log
+experiments/**/_judge.log

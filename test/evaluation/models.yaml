@@ -1,0 +1,53 @@
+# Central model registry — every LLM profile usable by the evaluation suite.
+#
+# Fields:
+#   provider:    free label (usfq-gateway, openai, deepseek, ollama, local-stub...)
+#   base_url:    OpenAI-compatible endpoint. Empty for stub mode.
+#   api_key_env: environment variable that holds the API key (optional).
+#   model:       model id sent to the API (e.g. "zai-org/GLM-5.3-Flash").
+#   mode:        "real" (calls the endpoint) or "stub" (deterministic offline).
+#   notes:       human-readable description (optional).
+#
+# To add a new provider/model: append an entry here. No code changes needed.
+models:
+  # --- Real: USFQ LLM gateway (current production LLM) ---
+  glm-flash-default:
+    provider: usfq-gateway
+    base_url: https://ai.usfq.edu.ec/api/agents/llm/main/v1
+    api_key_env: OPENAI_API_KEY
+    model: zai-org/GLM-5.3-Flash
+    mode: real
+    notes: Production model served by USFQ vLLM gateway (1M context).
+
+  # --- Real: same gateway, other reasoning/chat configs can be added ---
+  glm-flash-chat-low:
+    provider: usfq-gateway
+    base_url: https://ai.usfq.edu.ec/api/agents/llm/main/v1
+    api_key_env: OPENAI_API_KEY
+    model: zai-org/GLM-5.3-Flash
+    mode: real
+    notes: Same model, reserved for chat-layer experiments (reasoning low).
+
+  # --- Stubs (offline, deterministic, zero cost) ---
+  glm-stub-fast:
+    provider: local-stub
+    base_url: ""
+    model: stub-glm-flash
+    mode: stub
+    notes: Deterministic stub mirroring GLM-5.3-Flash behavior for dry-runs.
+
+  glm-stub-conservative:
+    provider: local-stub
+    base_url: ""
+    model: stub-glm-conservative
+    mode: stub
+    notes: Deterministic stub with lower default temperature for dry-runs.
+
+  # --- Example: how to add another OpenAI-compatible provider later ---
+  # openai-gpt4o:
+  #   provider: openai
+  #   base_url: https://api.openai.com/v1
+  #   api_key_env: OPENAI_API_KEY
+  #   model: gpt-4o
+  #   mode: real
+  #   notes: Reference commercial baseline.

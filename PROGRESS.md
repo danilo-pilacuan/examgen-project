@@ -1,0 +1,604 @@
+# PROGRESS.md — Exam Generator
+
+> Bitacora raiz de progreso (politica permanente de estado del repo, seccion 0 de
+> `.github/copilot-instructions.md`). Reemplaza a `implementaciones/HANDOFF.md`
+> como log raiz; el detalle por etapa vive en `.ops/implementations/IMPL-*.md`.
+> Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
+> si en el futuro se aprueba el modelo OKF de bitacora.
+
+## 2026-11-08 (recuperacion de entorno Docker: imagenes perdidas, stack reconstruido, flujo completo verificado)
+
+* **Hecho:** Las imagenes y contenedores del stack local se perdieron en el
+  host. Reconstruccion completa con `docker compose -f docker/
+  docker-compose.yml up -d --build` (exam-app, exam_frontend, exam_postgres_db
+  con pgvector, exam_latex_compiler, exam_embedding_service) + open-webui con
+  perfil legacy. El volumen `docker_postgres_data` sobrevivio a la perdida de
+  imagenes: la BD conservo sus 13 tablas, 8 materias, 318 material_chunks,
+  647 generated_questions, 5 examenes, el usuario qa-r11@usfq.test y el
+  alembic head c9d0e1f2a3b4, por lo que NO fue necesario volver a ejecutar
+  seeds ni re-indexar material (data/inputs y data/agent_outputs intactos,
+  894 archivos). Verificacion: health de los 6 contenedores, login
+  qa-r11 200, GET /subjects 200 (8), POST /v1/embeddings 200, proxy nginx
+  /subjects /exams /output 200. Flujo completo de creacion via API real:
+  POST /exams/generate sobre "Economia Aplicada - QA11" (blueprint 2
+  preguntas, bloom remember/understand 0.5/0.5, dificultad easy/medium
+  0.5/0.5, topic Estudio de Mercado 1.0) -> 200 en ~3 min: 2 items
+  multiple_choice aprobados, 0 rechazos, 4 llamadas LLM, persist
+  saved=2, compilacion en intento 1, artefactos Rebuild_Check_1.zip +
+  Rebuild_Check_1_A.pdf + Rebuild_Check_1_A_respondido.pdf creados en
+  data/agent_outputs y servidos por el frontend (/output 200). Cambio de
+  codigo: un servidor de dev ajeno (React Native, C:\dev\trigger-hub) ocupa
+  permanentemente el puerto host 8081 -> el embedding-service se remapeo a
+  18081:8081 en docker/docker-compose.yml (el lado contenedor sigue en
+  8081; la red interna usa http://embedding-service:8081 sin cambios; los
+  scripts en host deben exportar EMBEDDING_URL=http://localhost:18081/
+  v1/embeddings).
+* **Falta:** commit + push del meta-repo (docker-compose.yml + .ops);
+  verificado del propietario de los pendientes previos (QT-011..QT-015,
+  IMPL-028..031, BUG-026..031).
+* **Decision:** mantener los seeds intactos: la persistencia por volumen
+  demostro que no hace falta re-seed tras perder imagenes; el remapeo de
+  puerto host (18081) se elige sobre mover el dev server ajeno porque el
+  conflicto es del host y EMBEDDING_URL es configuracion pydantic-settings.
+
+## 2026-11-06 (ronda 15 - rediseno Exams: Bloom/dificultad checkboxes y blueprint por tema)
+
+* **Hecho:** BL-024/IMPL-031/QT-015/BUG-030. Feedback ronda 2 de la tercera
+  revision de Felipe: los selects de presets eran confusos y el panel avanzado
+  no era intuitivo. ExamsView.vue frontend-only: checkbox groups de Bloom
+  (6 niveles reales) y dificultad (3) con distribucion uniforme de lo marcado
+  (levelsToDist, resto a la primera clave), selectores numericos por tema real
+  del banco (0-50) convertidos a topics_weight (applyTopicCounts), guards en
+  generate() (0 tipos, suma > total), removidos presets y grids de peso custom;
+  i18n EN/ES (7 claves nuevas, 3 removidas). Contrato backend sin cambios.
+  BUG-030: interpolacion i18n sin {sum,total} -> hint "(of )"; corregido en
+  template + generate(), rebuild, hint "(of 10)" verificado. QA Playwright:
+  rechazo suma 60 > total 10 con 0 llamadas API; E2E real POST 200 (2
+  preguntas, ZIP). vue-tsc + build verdes; imagen Docker reconstruida.
+  BUG-031 (reporte del propietario): la fecha verified_at no se reflejaba
+  al verificar en Bank sin recargar la tabla; setHumanVerification en
+  stores/bank.ts descartaba la respuesta del PUT y parcheaba solo
+  verified_by_human - fix adopta el QuestionOut completo por indice. QA
+  Playwright en ambos sentidos sin recarga (Verify muestra la fecha al
+  instante, Remove la limpia). Docs .ops: BL-024, IMPL-031, QT-015,
+  BUG-030, BUG-031 + indexes/traceability.
+* **Falta:** commit + push del submodulo frontend (rediseno + fix BUG-031);
+  verificado del propietario (QT-015/BUG-030/BUG-031 y pendientes previos).
+* **Decision:** rediseno frontend-only; el backend recibe el mismo contrato
+  (distribuciones uniformes y topics_weight derivado de conteos), sin cambios
+  de schema ni planner.
+
+## 2026-11-05 (tercera revision Felipe: A1 fechas de verificacion + A2 extendido tipos de pregunta)
+
+* **Hecho:** BL-023/IMPL-030/QT-014. Analisis de la revision en
+  `Requisitos/tercera_revision_items.md`; el propietario aprobo A1 y A2
+  (extendido). A1: columna `verified_at` (migracion `c9d0e1f2a3b4`), sellado en
+  `bank/service.py` (creacion con IA, verificacion humana, NULL al quitar),
+  DTOs exam-app y 2 columnas de fecha en BankView. A2 extendido:
+  `allowed_question_types` en ExamBlueprint (default 6 tipos, lista vacia
+  rechazada), planner con filtro por Bloom + fallback, checkboxes + panel
+  avanzado (distribucion custom Bloom/dificultad, retrieval) en ExamsView,
+  i18n EN/ES. Validacion estatica verde: tsc, vue-tsc (fix 2x TS1345), vite
+  build, py_compile, AST checks, caso de rechazo, head unico de Alembic.
+* **Falta:** verificacion en navegador (rebuild Docker + `alembic upgrade
+  head`) y suite e2e, pendientes del propietario.
+* **Decision:** A2 implementado en version extendida (distribucion custom +
+  retrieval) a pedido del propietario; A3/A4/B1/B2/C1-C5 pospuestos.
+* **Medicion:** DEFAULT_OK (6 tipos), REJECT_OK (ValidationError), DEDUP_OK,
+  FALLBACK_OK/OK2, PY_COMPILE_OK, HEADS ['c9d0e1f2a3b4'], vue-tsc exit 0,
+  build 4.74 s. Commits publicados: core e4f8ea5 + 5c53ca0, exam-app c38f871,
+  agents-backend 57209b1, frontend fd6595a + ffaaada, meta e968a41.
+
+## 2026-10-28 (ronda QA 13 - extension ronda 12: descarga del banco con auditoria prompt/thinking)
+
+* **Hecho:** BL-022/QT-013. (1) exam-app 40e6750: GET
+  /subjects/{id}/questions/export; correlacion de llm_responses
+  (pipeline:generator) por statement exacto con newest-first-wins (la clave
+  con que el pipeline persiste question_text); thinking null +
+  thinking_capture_enabled:false cuando LLM_CAPTURE_THINKING deshabilitado.
+  (2) frontend f19813f: boton Download bank (question_bank_<subject>_<date>.json),
+  alerta con conteo + nota de thinking, bloques colapsables Prompt/Thinking
+  en el detalle de fila con fallback noPrompt; i18n EN/ES. (3) Verificado en
+  vivo: API 218/218 prompts (Adam) y 6/6 (QA11); navegador real con descarga
+  y alerta "Bank downloaded: 218 questions (JSON)". (4) e2e 18/18 PASS
+  (16 previos + F7/F7b en download.spec.ts). Submodulos publicados en
+  RC3/develop.
+* **Falta:** verificacion final del propietario; thinking solo se capturara
+  en generaciones futuras si LLM_CAPTURE_THINKING=true (decision pendiente).
+* **Decision:** correlacion por statement exacto (misma clave de persistencia
+  del pipeline) en lugar de anadir columnas a generated_questions.
+* **Medicion:** Q_WITH_PROMPT=218/218 y 6/6; THINKING_FLAG=False;
+  suite 18/18 en 21.4 s.
+
+## 2026-11-04 (graficos de infraestructura y harnessing)
+
+* **Hecho:** se creo `docs/graphs.md` con niveles C4-like de contexto,
+  contenedores, componentes, flujos runtime y una vista detallada del harness
+  del agente. El diagrama principal conecta `experiments.yaml`, perfiles,
+  patches, stubs/real adapters, LangGraph, telemetria, metricas, juez y
+  `runs.jsonl`; tambien se agrego su puntero en `.ops/architecture/graphs.md`.
+* **Falta:** revision del propietario sobre los limites de confianza y la
+  exactitud de los puertos/documentacion de despliegue.
+* **Decision:** Mermaid sobre Structurizr porque ya es el formato usado en la
+  documentacion y permite revisar el source junto al codigo del harness.
+
+## 2026-11-04 (modelo especializado de harness y tools)
+
+* **Hecho:** se amplio `docs/graphs.md` con un Agent Harness Reference Model:
+  runtime loop, proveedores de contexto/estado, politica y seguridad,
+  observabilidad/evaluacion, catalogo visual de las 15 tools, ciclo completo de
+  invocacion y checkpoints del harness. Se documentaron categorias read,
+  generate, write, material, subject y artifact.
+* **Falta:** revision del propietario sobre el modelo conceptual y sus limites
+  frente a la implementacion actual de confirmacion por prompt.
+* **Decision:** usar el modelo de harness como estructura principal de las
+  vistas de agente, manteniendo C4 solo para contexto y despliegue. Referencia
+  conceptual: Microsoft Agent Harness.
+
+## 2026-11-04 (componentes por layer del harness)
+
+* **Hecho:** cada layer del harness tiene una grafica propia en
+  `docs/graphs.md`: runtime, contexto/estado, tools, policy/safety,
+  observabilidad/evaluacion y UX/transporte. Tools se descompone en 15
+  capacidades reales, servicios, stores y outputs; tambien se agrego su flujo
+  de guardrails y resultados.
+* **Falta:** revision del propietario sobre el nivel de detalle final y la
+  correspondencia entre tool y evidencia de QA.
+* **Decision:** mantener una vista general de planos y vistas especializadas
+  por layer para evitar que los componentes queden ocultos en un solo grafo.
+
+## 2026-11-04 (sublayers funcionales)
+
+* **Hecho:** se agrego a `docs/graphs.md` un mapa de sublayers para runtime,
+  contexto, tools, policy, observabilidad y evaluacion. Tools se descompone en
+  contrato, seleccion, ejecucion, efectos y feedback, con rutas separadas para
+  lectura, generacion, escritura, corpus y artefactos. Se agrego una matriz de
+  evidencia por layer/sublayer.
+* **Falta:** revision del propietario sobre el nivel de granularidad y los
+  limites entre sublayers de runtime y transporte.
+* **Decision:** documentar sublayers como secuencias operativas, no como
+  jerarquia C4 estricta.
+
+## 2026-10-28 (ronda QA 12 - recertificacion, credenciales en archivo, BUG-026 y BUG-027 corregidos)
+
+* **Hecho:** cierre de la ronda 12. (1) Credenciales QA entregadas en
+  qa-r11-credentials.qa-creds.txt (git-ignored). (2) Suite e2e completa
+  16/16 PASS dos veces (tras fix BUG-026 y tras rebuild BUG-027; 15
+  versionadas + nueva bug026.spec.cjs; L2 estricto verde). (3) BUG-026 ->
+  corregido (frontend c327682, meta 299b118): AppHeader centraliza la
+  carga de estadisticas en un watcher de activeSubjectId (patron ExamsView,
+  immediate: true); 3/3 caminos verificados en vivo (login, Activate,
+  combobox) con conteos contra BD real (6q/28c y 6q/85c). (4) BUG-027 ->
+  corregido (exam-app 2474b2c + agents-backend e5cee07, meta 6ca1c13):
+  repros en vivo confirmaron ambos claims (examenes genericos publicados
+  con 0 chunks/0 preguntas; indexed_chunks_count siempre 0 en el camino
+  API); fix fail-fast en POST /exams/generate (404 materia inexistente,
+  422 accionable si 0 chunks Y 0 preguntas, alineado con C6/BUG-004 y E5)
+  + ingestor_node devuelve el COUNT real de material_chunks; verificacion
+  V1-V4 en vivo tras rebuild: 422 accionable en materia vacia; 200 con
+  indexed_chunks_count: 28 y item RAG-grounded en Database Systems; 404
+  en materia inexistente; C6 sin persistencia en materia vacia. (5)
+  BUG-021 re-confirmado en vivo 2 veces durante los repros (persist:false
+  persistio examen/PDFs/ZIP; DEC-003 sigue pendiente del propietario);
+  artefactos de repro purgados (materia de repro, filas de examen,
+  JSON/PDF/ZIP), materias de control y examenes qa11 intactos.
+* **Falta:** verificado del propietario (QT-011/QT-012, IMPL-028/IMPL-029,
+  BUG-026/027/028/029 y J1); BUG-024/025 abiertos (P2); BUG-019/020/021
+  con DEC-001/002/003 pendientes; extension opcional E03 >=4 repeticiones;
+  validar juez in-run corregido en la proxima campana (num_judged > 0).
+* **Decision:** BUG-026 y BUG-027 se fixearon en ronda 12 al no dañar la
+  certificacion (no alteran alcance de tesis ni resultados de campana ya
+  publicados); BUG-021 se deja abierto porque su fix requiere decision de
+  semantica de persist (DEC-003 del propietario).
+
+
+## 2026-10-28 (ronda QA 11 - cierre: campana 82/82, BUG-029 corregido, juez J1 e ingles HITL)
+
+* **Hecho:** cierre de la ronda 11. (1) Campana REAL completada 82/82
+  (E04 18, E03 10, E01 27, E02 27; 0 fallidos, exit 0; el runner crash-proof
+  resumo el crash previo como SKIP sin doble costo). (2) BUG-029 corregido
+  y verificado en vivo: deps declaradas (core f0fc306, exam-app 2fd4491),
+  imagen reconstruida, indexacion docx/pptx 200/200/200 (4 + 40 chunks;
+  reindex completo 85 = 41 PDF + 4 docx + 40 pptx) con
+  scripts/qa_r11_docx_index.py; commits meta ae940e2/d89ec30/41d368c/dc698ca
+  publicados. (3) Hallazgo J1 (defecto real del framework): el juez LLM
+  in-run registro num_judged=0 en 82/82 porque harness pasaba al juez los
+  registros de retrieval SIN correlacionar (statement vacio) y el juez
+  descarta en silencio; correlacion corregida en harness.py y windowing de
+  judge_experiment.py reforzado (commit 3827e4d). El juez post-hoc se
+  aborto deliberadamente: las ventanas de auditoria por timestamp derivan
+  +-1 fila (E04 79 llamadas vs 80 filas; E01 213 vs 214) y desalinearian
+  pares statement<->chunks; rag_faithfulness lexica si cubre 82/82.
+  (4) Agregados + reportes + FINDINGS regenerados con numeros r11 (commit
+  9e6bd6c): E01 T=0.3 domina eficiencia/alineacion (aprobacion 1.000,
+  Bloom 1.000) y T=0.7 conserva la mejor robustez entre clones; E02 k=8
+  dominado (aprobacion 0.875, 3x tokens), k=1 y k=3 empatan alineacion
+  0.986; E03 sigma entre clones 1.311 con solo 2 repeticiones (H5 no
+  concluyente; extension a >=4 recomendada); E04 aprobacion insensible a la
+  temperatura del evaluador (0.938-0.979) y T=0.2 la mas eficiente.
+  (5) Ingles de la campana verificado como HITL: escaneo determinista de
+  621 items entregados (scripts/qa_r11_english_check.py): 0 cuerpos en
+  espanol; 13/621 con nombres propios o glosas del material (Maria, Cafe
+  Aroma, "(Estudio de Mercado)"); 3/621 con subtopic que repite el temario
+  en espanol (metadato); el evaluador rechazo 5 items
+  language_not_english durante la campana (defensa activa).
+* **Falta:** verificado del propietario (QT-011/IMPL-028/BUG-028/BUG-029 y
+  J1); extension opcional de E03 a >=4 repeticiones por clon si la tesis
+  defiende H5; validar el juez corregido en la proxima campana
+  (num_judged > 0); BUG-026/027/024/025 siguen abiertos.
+* **Decision:** no correr el juez post-hoc sobre la campana r11: la
+  incertidumbre de +-1 fila en la ventana de auditoria corromperia en
+  silencio el apareamiento statement<->chunks; se prefiere documentar la
+  brecha y corregir la correlacion para corridas futuras.
+
+
+## 2026-10-28 (ronda QA 11 - recertificacion, BD desde cero, ingles e2e y set de metricas)
+
+* **Hecho:** ronda 11 ejecutada a pedido del propietario (IMPL-028 / QT-011):
+  recertificar lo primordial con el agente como verificador humano (derecho
+  HITL otorgado), regenerar el framework de pruebas, asegurar ingles en TODO
+  el sistema (preguntas y respuestas incluidas), regenerar el set completo de
+  metricas y reconstruir la BD desde cero. (1) BD reconstruida desde cero
+  (drop + alembic head b8c9d0e1f2a3, 13 tablas) y material re-indexado
+  (28 + 51 chunks). (2) 12 preguntas nuevas 100% en ingles via pipeline real
+  (6 por materia: Database Systems; Economia Aplicada - QA11); revision
+  humana HITL 12/12 APROBADAS (exactitud, distractores, dificultad,
+  redaccion); 2 sospechas de mojibake descartadas como falso positivo
+  (beta U+03B2 / por U+00D7 son simbolos matematicos UTF-8 reales; artefacto
+  de consola cp1252 de PowerShell 5.1; verificado con cliente Python y
+  regex en BD); verified_by_human=true en 12/12 via
+  PUT /questions/{id}/verification. (3) Suite Playwright 15/15 PASS (10.8 s)
+  con credenciales qa-r11 y L2 endurecido a asercion estricta (0 espanol en
+  el banco). (4) 2 examenes de control en ingles compilan (qa11_control_db,
+  qa11_control_econ) con PDFs con/sin respuestas + ZIP. (5) Set de metricas
+  regenerado: subjects.yaml (5 clones en ingles adam..esteban),
+  experiments.yaml (topics en ingles; 82 runs: E01=27, E02=27, E03=10,
+  E04=18), raws de ronda 10 archivadas, smoke dry-run OK con purga de su
+  polucion, campana REAL lanzada en background (E04->E03->E01->E02,
+  scripts/run_eval_campaign_r11.ps1). (6) BUG-028 -> corregido (opcion (c)
+  del propietario: purga + regeneracion; 0 preguntas en espanol en BD).
+  BUG-029 nuevo (medio): indexacion docx/pptx falla en contenedor
+  ("No module named 'docx'"; python-docx/python-pptx no declarados en los
+  manifests); con clear=true los chunks existentes se conservan (51/51 tras
+  el 400: la validacion va antes del borrado). .ops: test-plan Ronda 11,
+  QT-011, IMPL-028, traceability, READMEs, BUG-028/BUG-029.
+* **Falta:** agregados + informes por experimento al terminar la campana
+  (analysis.aggregate + reporting.report; judge E03 opcional) en un commit
+  de seguimiento; verificado del propietario (QT-011/IMPL-028/BUG-028/BUG-029);
+  fix BUG-029 (deps + rebuild, P2); BUG-026/027/024/025 siguen abiertos.
+* **Decision:** BUG-028 resuelto con la opcion (c) confirmada por el
+  propietario en el mandato de la ronda 11.
+
+
+* **Hecho:** ronda 10 ejecutada a pedido del propietario: recertificar lo
+  esencial, crear el framework de pruebas versionado y verificar que TODO el
+  sistema este en ingles (UI, preguntas y respuestas). (1) Suite Playwright
+  versionada BL-010 creada en `projects/frontend/e2e`
+  (playwright.config.ts + helpers.ts con login UI/fixture authedPage +
+  3 specs: functional F1-F12, integration I1/I5/I8/I-bonus, language
+  L1/L1b/L2 informativo = 15 tests) con deps (@playwright/test 1.64.1 +
+  chromium) y .env.example; resultado 15/15 PASS contra el stack Docker
+  en 3 corridas (la ultima tras el rebuild del backend). Cuenta de control
+  qa-r10@usfq.test creada en BD con el hash pbkdf2 del backend. (2)
+  Contrato de idioma enforceado en codigo: prompts de generator_node y
+  evaluator_node (rechazo language_not_english), generate_question del
+  chat y verifier.py exigen escribir pregunta/opciones/respuesta/explicacion
+  en ENGLISH independientemente del idioma del material o la materia;
+  exam-app reconstruido (docker compose build) y verificado dentro del
+  contenedor (grep 'in ENGLISH': 1/2/1). (3) E1-EN PASS: POST
+  /exams/generate sobre Eva (material RAG en espanol) -> examen
+  QA_R10_English_Gen con 3 items 100% en ingles (verificado en BD),
+  0 rechazos, PDFs + ZIP + JSON en /app/output: el enforce funciona con
+  contexto cross-language. (4) L2 informativo: banco heredado 197/200 en
+  espanol; censo completo 933/1239 -> BUG-028 nuevo (dato, no codigo;
+  decision del propietario: regenerar/marcar/purgar). .ops: test-plan
+  Ronda 10, QT-010, IMPL-027, traceability, BL-010 -> ejecutado, README qa,
+  BUG-028, handoff. Commits publicados en origin: meta-repo 0435f6c,
+  agents-backend ea24a81, frontend 40ebdba (rama RC3/develop).
+* **Falta:** verificado del propietario (QT-010/IMPL-027/BL-010/BUG-028);
+  decision sobre el banco heredado en espanol (BUG-028); fix de BUG-027 y
+  BUG-026 (requieren codigo + rebuild).
+* **Decision:** ninguna nueva (BUG-028 abierto para el propietario).
+
+## 2026-10-27 (ronda QA 9 - recertificacion + certificacion de examenes)
+
+* **Hecho:** recertificacion QA ronda 9 ejecutada a pedido del propietario
+  (IMPL-026 / QT-009), agente como verificador humano en Playwright contra
+  el navegador real, sin unitarias. Funcionales F1-F13 PASS (login,
+  bancos 200 preguntas + filtros, detalle inline C54, toggle verificacion,
+  descargas ZIP/PDF, material 41 chunks, crear materia, chat con contexto
+  de materia, sidebar server-side, reload duro, logout/login, guardia de
+  ruta); F9 PASS con BUG-026 nuevo (chips de cabecera 0/0 hasta
+  re-seleccionar el asunto tras login/Activate); F14 registra BUG-025
+  vivo. Integracion I1-I9 PASS (401 sin token, ownership 403 de B sobre
+  hilo de A, guardrail DELETE verificada 403, auth 422/422/401/200,
+  aislamiento entre usuarios con legacy legible, HEAD /output, CRUD de
+  hilos 200/204); I4 FAIL conocido (BUG-024 sin fix planificado).
+  Certificacion de examenes E1-E4 PASS con nota (QA_R9_Cert sobre Eva:
+  8 llamadas LLM, 1 rechazo difficulty_mismatch, 3/4 items publicados,
+  ZIP 175KB A/B + respondido, PDFs GET/HEAD 200 con Content-Disposition,
+  visibilidad por propietario; anomalia `indexed_chunks_count: 0` pese a
+  41 chunks). E5 FAIL -> BUG-027 nuevo (alto): materia con 0 chunks y 0
+  preguntas publica un examen con 2 preguntas genericas fuera de tema
+  ("Sahara Desert"), persiste el examen (BD + ZIP + 2 PDFs) y burla la
+  salvaguarda C6/BUG-004. Limpieza: purgada la materia QA R9 Recert, el
+  examen QA_R9_Empty (BD + 4 archivos en /app/output) y sus 2 preguntas;
+  conservados QA_R9_Cert (evidencia) y el hilo de control 57a386a2. .ops:
+  test-plan Ronda 9, QT-009 -> ejecutado, IMPL-026 -> ejecutado,
+  traceability, README de qa, BUG-026 y BUG-027 nuevos, handoff.
+* **Falta:** verificado del propietario (QT-009, BUG-026, BUG-027);
+  fix de BUG-027 (fail-fast sin material/banco + indexed_chunks_count) y
+  BUG-026 (watcher de activeSubjectId) - ambos requieren codigo + rebuild;
+  commit + push de docs.
+* **Decision:** ninguna nueva (BUG-026/027 abiertos para el propietario;
+  BUG-024 sigue sin fix planificado).
+* **Medicion:** 22 checks PASS / 2 FAIL (24 checks: F1-F14, I1-I9,
+  E1-E5); 2 bugs nuevos (BUG-026 menor, BUG-027 alto); 1 examen de
+  certificacion conservado como evidencia.
+
+## 2026-10-27 (ronda QA 8 - anexo UX: banco de preguntas expandible)
+
+* **Hecho:** UX del Banco de Preguntas corregida a pedido del propietario
+  (detalle al final de la lista, fuera de pantalla, sin indicador de
+  seleccion). BankView.vue: acordeon inline de una seleccion — columna
+  chevron + fila con role=button/tabindex/aria-expanded, panel de detalle
+  como fila tr.detail-row (colspan 7) justo bajo la fila pulsada,
+  seleccion alterna por segundo clic o boton X, auto-scroll suave al panel
+  (function ref setDetailRow porque un ref de plantilla dentro de v-for es
+  un array y rompia scrollIntoView), hover/focus-visible, i18n es/en
+  (expandHint/collapseHint/detailInlineHint). Se elimino el bloque de
+  detalle duplicado que quedaba tras la tabla. Verificacion Playwright
+  (qa-r7, 200 preguntas): expandir inline, chevron rotado 90 grados, cerrar
+  por X y por segundo clic, switch a otra fila (seleccion unica), teclado
+  Tab+Enter expandir/colapsar, hover/focus affordance, 0 errores de consola;
+  docker compose build frontend + up aplicado (bundle BankView-B0_gczOs.js).
+* **Falta:** verificado del propietario; commit + push frontend/meta
+  (bump de submodulo y docs).
+* **Decision:** ninguna nueva; extiende la correccion de ronda 8 ya aprobada.
+* **Medicion:** 8 casos Playwright PASS (C54); tsc local OK; 0 errores de
+  consola en navegador real.
+
+## 2026-10-27 (ronda QA 8: fix DEC-004, hilos de chat server-side)
+
+* **Hecho:** resolucion DEC-004 (a extendida por el propietario) implementada
+  y verificada (IMPL-025 / BL-017 / QT-008). Backend: modelo ChatThread +
+  migracion b8c9d0e1f2a3 (aplicada en el contenedor, alembic head), servicio
+  threads_service.py (register_or_adopt nunca reasigna un id ajeno,
+  require_owned_thread, record_turn con badges y tope 1M), endpoints
+  GET/PATCH/DELETE /api/chat/threads, y ownership 403 en history/stream/
+  invoke. Frontend: `useThreadId.ts` reescrito server-backed (refresh/
+  invalidate/ensureLoaded, create/remove/rename, touchThread con titulo
+  fijado solo al primer mensaje), ThreadSidebar con badges (chip de ultima
+  materia + contador de mensajes) y delete asincrono, ChatPanel sin titulo
+  por turno + refreshThreads tras stream, ChatView hidrata el hilo mas
+  reciente, auth.ts invalida el listado en login/register/logout, i18n es/en.
+  Verificacion real: scripts/verify-threads-r8.ps1 12/12 PASS (B sobre hilo
+  de A: history/write/rename/delete = 403; listado aislado; 401 sin token;
+  titulo fijado y message_count=2->4; A renombra y borra lo suyo) +
+  Playwright con qa-r7 (reload conserva la conversacion y la hidrata desde
+  el server, badges "QA R7 Recert"+"4" visibles, delete deja chat_threads=0).
+  Docker rebuild del frontend detecto TS2349 (v-for shadowing de `t` de
+  useI18n) que el tsc local no atrapa; corregido con `th`. Usuarios y hilos
+  de control qa-r8 purgados. .ops: BUG-022/023 -> `corregido`, DEC-004 ->
+  `tomada`, BL-017 -> `ejecutado`, IMPL-025 + QT-008 nuevos, test-plan
+  C41-C53, traceability, READMEs, handoff, esta bitacora.
+* **Falta:** verificado del propietario (QT-008/BUG-022/023); push a origin
+  de 4 repos (core, exam-app, frontend, meta-repo); purga del checkpointer
+  huerfano al borrar hilo (seguimiento); BUG-024/025; DEC-001/002/003 y
+  fixes BUG-019/020/021; tesis; BL-010.
+* **Decision:** DEC-004 tomada (a extendida): listado server-side con
+  badges, almacenamiento global entre materias (lo que se acota es por
+  usuario/dispositivo), titulo fijado, lazy adoption de hilos heredados.
+* **Medicion:** 12/12 comprobaciones API PASS + 3 casos funcionales
+  Playwright PASS (C51-C53); migracion a7b8c9d0e1f2 -> b8c9d0e1f2a3 aplicada;
+  hilos de control qa-r8 y usuarios purgados (0 filas residuales).
+
+## 2026-10-27 (ronda QA 7: recertificacion funcional + integracion)
+
+* **Hecho:** ronda 7 de QA ejecutada contra RC3/develop a pedido del propietario
+  (IMPL-024): pruebas funcionales con Playwright en navegador real y de
+  integracion via API/nginx/Postgres, sin unitarias. Diagnostico del bug
+  reportado ("no veo conversaciones pasadas en el historial"): es BUG-023, el
+  listado de hilos vive solo en `localStorage['mvp_chat_threads']`
+  (`useThreadId.ts:4`); en el mismo navegador los 2 hilos de control se listan
+  e hidratan (C26/C27 PASS), pero limpiar el storage deja la sidebar vacia
+  aunque los hilos siguen en el checkpointer (C25 FAIL, repro del reporte).
+  La brecha es BL-017 (pendiente desde ronda 2). Hallazgo critico BUG-022: los
+  endpoints de chat autentican pero no verifican propiedad del thread_id
+  (`chat.py` history/stream/invoke), asi que el usuario B leyo y ESCRIBIO el
+  hilo de A (evidencia API + visual en navegador con un tercer usuario);
+  decision abierta DEC-004 con 3 opciones. Nota: materias semilla sin owner
+  son escribibles por cualquiera. Funcionales PASS: banco (200 filas, filtros,
+  toggle), examenes, material, creacion de materia, chat con materia activa,
+  reload duro, guardia de ruta anonima. Integracion PASS: auth 422/409/401,
+  aislamiento 403, guardrail de verificadas. Nuevos: BUG-024 (nginx sin
+  cabeceras de seguridad), BUG-025 (login invalido muestra "Tu sesion
+  expiro"). .ops actualizado: IMPL-024, QT-007, test-plan C25-C40, BUG-022/023/
+  024/025, DEC-004, traceability, BL-017 re-elevado a listo, indices, handoff.
+* **Falta:** resolucion de DEC-004 y fix de BUG-022/023 (BL-017); fixes
+  BUG-024/025; DEC-001/002/003 y fixes BUG-019/020/021; tesis; BL-010.
+* **Decision:** sin cambios de codigo: los 4 bugs nuevos quedan `abierto`;
+  BUG-022/023 bloqueados por DEC-004 (el agente no cierra decisiones ni
+  aplica fixes sin el propietario). Generacion E2E de examen omitida en la
+  ronda: ya cubierta por C19 (ronda 5) y C2 (ronda 6).
+* **Medicion:** C25-C40: 11 PASS / 3 FAIL / 2 PASS con nota; 2 hilos de
+  control en checkpointer (ad0e765d, c35b172e) con 4 mensajes cada uno; B
+  leyo 4 mensajes de A y le inserto 2; nginx devuelve solo Server y
+  Content-Type (sin HSTS/XCTO/XFO); datos QA temporales purgados (materia
+  "QA R7 UI Temp", usuario qa-r7-ui-temp, token files).
+
+## 2026-10-27 (ronda QA 6: certificacion RC3)
+
+* **Hecho:** ronda 6 de QA ejecutada contra RC3/develop con stack levantado (IMPL-023).
+  Verificado: BUG-018 (sonda raiz -> 422 real via nginx; sonda metadata anidada -> 200 con
+  num_versions=2, 4 PDFs y ZIP); RFC-10 (hard reload conserva la materia activa y contadores);
+  RFC-11 (abort de SSE -> burbuja failed + Retry -> turno completo y rehidratado desde el
+  checkpointer sin duplicar contenido); BUG-016 (3 restarts de exam_app con sesion activa,
+  0 401, HITL intacto); C2 (PDF real 5.4 MB, sin 413, 211 chunks indexados ~20 min, RAG
+  citando el material). Regresiones: R1 save HITL verified-by-human, R2 guardrail anti-borrado,
+  R4 export XLSX por chat (tool export_questions), R5 auditoria llm_responses (3250 filas,
+  thread trazado), R6 toggle ES/EN persistente. Hallazgos nuevos documentados: BUG-019 (el
+  mensaje HUMAN se duplica en el checkpointer tras Retry: `_initial_state` reinserta el user
+  y `add_messages` anade), BUG-020 (indexacion de material grande sin limites/progreso/
+  cancelacion: 8000 paginas ~29 h de embeddings, satura exam_embedding_service y bloquea
+  uploads), BUG-021 (persist=false de /exams/generate persiste igualmente fila+PDFs+ZIP,
+  `nodes.py` ~627 incondicional). Decisiones abiertas para el propietario: DEC-001 (semantica
+  de persist), DEC-002 (dedupe HUMAN), DEC-003 (limites de indexacion). .ops actualizado:
+  IMPL-023, test-plan (C21-C24 + resultados ronda 6), traceability, READMEs qa/decisions,
+  BUG-016/018 cerrados con evidencia, handoff.
+* **Falta:** fixes de BUG-019/020/021 tras las DEC-001/002/003; escritura de la tesis;
+  BL-010 Playwright suite; etapa 01 (repos remotos + CI); inconsistencia validate.yml.
+* **Decision:** los 3 bugs nuevos quedan `abierto` con DEC abierta: el agente no cierra
+  decisiones ni inventa fixes sin decision del propietario (regla .ops). La sonda 2 de
+  BUG-018 dejo el examen "SondaR6Anidada" en la lista Exams: es consecuencia de BUG-021,
+  no regresion de BUG-018.
+* **Medicion:** 3 restarts/0 401; PDF 5.4 MB -> 211 chunks / ~20 min; caso extremo 6.86 MB
+  -> ~41,500 chunks / ~29 h estimadas de embeddings (CPU, batch 16 @ ~90 s); llm_responses
+  3250 filas; export XLSX con 1 pregunta; 0 DELETEs del guardrail; toggle idioma persistente
+  tras reload.
+
+## 2026-10-26 (RC2 tag + rama RC3/develop)
+
+* **Hecho:** commit de docs pendientes (`5d5a6f3`); tag `RC2` anotado y publicado en los 7
+  repos (meta + 6 submodulos); rama `RC3/develop` creada y publicada en los 7 repos. Fixes de
+  bugs conocidos (IMPL-022): BUG-018 `ConfigDict(extra="forbid")` en `ExamBlueprint` (core,
+  verificado con script desechable: raiz invalida -> 422, metadata anidada OK, tool del agente
+  OK, round-trip DB OK); BUG-016 retry unico de 401 re-leyendo `mvp_auth` con chequeo de `exp`
+  (`http.ts`); BL-008 RFC-10 persistencia de materia activa (`mvp_active_subject`,
+  `stores/subjects.ts`) y RFC-11 rehidratacion de la burbuja tras Retry (`loadThread(id, false)`
+  + watch en `ChatPanel.vue`). Frontend build (178 modulos) y vue-tsc OK. Docs .ops
+  actualizados (IMPL-022 + indices + BUG/BL + traceability + handoff).
+* **Falta:** verificacion en navegador del propietario (C8 retry 401, F5 materia activa,
+  reinicio exam_app, sondas HTTP del BUG-018); escritura de la tesis; C2 con PDF grande;
+  BL-010 Playwright; inconsistencia validate.yml (infra DigitalMe ausente).
+* **Decision:** todos los repos trabajan en `RC3/develop`; `RC2` queda como tag de linea
+  base. Los BUG pasan a `resuelto` con fix aplicado; el estado `verified` sigue reservado
+  al propietario.
+* **Medicion:** build del frontend 178 modulos / 5.50 s; vue-tsc sin errores; 4 sondas de
+  BUG-018 OK; tag y rama presentes en origin en los 7 repos.
+
+## 2026-10-26 (informe de implementacion)
+
+* **Hecho:** publicados en origin `166c71e` + `2155694` (QA ronda 5). Creado
+  `docs/informe_implementacion.md`: informe integral en espanol para la tesis y defensa
+  (resumen ejecutivo con metricas, arquitectura monorepo + 6 servicios, pipeline batch de
+  6 nodos, agente ReAct con 15 tools y HITL, RAG, seguridad multi-tenant, framework de
+  evaluacion, resultados de la campana 102 runs con H1-H5, 5 rondas de QA, metricas de
+  escala verificadas contra la BD, limitaciones, trabajo futuro y guion de defensa con
+  demo sugerida). 4 diagramas mermaid (arquitectura, pipeline, loop agente, RAG).
+* **Falta:** escrito de la tesis (capitulos de implementacion y experimentacion); BUG-018
+  endurecimiento; C2 con PDF grande real; BL-010 suite Playwright; revision `verified` del
+  propietario; repos remotos de submodulos (etapa 01); inconsistencia del instruccionado
+  (validate.yml referencia infra DigitalMe ausente).
+* **Decision:** el informe es un documento de referencia integral, no duplica
+  `docs/informe_avance.md` (avance de etapas): este resume el sistema terminado y los
+  resultados; aquel el log de avance por etapa. Nombres de archivos no cambian.
+
+## 2026-10-26 (ronda QA 5)
+
+* **Hecho:** commit `166c71e` con el nuevo instruccionado del agente (copilot-instructions.md,
+  skill ops-lifecycle, workflow validate.yml; sin publicar en origin). QA ronda 5 API-centrada
+  (IMPL-021): routing nginx (Accept json, SPA fallback, OPTIONS/HEAD, /output 404), auth 401,
+  aislamiento multi-tenant, 422 accionable, generacion E2E con banco vacio (16 llamadas LLM,
+  8 preguntas, zip via /output 200), DELETE de pregunta, BUG-017b re-verificado (toggle 200
+  bidireccional). num_versions verificado funcional (2 versiones / 4 PDFs con el campo
+  anidado en `blueprint.metadata`); BUG-018 abierto como endurecimiento (Pydantic descarta
+  campos extra del blueprint sin 422). C16-C20 agregados al test-plan. Sondas de QA
+  purgadas de la BD.
+* **Falta:** BUG-018 endurecimiento (extra=forbid); C2 con PDF grande real; BUG-016 retry;
+  BL-010 suite Playwright; capitulo de experimentacion de la tesis; revision `verified` del
+  propietario; publicar `RC2/develop` en origin; inconsistencia del instruccionado (validate.yml
+  referencia infra DigitalMe ausente: tools/, mcp/, package.json raiz).
+* **Decision:** contrato de /exams/generate confirmado con sondas contrastadas: metadatos
+  (title/name/num_versions) viven en `blueprint.metadata` (el frontend ya lo anida asi);
+  GET/DELETE /subjects/{id} sin endpoint (API minima por diseno, gap menor).
+* **Medicion:** 5 sujetos de prueba aislados correctos; generacion ~0.5-4 min/run; zip
+  101-130 KB; 0 rechazos de items; 3 rondas de generacion persistidas y purgadas.
+
+## 2026-10-26
+
+* **Hecho:** migracion de la carpeta `implementaciones/` al arbol `.ops` (BL-000 / IMPL-020):
+  19 documentos de etapa -> `.ops/implementations/IMPL-NNN-*.md`; 18 bugs -> `.ops/qa/BUG-NNN.md`;
+  22 items de backlog -> `.ops/project/backlog/BL-NNN.md`; REQ-001..003; handoff, plan,
+  test-plan (C1-C15/R1-R7), traceability (REQ->BL->IMPL->QT->BUG), plantillas OKF y READMEs
+  de carpeta. Referencias externas actualizadas (ARCHITECTURE.md, docs/informe_avance.md,
+  readme.md); `implementaciones/` eliminado. Validacion: 89 archivos, ids unicos,
+  frontmatter conforme, ASCII limpio, <=40 lineas de contenido.
+* **Falta:** revision y `verified` del propietario sobre REQ/IMPL/BUG (el agente no escribe
+  verified); IMPL-020 pasa a ejecutado tras esa revision.
+* **Decision:** ninguna (convencion de mapeo documentada en `.ops/project/plan.md`).
+* **Medicion:** 102 runs reales de la campana de evaluacion (etapa 15); H1-H5 resueltas.
+
+## 2026-10-26 (sesion anterior)
+
+* **Hecho:** etapa 16 — QA ronda 4 con Playwright: fix scroll global (BUG-17) y rewrite nginx
+  del toggle de verificacion (BUG-17b); matriz de 10 casos verificada en navegador.
+* **Falta:** suite Playwright versionada (BL-010).
+* **Decision:** ninguna.
+* **Medicion:** scrollHeight > clientHeight verificado en Exams/Bank/Subjects; PUT de
+  verificacion 200 via nginx.
+
+## 2026-11-09 (exposicion publica del stack al internet con cloudflared quick tunnel)
+
+* **Hecho:** A pedido del propietario ("exponer mi sistema al internet,
+  tailscale funnels o cloudflared, con la mas sencilla y agnostica a
+  credenciales"), comparadas ambas alternativas y elegido cloudflared quick
+  tunnel: 0 cuentas, 0 credenciales, 1 comando docker; Tailscale Funnel
+  exige cuenta + cert HTTPS + funnel ACL. Ejecutado en vivo (no simulado):
+  winget y curl.exe a GitHub releases devolvieron 504 en esta red -> se uso
+  la imagen Docker (`docker pull cloudflare/cloudflared:latest`);
+  `docker run --rm -d --name exam_tunnel cloudflare/cloudflared:latest
+  tunnel --url http://host.docker.internal:3000 --no-autoupdate` levanto el
+  tunel y de los logs salio la URL publica
+  https://grab-testimonials-pty-numbers.trycloudflare.com. Verificacion E2E
+  real a traves de internet: GET / -> 200 (SPA), GET /subjects con
+  Accept: application/json sin token -> 401 (la auth JWT se mantiene a
+  traves del tunel), POST /auth/login 200 con cuenta de prueba, GET
+  /subjects autenticado -> 200 (8 materias), WebSocket
+  wss://...trycloudflare.com/ws -> OPEN (101) con WebSocket nativo de
+  Node v24.21.0. Documentacion en .ops: bootstrap de .ops/operations/
+  (README + runbooks.md + RUN-016-exposicion-publica-cloudflared.md, estado
+  probado) + recipe-levantamiento.md (secuencia de levantamiento agnostica
+  a credenciales: stack, tunel con FRONTEND_PORT como variable, alta de
+  usuario, teardown; token estable solo como $TUNNEL_TOKEN placeholder),
+  DEC-005-exposicion-publica-tunel.md abierta para el propietario,
+  QT-016-exposicion-publica-cloudflared.md aprobada con caso adversarial
+  (401 sin token y URL muerta tras teardown), indexes de decisions y handoff
+  actualizados. A continuacion, a pedido del propietario, la recipe se
+  convirtio en mecanismo reproducible: RECIPE.md en la raiz (entrada para
+  cualquier agente: solo clona el repo principal; submodulos, secretos,
+    stack, verificacion y tunel estan en la recipe). Eleccion de tecnologia
+    iterada con el propietario en cuatro pivotes: bring-up.ps1 (PS 5.1,
+    verde E2E) descartado por no universal; bring-up.py stdlib descartado
+    al pedir interprete extra; bring-up.sh descartado por exigir Git Bash
+    en Windows (el propietario: "los usuarios no suelen instalarlo");
+    version dual ps1+sh descartada al autorizar explicitamente el pivote
+    final: UNA sola script Python con bootstrap de interprete portable
+    temporal cuando el host no tiene Python (zip embeddable de python.org
+    a un directorio temporal, sin instalar ni tocar el PATH, nada dentro
+    del repo). scripts/bring-up.py (~270 lineas, solo stdlib) automatiza:
+    submodulos, .env (crea desde .env.example, pide OPENAI_API_KEY oculto
+    o lo toma del entorno, genera AUTH_SECRET con secrets.token_hex),
+    docker compose up -d --build, espera healthy, smoke (SPA 200,
+    /subjects 401 sin token), quick tunnel e imprime la URL publica.
+    Probada E2E en vivo DOS veces: con el Python del host (URL
+    https://continuity-despite-alt-alliance.trycloudflare.com verificada
+    desde fuera, 401 sin token y SPA 200) y con el interprete portable
+    3.12.8 descargado a %TEMP% (--no-tunnel, exit 0 en los 4 pasos).
+    Gotchas fijados en la script: docker logs mudo sin stderr en PS (usar
+    cmd /c), exit 1 cosmetico de compose validado por health+HTTP, .env
+    editado a nivel de bytes para preservar encoding y line endings.
+* **Falta:** verificado del propietario en DEC-005 (confirmar quick tunnel
+  o pedir named tunnel/Tailscale Funnel); si se quiere URL estable, crear
+  tunnel token propio y seguir el Modo B de RUN-016; BUG-024 (cabeceras de
+  seguridad nginx) gana prioridad con el stack expuesto; script probada
+  E2E solo en Windows (Python del host y portable; pendiente Linux/macOS
+  si se necesita); commit + push.
+* **Decision:** cloudflared quick tunnel como mecanismo de exposicion
+  (DEC-005, abierta para confirmacion): cumple el requisito de
+  agnosticismo de credenciales (nada que configurar hoy, nada que rotar
+  manana) y evita abrir puertos o tocar el firewall institucional; la
+  efimeridad de la URL es aceptable para demo y revision externa. Para el
+  mecanismo de levantamiento, UNA sola script Python (stdlib) con
+  bootstrap de interprete portable temporal, autorizado por el
+  propietario; descartadas las variantes ps1, sh y dual.
