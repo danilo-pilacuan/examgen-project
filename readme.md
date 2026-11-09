@@ -60,6 +60,11 @@ cd docker && docker compose up -d --build
 
 > **Multi-profesor:** cada profesor ve solo sus materias y sesiones (JWT + `subjects.owner_id`). Las materias creadas antes de la auth quedan compartidas entre todos. Definir `AUTH_SECRET` en producción.
 
+## 🌐 Exponer al internet (demo / revisión externa)
+
+- Guía: [docs/exposicion-internet.md](docs/exposicion-internet.md) — cloudflared quick tunnel, sin credenciales.
+- Runbook: [.ops/operations/RUN-016-exposicion-publica-cloudflared.md](.ops/operations/RUN-016-exposicion-publica-cloudflared.md) y recipe de levantamiento: [.ops/operations/recipe-levantamiento.md](.ops/operations/recipe-levantamiento.md).
+
 ## 🧪 Pipeline batch (API tradicional)
 
 ```bash

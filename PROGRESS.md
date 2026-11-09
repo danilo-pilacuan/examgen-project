@@ -537,3 +537,40 @@
 * **Decision:** ninguna.
 * **Medicion:** scrollHeight > clientHeight verificado en Exams/Bank/Subjects; PUT de
   verificacion 200 via nginx.
+
+## 2026-11-09 (exposicion publica del stack al internet con cloudflared quick tunnel)
+
+* **Hecho:** A pedido del propietario ("exponer mi sistema al internet,
+  tailscale funnels o cloudflared, con la mas sencilla y agnostica a
+  credenciales"), comparadas ambas alternativas y elegido cloudflared quick
+  tunnel: 0 cuentas, 0 credenciales, 1 comando docker; Tailscale Funnel
+  exige cuenta + cert HTTPS + funnel ACL. Ejecutado en vivo (no simulado):
+  winget y curl.exe a GitHub releases devolvieron 504 en esta red -> se uso
+  la imagen Docker (`docker pull cloudflare/cloudflared:latest`);
+  `docker run --rm -d --name exam_tunnel cloudflare/cloudflared:latest
+  tunnel --url http://host.docker.internal:3000 --no-autoupdate` levanto el
+  tunel y de los logs salio la URL publica
+  https://grab-testimonials-pty-numbers.trycloudflare.com. Verificacion E2E
+  real a traves de internet: GET / -> 200 (SPA), GET /subjects con
+  Accept: application/json sin token -> 401 (la auth JWT se mantiene a
+  traves del tunel), POST /auth/login 200 con cuenta de prueba, GET
+  /subjects autenticado -> 200 (8 materias), WebSocket
+  wss://...trycloudflare.com/ws -> OPEN (101) con WebSocket nativo de
+  Node v24.21.0. Documentacion en .ops: bootstrap de .ops/operations/
+  (README + runbooks.md + RUN-016-exposicion-publica-cloudflared.md, estado
+  probado) + recipe-levantamiento.md (secuencia de levantamiento agnostica
+  a credenciales: stack, tunel con FRONTEND_PORT como variable, alta de
+  usuario, teardown; token estable solo como $TUNNEL_TOKEN placeholder),
+  DEC-005-exposicion-publica-tunel.md abierta para el propietario,
+  QT-016-exposicion-publica-cloudflared.md aprobada con caso adversarial
+  (401 sin token y URL muerta tras teardown), indexes de decisions y handoff
+  actualizados.
+* **Falta:** verificado del propietario en DEC-005 (confirmar quick tunnel
+  o pedir named tunnel/Tailscale Funnel); si se quiere URL estable, crear
+  tunnel token propio y seguir el Modo B de RUN-016; BUG-024 (cabeceras de
+  seguridad nginx) gana prioridad con el stack expuesto; commit + push.
+* **Decision:** cloudflared quick tunnel como mecanismo de exposicion
+  (DEC-005, abierta para confirmacion): cumple el requisito de
+  agnosticismo de credenciales (nada que configurar hoy, nada que rotar
+  manana) y evita abrir puertos o tocar el firewall institucional; la
+  efimeridad de la URL es aceptable para demo y revision externa.

@@ -25,6 +25,10 @@ status: stable
   detectada en QA ronda 7 (BUG-022/023, reporte de historial). Resolucion
   del propietario: opcion (a) extendida; badges ultima materia + contador;
   titulo fijado al primer mensaje. Implementada en IMPL-025.
+- `DEC-005-exposicion-publica-tunel.md` (abierta, 2026-11-09): mecanismo de
+  exposicion publica (cloudflared quick vs Tailscale Funnel vs tunel con
+  nombre). El agente ejecuto la opcion (a) y la documento en RUN-016; queda
+  abierta para que el propietario confirme o pida (b)/(c).
 
 Open questions are drafted here as `DEC-NNN-slug.md` (template `templates/decision.md`,
 6-line options table max) and the owner answers them. The agent never closes a DEC

@@ -6,31 +6,24 @@ title: Handoff entre sesiones
 description: Punto de entrada de cada sesion; estado exacto donde se quedo el trabajo.
 estado: vigente
 dueno: rol:propietario
-fecha: 2026-11-08
-relaciona: [plan, ops-readme]
+fecha: 2026-11-09
+relaciona: [plan, ops-readme, RUN-016]
 status: stable
 sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.md, title: copilot-instructions }]
 ---
 
-> **Ultima actualizacion:** 2026-11-08 (recuperacion de entorno: las imagenes
-> y contenedores Docker del stack se perdieron y se volvieron a crear con
-> `docker compose up -d --build`; el volumen `docker_postgres_data`
-> sobrevivio, asi que la BD completa (8 materias, 318 chunks, 647 preguntas,
-> 5 examenes, head c9d0e1f2a3b4) NO se perdio y NO hizo falta re-seed; el
-> material y los PDFs/ZIPs de data/ siguen intactos. Cambio puntual: el
-> puerto host del embedding-service paso de 8081 a 18081 en
-> docker/docker-compose.yml porque un servidor de dev ajeno (React Native,
-> C:\dev\trigger-hub) ocupa 8081; el lado contenedor sigue en 8081 y los
-> scripts en host deben usar EMBEDDING_URL=http://localhost:18081/v1/
-> embeddings. Flujo completo de creacion verificado E2E via API real:
-> login qa-r11 -> POST /exams/generate (2 preguntas, Economia Aplicada -
-> QA11) -> 200 en ~3 min, 2 items aprobados, Rebuild_Check_1 PDFs + ZIP
-> servidos por nginx) | **Rama:** `RC3/develop` | **Arbol:** docker/
-> docker-compose.yml modificado (puerto 18081) + docs/informe_
-> experimentos_r11.md sin commitear; submodulos limpios y publicados
-> (frontend 351b7b4 en origin, incluye el rediseno r15 y BUG-031 que estaba
-> pendiente de push). Base de datos conservada; indice de embedding-service
-> verificado (POST /v1/embeddings 200).
+> **Ultima actualizacion:** 2026-11-09 (exposicion publica del stack al
+> internet: decision tomada con el propietario en la sesion - cloudflared,
+> opcion mas simple y agnostica a credenciales; RUN-016 ejecutado en vivo
+> con quick tunnel Docker: SPA 200, auth 401 sin token / 200 con credenciales
+> de prueba, WS 101, URL generada del formato
+> https://<4-palabras>.trycloudflare.com; QT-016 aprobada con caso adversarial
+> 401; DEC-005 abierta para confirmacion del propietario; recipe de
+> levantamiento en operations/recipe-levantamiento.md, sin credenciales
+> embebidas) | **Rama:** `RC3/develop` | **Arbol:** `docker exam_tunnel`
+> corriendo (contenedor de tuneles, removable con `docker rm -f exam_tunnel`);
+> `.ops/operations/` nuevo (README, runbooks, RUN-016, recipe);
+> `.ops/decisions/DEC-005`, `.ops/qa/QT-016` nuevos; indexes actualizados.
 >
 > **Sesion anterior:** 2026-11-05 (tercera revision Felipe: A1 fechas de
 > verificacion + A2 extendido tipos de pregunta). A1: migracion `c9d0e1f2a3b4`
@@ -118,6 +111,7 @@ Exam Generator: MVP de tesis USFQ para que un profesor genere examenes LaTeX por
 - `docker compose up -d --build frontend` devuelve exit 1 cosmico por stderr de
   docker en PowerShell; verificar con `docker ps` + curl 200, no con exit code.
 - git push desde PowerShell lanza NativeCommandError por stderr: es cosmético; verificar con `git ls-remote`.
+- quick tunnel de cloudflared muere con su contenedor: la URL trycloudflare.com no es reutilizable ni sobrevive a un restart de Docker; para URL estable hace falta tunnel token propio (RUN-016 Modo B).
 
 ## Historial de sesiones
 
@@ -139,3 +133,4 @@ Exam Generator: MVP de tesis USFQ para que un profesor genere examenes LaTeX por
 | 2026-11-05 (tercera revision) | Analisis de Requisitos/tercera_revision_Felipe.md -> Requisitos/tercera_revision_items.md (A1-A4, B1-B2, C1-C5); el propietario aprobo A1 y A2 (extendido). Implementado en 4 submodulos: A1 verified_at (migracion c9d0e1f2a3b4, sellado en bank/service.py con _utcnow, DTOs exam-app, 2 columnas de fecha en BankView) y A2 extendido (allowed_question_types en ExamBlueprint con rechazo de lista vacia, planner con filtro por Bloom + fallback, checkboxes + panel avanzado de distribucion custom y retrieval en ExamsView, i18n EN/ES). Validacion estatica verde: tsc, vue-tsc (corrigio 2x TS1345 en ExamsView), vite build 4.74 s, py_compile 7 archivos, AST checks, caso de rechazo (lista vacia -> ValidationError), dedup, fallback del planner, head unico de Alembic. Docs .ops: BL-023, IMPL-030, QT-014 + indexes/traceability/READMEs. Commits publicados en origin RC3/develop: core e4f8ea5 + 5c53ca0, exam-app c38f871, agents-backend 57209b1, frontend fd6595a + ffaaada, meta e968a41. Pendiente: verificacion en navegador (rebuild Docker + alembic upgrade head) y suite e2e, del propietario |
 | 2026-11-06 (ronda 15) | Feedback ronda 2 de la tercera revision (mandato del propietario: Bloom no select y blueprint por tema) implementado frontend-only (IMPL-031/BL-024): checkbox groups de Bloom (6 niveles) y dificultad (3) con distribucion uniforme (levelsToDist, resto a la primera clave) y selectores numericos por tema real del banco (0-50, topics por watch de activeSubjectId) convertidos a topics_weight (applyTopicCounts, fallback general 1.0); removidos presets y grids de peso custom; i18n EN/ES (7 claves nuevas, 3 removidas). BUG-030 detectado y corregido: interpolacion i18n sin {sum,total} -> hint "(of )"; fix en template + generate(), rebuild y hint "(of 10)" verificado. QA Playwright (materia Economia Aplicada - QA11): rechazo suma 60 > total 10 con 0 llamadas API; E2E real total 2 / Econometrics 2 / 3 niveles Bloom desmarcados -> POST 200 tras ~4 min, examen con ZIP. Docs .ops: BL-024, IMPL-031, QT-015, BUG-030 + indexes/traceability/handoff/PROGRESS. Pendiente: commit + push del submodulo frontend; verificado del propietario |
 | 2026-11-08 (recuperacion entorno) | Las imagenes y contenedores Docker del stack desaparecieron del host; se reconstruyeron con `docker compose -f docker/docker-compose.yml up -d --build` (pgvector, latex-compiler, embedding-service, exam-app, frontend) + open-webui con perfil legacy. El volumen `docker_postgres_data` sobrevivio: BD completa conservada (8 materias, 318 chunks, 647 preguntas, 5 examenes, alembic head c9d0e1f2a3b4, cuenta qa-r11), no fue necesario re-seed; data/inputs y data/agent_outputs intactos (894 archivos). Un proceso ajeno (React Native dev server, node C:\dev\trigger-hub) ocupa el puerto host 8081 -> el embedding-service se remapeo a 18081:8081 en docker/docker-compose.yml (lado contenedor sin cambios; scripts en host: EMBEDDING_URL=http://localhost:18081/v1/embeddings). Verificacion: health 200 en los 6 contenedores, login qa-r11 200, GET /subjects 200, POST /v1/embeddings 200, flujo completo POST /exams/generate 200 en ~3 min (2 preguntas multiple_choice aprobadas, 0 rechazos, 4 llamadas LLM, persist saved=2, Rebuild_Check_1 PDFs + ZIP creados y servidos por nginx 200). Pendiente: commit + push del cambio de puerto en el meta-repo |
+| 2026-11-09 (exposicion publica) | Pedido del propietario: exponer el stack al internet; comparados Tailscale Funnel y cloudflared; elegido cloudflared quick tunnel (0 credenciales, 1 comando docker, URL aleatoria efimera) - RUN-016 ejecutado en vivo: contenedor `exam_tunnel` (cloudflare/cloudflared:latest) -> http://host.docker.internal:3000; verificacion E2E real via URL publica: SPA 200, /subjects 401 sin token (la auth JWT se mantiene atravesando el tunel), login 200 con cuenta de prueba, GET /subjects 200 con 8 materias, WebSocket wss://.../ws OPEN (101). Documentacion: .ops/operations/ bootstrappeado (README, runbooks.md, RUN-016 estado probado, recipe-levantamiento.md agnostica a credenciales con $TUNNEL_TOKEN como placeholder), DEC-005 abierta (propietario confirma o pide named/tailscale), QT-016 aprobada con caso adversarial 401, handoff+PROGRESS actualizados. Gotchas nuevos: winget y curl.exe a GitHub releases devolvieron 504 en esta red -> docker pull cloudflare/cloudflared:latest funciona; quick tunnel muere con el contenedor (URL no reutilizable). Pendiente: verificado del propietario en DEC-005, alta de TUNNEL_TOKEN propio si se quiere URL estable |
