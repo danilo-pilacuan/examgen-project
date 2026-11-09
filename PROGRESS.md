@@ -564,13 +564,41 @@
   DEC-005-exposicion-publica-tunel.md abierta para el propietario,
   QT-016-exposicion-publica-cloudflared.md aprobada con caso adversarial
   (401 sin token y URL muerta tras teardown), indexes de decisions y handoff
-  actualizados.
+  actualizados. A continuacion, a pedido del propietario, la recipe se
+  convirtio en mecanismo reproducible: RECIPE.md en la raiz (entrada para
+  cualquier agente: solo clona el repo principal; submodulos, secretos,
+    stack, verificacion y tunel estan en la recipe). Eleccion de tecnologia
+    iterada con el propietario en cuatro pivotes: bring-up.ps1 (PS 5.1,
+    verde E2E) descartado por no universal; bring-up.py stdlib descartado
+    al pedir interprete extra; bring-up.sh descartado por exigir Git Bash
+    en Windows (el propietario: "los usuarios no suelen instalarlo");
+    version dual ps1+sh descartada al autorizar explicitamente el pivote
+    final: UNA sola script Python con bootstrap de interprete portable
+    temporal cuando el host no tiene Python (zip embeddable de python.org
+    a un directorio temporal, sin instalar ni tocar el PATH, nada dentro
+    del repo). scripts/bring-up.py (~270 lineas, solo stdlib) automatiza:
+    submodulos, .env (crea desde .env.example, pide OPENAI_API_KEY oculto
+    o lo toma del entorno, genera AUTH_SECRET con secrets.token_hex),
+    docker compose up -d --build, espera healthy, smoke (SPA 200,
+    /subjects 401 sin token), quick tunnel e imprime la URL publica.
+    Probada E2E en vivo DOS veces: con el Python del host (URL
+    https://continuity-despite-alt-alliance.trycloudflare.com verificada
+    desde fuera, 401 sin token y SPA 200) y con el interprete portable
+    3.12.8 descargado a %TEMP% (--no-tunnel, exit 0 en los 4 pasos).
+    Gotchas fijados en la script: docker logs mudo sin stderr en PS (usar
+    cmd /c), exit 1 cosmetico de compose validado por health+HTTP, .env
+    editado a nivel de bytes para preservar encoding y line endings.
 * **Falta:** verificado del propietario en DEC-005 (confirmar quick tunnel
   o pedir named tunnel/Tailscale Funnel); si se quiere URL estable, crear
   tunnel token propio y seguir el Modo B de RUN-016; BUG-024 (cabeceras de
-  seguridad nginx) gana prioridad con el stack expuesto; commit + push.
+  seguridad nginx) gana prioridad con el stack expuesto; script probada
+  E2E solo en Windows (Python del host y portable; pendiente Linux/macOS
+  si se necesita); commit + push.
 * **Decision:** cloudflared quick tunnel como mecanismo de exposicion
   (DEC-005, abierta para confirmacion): cumple el requisito de
   agnosticismo de credenciales (nada que configurar hoy, nada que rotar
   manana) y evita abrir puertos o tocar el firewall institucional; la
-  efimeridad de la URL es aceptable para demo y revision externa.
+  efimeridad de la URL es aceptable para demo y revision externa. Para el
+  mecanismo de levantamiento, UNA sola script Python (stdlib) con
+  bootstrap de interprete portable temporal, autorizado por el
+  propietario; descartadas las variantes ps1, sh y dual.

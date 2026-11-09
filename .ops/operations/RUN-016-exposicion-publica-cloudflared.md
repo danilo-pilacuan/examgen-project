@@ -1,4 +1,4 @@
----
+﻿---
 id: RUN-016
 tipo: Runbook
 type: Runbook
@@ -18,7 +18,13 @@ Cuando se necesita que un revisor externo alcance el stack (demo de tesis,
 revision de Felipe) sin abrir puertos en el router ni modificar el firewall
 del host. Objetivo: URL publica HTTPS en menos de 2 minutos. Elegido en
 [DEC-005](../decisions/DEC-005-exposicion-publica-tunel.md) sobre Tailscale
-Funnel por no requerir cuenta ni credenciales en modo demo.
+Funnel por no requerir cuenta ni credenciales en modo demo. Via automatizada
+desde clone fresco: `RECIPE.md` + `scripts/bring-up.py` (Python 3.7+, solo
+stdlib; si el host no tiene Python, la recipe trae el bootstrap de un
+interprete portable temporal: zip embeddable de python.org a un directorio
+temporal, sin instalar ni tocar el PATH; submodulos, .env, build, smoke,
+tunel; probada 2026-11-09 con el Python del host y con el interprete
+portable).
 
 ## Procedimiento
 
