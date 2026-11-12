@@ -15,8 +15,9 @@ status: stable
 
 - `overview.md` - system map of the 6-submodule monorepo (pending; today the source
   of truth is the root `ARCHITECTURE.md`).
-- `graphs.md` - C4-like Mermaid views, with the agent harnessing view as the
-  primary thesis diagram. Source: `docs/graphs.md`.
+- `graphs.md` - C4-like Mermaid views, user-mode only, with the agent harnessing
+  view as the primary thesis diagram. Sources: `docs/graphs.md` (complete) and
+  `docs/graphs_tesis.md` (simplified thesis selection).
 - `threat-model.md` - pending (auth JWT + token-in-body is the known sensitive spot).
 
 Populate these from the root `ARCHITECTURE.md` when product work resumes; this

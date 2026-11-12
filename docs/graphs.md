@@ -13,16 +13,16 @@ only context/container/component levels.
 
 1. **Context**: actors, external systems, and trust boundaries.
 2. **Containers**: deployable services and data stores.
-3. **Agent components**: conversational and batch LangGraph contexts.
+3. **Agent components**: the conversational agent and the exam-generation
+   pipeline it invokes.
 4. **Harnessing**: the primary view for reproducible agent experiments.
-5. **Runtime flows**: the two production paths and their evidence outputs.
+5. **Runtime flow**: the chat-driven exam-generation flow.
 
 ## Level 1 - system context
 
 ```mermaid
 flowchart LR
     professor["Professor<br/>human"]
-    evaluator["Researcher / evaluator<br/>human"]
     system["Exam Generator<br/>AI-assisted exam authoring system"]
     gateway["USFQ LLM gateway<br/>GLM-5.3-Flash"]
     browser["Browser"]
@@ -30,14 +30,15 @@ flowchart LR
 
     professor -->|"chat, material, review"| browser
     browser --> system
-    evaluator -->|"experiment config and acceptance criteria"| system
     system -->|"OpenAI-compatible requests"| gateway
     system -->|"runs on"| gpu
 ```
 
-The system has two human-facing roles. The professor operates the product and
-confirms question verification. The evaluator operates the experiment harness
-and interprets evidence; it does not bypass the production guardrails.
+The system has one human-facing role in normal operation: the professor, who
+uploads course material, chats with the agent, verifies generated questions,
+and downloads the exam artifacts. The researcher who operates the experiment
+harness appears only in the harnessing view (Level 4) and never bypasses the
+production guardrails.
 
 ## Level 2 - deployment and containers
 
@@ -50,7 +51,6 @@ flowchart TB
         db[("postgres-db<br/>PostgreSQL 16 + pgvector<br/>39000:5432")]
         emb["embedding-service<br/>bge-m3<br/>39004:8081"]
         latex["latex-compiler<br/>FastAPI + TeXLive<br/>39003:8080"]
-        webui["open-webui<br/>legacy profile<br/>39001:8080"]
         files[("Mounted data<br/>inputs + agent_outputs")]
     end
 
@@ -59,7 +59,6 @@ flowchart TB
 
     professor -->|"same-origin HTTP / WS / SSE"| fe
     fe -->|"nginx proxy"| app
-    webui -->|"OpenAI-compatible /v1"| app
     app --> agent
     agent -->|"checkpoints, subjects,<br/>questions, audit logs"| db
     agent -->|"embeddings"| emb
@@ -176,39 +175,43 @@ sequenceDiagram
     M->>H: Continue loop or answer user
 ```
 
-The current implementation performs confirmation at the prompt contract for
-OpenWebUI compatibility, while the harness boundary remains the architectural
-location of the policy. Validation failures become actionable `ToolMessage`
+The current implementation performs confirmation at the prompt contract,
+while the harness boundary remains the architectural location of the policy.
+Validation failures become actionable `ToolMessage`
 results; unknown tools and execution failures do not silently look successful.
 
-### 3.2 Batch generation context
+### 3.2 Exam generation pipeline (invoked from the chat)
+
+The professor never sees a separate batch job. In the chat, the agent first
+proposes a blueprint (number of questions, Bloom and difficulty distribution)
+and asks for the exam name and the number of versions; only after the
+professor confirms both does the `generate_exam_pdf` tool run this pipeline
+inside the same conversation.
 
 ```mermaid
 flowchart LR
-    input["Subject + material + blueprint"] --> ingestor["ingestor"]
-    ingestor --> planner["planner"]
-    planner --> generator["generator"]
-    generator --> evaluator["evaluator"]
-    evaluator --> route{"Approved?"}
-    route -->|"yes"| accept["accept"]
-    route -->|"no"| reject["reject + rejection log"]
-    reject --> retry{"Retries left?"}
-    retry -->|"yes"| generator
-    retry -->|"no"| planner
-    accept --> remaining{"Specs remain?"}
-    remaining -->|"yes"| generator
-    remaining -->|"no"| assembler["assembler"]
-    assembler --> compiler["compiler"]
-    compiler --> compile_retry{"Compilation completed?"}
-    compile_retry -->|"no, attempts left"| compiler
-    compile_retry -->|"yes or failed"| output["PDF / ZIP / audit state"]
-    ingestor -.-> db[("Postgres + pgvector")]
+    chat["Professor confirms blueprint<br/>in the chat"] --> tool["generate_exam_pdf<br/>agent tool"]
+    tool --> ingestor["ingestor<br/>material context"]
+    ingestor --> planner["planner<br/>item specs"]
+    planner -->|"specs remain"| generator["generator<br/>RAG + LLM"]
+    planner -->|"no specs"| assembler["assembler"]
+    generator --> evaluator["evaluator<br/>quality gate"]
+    evaluator -->|"approved"| accept["accept item"]
+    evaluator -->|"rejected"| reject["reject + rejection log"]
+    accept -->|"specs remain"| generator
+    accept -->|"no specs"| assembler
+    reject -->|"retry or next spec"| generator
+    reject -->|"no specs left"| assembler
+    assembler --> compiler["compiler<br/>LaTeX to PDF"]
+    compiler -->|"failed, attempts left"| compiler
+    compiler -->|"completed or failed"| output["PDFs with and without<br/>answers + ZIP in the chat<br/>and Exams view"]
+    ingestor -.-> rag[("Postgres + pgvector")]
     generator -.-> llm["USFQ LLM gateway"]
     evaluator -.-> llm
     compiler -.-> latex["latex-compiler"]
 ```
 
-The batch context is stateful within a run. Rejections, retries, accepted
+The run is stateful within the conversation. Rejections, retries, accepted
 items, LLM call counts, and compilation attempts are explicit state fields and
 must remain observable in the run record.
 
@@ -220,19 +223,17 @@ flowchart TB
         rest["REST<br/>auth, subjects, material, questions, exams"]
         sse["SSE<br/>chat turn events"]
         ws["WebSocket<br/>chat transport"]
-        compat["OpenAI-compatible /v1<br/>legacy OpenWebUI"]
     end
     frontend["Vue frontend"] --> rest
     frontend --> sse
     frontend --> ws
-    webui["OpenWebUI legacy"] --> compat
     api --> engine["LangGraphEngine"]
     engine --> conversational["Conversational graph"]
-    api --> batch["Exam pipeline services"]
+    api --> pipeline["Exam pipeline services"]
     conversational --> db[("Postgres")]
-    batch --> db
-    batch --> embedding["Embedding service"]
-    batch --> compiler["LaTeX compiler"]
+    pipeline --> db
+    pipeline --> embedding["Embedding service"]
+    pipeline --> compiler["LaTeX compiler"]
 ```
 
 ## Level 4 - primary graph: agent harnessing
@@ -247,7 +248,8 @@ providers, capability/tool providers, middleware/policy, UX/event streaming,
 and an evaluation plane. Microsoft's Agent Harness documentation uses the same
 separation for function invocation, session context, approvals, observability,
 and bounded loops; this project maps those concepts to LangGraph, typed tools,
-Postgres, EventBus, and the evaluation harness.
+Postgres, EventBus, and the evaluation harness. A simplified, thesis-facing
+selection of the key diagrams lives in `docs/graphs_tesis.md`.
 
 ```mermaid
 flowchart TB
@@ -447,8 +449,8 @@ flowchart TB
     exam --> generate_exam["generate_exam_pdf"]
     exam --> export["export_questions"]
     generate_exam --> blueprint["ExamBlueprint + versions"]
-    blueprint --> batch["exam pipeline + LaTeX compiler"]
-    batch --> outputs[("PDF / ZIP output volume")]
+    blueprint --> pipeline["exam pipeline + LaTeX compiler"]
+    pipeline --> outputs[("PDF / ZIP output volume")]
     export --> export_service["bank export serializer"]
     export_service --> outputs
 
@@ -521,7 +523,7 @@ flowchart TB
     turn["Agent turn"] --> llm_audit["record_llm_response<br/>prompt, answer, thinking flag,<br/>model, latency, thread_id"]
     tool["Tool execution"] --> event_bus["EventBus<br/>thread-partitioned buffer"]
     event_bus --> ui_stream["SSE / WS stream<br/>typed frontend events"]
-    pipeline["Batch pipeline"] --> telemetry["LLMTelemetry<br/>node, latency, chars, usage"]
+    pipeline["Exam pipeline"] --> telemetry["LLMTelemetry<br/>node, latency, chars, usage"]
     pipeline --> state["State digest<br/>approved, rejected, retries,<br/>chunks, total calls"]
     pipeline --> retrieval["Retrieval records<br/>statement + chunks"]
 
@@ -798,60 +800,42 @@ sequenceDiagram
     O-->>E: Reproducible evidence and report inputs
 ```
 
-## Runtime flow - conversational generation
+## Runtime flow - exam generation in the chat
 
 ```mermaid
 sequenceDiagram
-    participant U as Professor
-    participant F as Vue + nginx
-    participant A as exam-app
-    participant C as Conversational graph
-    participant T as Tool layer
-    participant L as LLM gateway
-    participant D as Postgres
-
-    U->>F: Chat request
-    F->>A: SSE/WS/REST with thread_id
-    A->>C: Invoke graph with persisted config
-    C->>L: Prompt + tool schema
-    L-->>C: Answer or tool call
-    C->>T: Execute scoped tool
-    T->>D: Read/write through service layer
-    T-->>A: Typed event and tool result
-    A-->>F: Activity, token, done/error
-    F-->>U: Render response and artifacts
-```
-
-## Runtime flow - batch and evaluation
-
-```mermaid
-sequenceDiagram
-    participant H as Harness or API
-    participant P as Batch graph
-    participant E as Embedder
+    participant U as Professor (chat)
+    participant C as Conversational agent
+    participant P as Exam pipeline
     participant D as Postgres + pgvector
     participant L as LLM gateway
     participant X as LaTeX compiler
     participant O as Output volume
 
-    H->>P: Subject, material paths, blueprint
-    P->>E: Index material and create vectors
-    E->>D: Store chunks and embeddings
-    P->>D: Retrieve relevant chunks
+    U->>C: Requests exam (name and versions confirmed)
+    C->>P: generate_exam_pdf with blueprint
+    P->>D: Read material chunks (RAG)
     P->>L: Generate and evaluate each item
     L-->>P: Structured item or evaluator result
     P->>X: Compile approved items
     X->>O: PDF and ZIP artifacts
-    P->>D: Persist questions, audit, and counters
-    P-->>H: State, metrics inputs, and outputs
+    P->>D: Persist exam record and audit counters
+    P-->>C: Result summary and artifact paths
+    C-->>U: Artifact event in the chat
 ```
+
+In the harnessing view (Level 4) the same pipeline is invoked by the
+evaluation harness instead of the chat agent, with identical seams; that is
+what makes chat runs and harness runs comparable.
 
 ## Diagram maintenance
 
 Update this file when a container, agent context, harness seam, external
 dependency, port, or evidence contract changes. Keep the harnessing graph
 aligned with `test/evaluation/src/harness.py`, `projects/agents-backend`, and
-the deployment Compose files. Validate Mermaid blocks in the editor preview
+the deployment Compose files. Keep `docs/graphs_tesis.md` in sync when a
+user-facing flow changes; it is the simplified view for the thesis document.
+Validate Mermaid blocks in the editor preview
 before considering the architecture change documented.
 
 Primary sources:

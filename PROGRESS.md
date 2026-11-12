@@ -6,6 +6,26 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
+## 2026-11-12 (graficos en modo usuario + version tesis)
+
+* **Hecho:** `docs/graphs.md` reescrito para hablar solo del sistema en modo
+  usuario: fuera el nodo/interfaz de OpenWebUI legacy y todo el lenguaje de
+  batch. El pipeline de examenes queda documentado como la herramienta de chat
+  `generate_exam_pdf` (HITL: nombre + versiones confirmados por el profesor),
+  fiel a `exam_pipeline/graph.py`; el harness de evaluacion se conserva como la
+  vista primaria de tesis (Level 4). Nuevo `docs/graphs_tesis.md`: 4 diagramas
+  simples en espanol para el documento de tesis (contexto, arquitectura,
+  bucle del agente con confirmacion humana, de chat a PDF), con recomendacion
+  de incluir solo 2 en la tesis para no saturar. Validacion: 30 bloques
+  mermaid de ambos archivos renderizados con mermaid-cli, 0 fallos.
+  Sincronizados `.ops/architecture/graphs.md`, su README, handoff y esta
+  bitacora.
+* **Falta:** verificado del propietario de los dos documentos; decidir que
+  diagramas de `graphs_tesis.md` entran al capitulo de experimentacion.
+* **Decision:** el "batch" no era un modo de usuario separado sino la via de
+  invocacion interna del pipeline desde el chat; se documenta como tal y la
+  palabra batch desaparece de la documentacion de usuario.
+
 ## 2026-11-12 (exam_tunnel como servicio compose del stack)
 
 * **Hecho:** `exam_tunnel` migrado de contenedor suelto (`docker run`) a
