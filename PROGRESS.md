@@ -6,6 +6,28 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
+## 2026-11-12 (launcher raiz levantar.py + re-levantamiento con salida publica por cloudflared)
+
+* **Hecho:** `levantar.py` nuevo en la raiz: launcher fino que delega en
+  `scripts/bring-up.py` via `runpy.run_path` conservando `sys.argv` (pasan
+  `--no-tunnel` y `--reuse-running`); una sola fuente de verdad para el
+  levantamiento. Infraestructura re-levantada en vivo con la script:
+  stack detectado como de este checkout, imagenes re-build rapidas,
+  exam_app healthy, smoke SPA 200 + /subjects 401 (Accept JSON),
+  6 submodulos OK, quick tunnel recreado (`exam_tunnel` Up). URL publica
+  impresa por el banner final: `https://amenities-circle-now-panel
+  .trycloudflare.com` y verificada desde fuera: `/` -> 200, `/subjects`
+  sin Accept JSON -> 200 (SPA catch-all, text/html), `/subjects` con
+  `Accept: application/json` -> 401 (auth intacta atravesando el tunel).
+* **Falta:** el propietario decide si el PR #4 fusiona esta rama (el
+  launcher va en el mismo PR); decision sobre URL estable (DEC-005).
+* **Decision:** la URL publica del quick tunnel es efimera por diseno:
+  subdominio aleatorio de Cloudflare que muere con `exam_tunnel` y cambia
+  en cada levantamiento; la script la imprime siempre al final para
+  compartirla. URL estable requiere Modo B con `TUNNEL_TOKEN` propio
+  (RUN-016; DEC-005 abierta, decision del propietario, el token jamas va
+  al repo).
+
 ## 2026-11-09 (endurecimiento del RECIPE y de bring-up.py tras experimento con agente externo)
 
 * **Hecho:** Analisis de la transcripcion `aprendizajes_despliegue.md`

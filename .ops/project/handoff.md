@@ -6,27 +6,35 @@ title: Handoff entre sesiones
 description: Punto de entrada de cada sesion; estado exacto donde se quedo el trabajo.
 estado: vigente
 dueno: rol:propietario
-fecha: 2026-11-09
+fecha: 2026-11-12
 relaciona: [plan, ops-readme, RUN-016]
 status: stable
 sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.md, title: copilot-instructions }]
 ---
 
-> **Ultima actualizacion:** 2026-11-09 (endurecimiento del recipe tras
-> experimento con agente externo: `RECIPE.md` con 5 reglas duras en
-> seccion 0A - sin exploracion antes de la script, ejecutar donde Docker
-> es nativo, deteccion obligatoria de stack en marcha, secretos jamas
-> entre checkouts, exit 0 como unico veredicto; `scripts/bring-up.py`
-> detecta contenedores exam_* por labels de compose y aborta si salen de
-> otro checkout salvo `--reuse-running`, y verifica los 6 submodulos en
-> SHAs fijados en paso 6; validado en vivo contra el stack real y con
-> simulacion de checkout ajeno) | **Rama:** `main` | **Arbol:** stack
-> exam_* corriendo desde este checkout (5 contenedores + exam_tunnel
-> removable con `docker rm -f exam_tunnel`); `aprendizajes_despliegue.md`
-> sin trackear (transcripcion del experimento; no commitear sin orden del
-> propietario); submodulos realineados a los SHAs fijados por main.
+> **Ultima actualizacion:** 2026-11-12 (launcher raiz `levantar.py` nuevo:
+> delega en `scripts/bring-up.py` via runpy conservando los flags
+> `--no-tunnel` y `--reuse-running`; una sola fuente de verdad.
+> Infraestructura re-levantada en vivo con la script: stack de este
+> checkout, exam_app healthy, smoke SPA 200 + /subjects 401, 6 submodulos
+> OK, `exam_tunnel` recreado y URL publica impresa en el banner final
+> `https://amenities-circle-now-panel.trycloudflare.com`, verificada desde
+> fuera: `/` 200 y `/subjects` con Accept JSON 401. La URL del quick
+> tunnel es efimera: cambia en cada levantamiento; estable solo con
+> `TUNNEL_TOKEN` propio - RUN-016 Modo B, DEC-005 abierta) | **Rama:**
+> `fix/recipe-agent-boundaries` (PR #4 abierto hacia main) | **Arbol:**
+> stack exam_* corriendo desde este checkout (6 contenedores Up,
+> incluido exam_tunnel; teardown con `docker rm -f exam_tunnel` y
+> `docker compose -f docker/docker-compose.yml down`);
+> `docs/graphs_extenso.md` sin trackear (ajeno a este trabajo, no
+> commitear).
 >
-> **Sesion anterior:** 2026-11-05 (tercera revision Felipe: A1 fechas de
+> **Sesion anterior:** 2026-11-09 (endurecimiento del recipe tras
+> experimento con agente externo: `RECIPE.md` con 5 reglas duras en
+> seccion 0A, `scripts/bring-up.py` detecta contenedores exam_* por
+> labels de compose y aborta si salen de otro checkout salvo
+> `--reuse-running`, verifica los 6 submodulos en SHAs fijados en paso 6;
+> commit b5e9d71 y PR #4 abierto hacia main). Anterior: 2026-11-05 (tercera revision Felipe: A1 fechas de
 > verificacion + A2 extendido tipos de pregunta). A1: migracion `c9d0e1f2a3b4`
 > (verified_at), sellado en service, DTOs, 2 columnas de fecha en BankView. A2
 > extendido: allowed_question_types en ExamBlueprint (default 6 tipos, lista

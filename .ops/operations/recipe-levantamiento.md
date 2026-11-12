@@ -6,7 +6,7 @@ title: Recipe de levantamiento del stack
 description: Script automatizada y recipe manual para clonar, levantar, verificar y exponer; sin credenciales embebidas.
 estado: vigente
 dueno: rol:propietario
-fecha: 2026-11-09
+fecha: 2026-11-12
 relaciona: [RUN-016]
 status: stable
 ---
@@ -19,8 +19,12 @@ Las cuentas de usuario se crean por UI o API en cada levantamiento.
 ## Via automatizada (entrada para un agente)
 
 `RECIPE.md` en la raiz: objetivo, reglas duras para el agente (seccion 0A),
-requisitos, pasos manuales y notas para el agente. Una sola script
-multiplataforma, Python 3.7+ solo stdlib: `scripts/bring-up.py`
+requisitos, pasos manuales y notas para el agente. Punto de entrada unico
+en la raiz: `python levantar.py` (launcher fino que delega en
+`scripts/bring-up.py` via runpy conservando los flags `--no-tunnel` y
+`--reuse-running`; verifica que la script exista y aborta con mensaje si
+no). Una sola script multiplataforma, Python 3.7+ solo stdlib:
+`scripts/bring-up.py`
 (submodulos -> `.env` (crea desde `.env.example`, pide la key oculta o toma
 `OPENAI_API_KEY` del entorno, genera `AUTH_SECRET`) -> deteccion de stack
 en marcha -> `docker compose up -d --build` -> espera healthy -> smoke
