@@ -25,7 +25,6 @@ the gitignored .env.
 import argparse
 import getpass
 import os
-import platform
 import re
 import secrets
 import shutil
@@ -277,12 +276,11 @@ def step4_smoke():
 def step5_tunnel():
     step_header(5, "Public exposure (cloudflared quick tunnel)")
     sh(["docker", "rm", "-f", "exam_tunnel"], check=False, capture=True)
-    cmd = ["docker", "run", "--rm", "-d", "--name", "exam_tunnel",
-           "cloudflare/cloudflared:latest", "tunnel",
-           "--url", "http://host.docker.internal:3000", "--no-autoupdate"]
-    if platform.system() == "Linux":
-        cmd += ["--add-host", "host.docker.internal:host-gateway"]
-    sh(cmd)
+    # exam_tunnel runs inside the compose project (service "tunnel",
+    # profile "tunnel") and reaches the SPA by the compose alias
+    # exam-frontend; same teardown as the rest of the stack.
+    sh(["docker", "compose", "-f", COMPOSE_FILE, "--profile", "tunnel",
+        "up", "-d", "tunnel"], check=False)
     url = ""
     deadline = time.time() + TUNNEL_TIMEOUT_S
     while time.time() < deadline:
@@ -300,8 +298,8 @@ def step5_tunnel():
     log("  System is UP and EXPOSED")
     log("  Local:    http://localhost:3000")
     log("  Public:   %s" % url)
-    log("  Teardown: docker rm -f exam_tunnel; "
-        "docker compose -f docker/docker-compose.yml down")
+    log("  Teardown: docker compose -f docker/docker-compose.yml "
+        "--profile tunnel down")
     log("=" * 60)
 
 
@@ -362,7 +360,6 @@ def main():
             "docker compose -f docker/docker-compose.yml down")
         return
     step5_tunnel()
-
 
 if __name__ == "__main__":
     main()

@@ -6,6 +6,35 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
+## 2026-11-12 (exam_tunnel como servicio compose del stack)
+
+* **Hecho:** `exam_tunnel` migrado de contenedor suelto (`docker run`) a
+  **servicio compose** `tunnel` en `docker/docker-compose.yml`, perfil
+  opt-in `tunnel` (mismo patron que `open-webui`/legacy):
+  `docker compose up -d --build` normal sigue siendo local-only; el tunel
+  entra con `--profile tunnel`. El servicio lleva
+  `container_name: exam_tunnel` (tooling y docs intactos), nombre de
+  servicio `tunnel` (sin prefijo `exam_` para no contaminar la deteccion
+  de stack de `bring-up.py`, que solo cuenta los 5 exam_* de app), y va
+  por la red compose al alias `exam-frontend`: ya no usa
+  `host.docker.internal` ni el `--add-host` de Linux (quirk del puerto
+  DGX 39005 desaparece: el puerto host deja de importar). `step5_tunnel`
+  de `bring-up.py` ahora hace `compose --profile tunnel up -d tunnel`;
+  banner de teardown actualizado. Docs sincronizados: RECIPE.md
+  (secciones 5/6, regla 0A, troubleshooting Linux), docs/exposicion-internet.md,
+  RUN-016, recipe-levantamiento.md. Verificado en vivo dos veces:
+  standalone eliminado, `python levantar.py` levanto el servicio (exit 0
+  primera corrida; la segunda con exit 1 cosmico de compose en PS, banner
+  OK), URL nueva impresa y probada desde fuera: `/` -> 200,
+  `/subjects` con Accept JSON -> 401. Teardown con perfil probado:
+  `compose --profile tunnel down` detiene tunel + stack.
+* **Falta:** fusion del PR #4 (este cambio entra en la misma rama);
+  decision sobre URL estable (DEC-005).
+* **Decision:** el tunel pertenece al ciclo de vida del stack: mismo
+  `compose down`, sin `--rm` ni contenedor huerfano. Servicio `tunnel`
+  con perfil para que el levantamiento por defecto siga sin exponer nada
+  al internet.
+
 ## 2026-11-12 (launcher raiz levantar.py + re-levantamiento con salida publica por cloudflared)
 
 * **Hecho:** `levantar.py` nuevo en la raiz: launcher fino que delega en

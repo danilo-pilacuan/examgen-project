@@ -55,15 +55,18 @@ git submodule update --init --recursive
 cp .env.example .env   # editar: OPENAI_API_KEY=<tu-key>; AUTH_SECRET generado
 docker compose -f docker/docker-compose.yml up -d --build
 docker inspect --format '{{.State.Health.Status}}' exam_app   # -> healthy
-docker run --rm -d --name exam_tunnel cloudflare/cloudflared:latest \
-  tunnel --url http://host.docker.internal:3000 --no-autoupdate
+docker compose -f docker/docker-compose.yml --profile tunnel up -d tunnel
 docker logs exam_tunnel 2>&1 | grep trycloudflare             # URL publica
 ```
 
-Con `FRONTEND_PORT` distinto (DGX: 39005) sustituir en `--url`. Para URL
-estable con credencial propia: `tunnel run --token $TUNNEL_TOKEN` (token
-solo por entorno). Bajar todo: `docker rm -f exam_tunnel; docker compose
--f docker/docker-compose.yml down` (volumenes intactos).
+El tunel es un servicio compose (`tunnel`, perfil opt-in) y va por la red
+compose al alias `exam-frontend`: el puerto host deja de importar (DGX u
+otro `FRONTEND_PORT` no requieren cambios). Para URL estable con credencial
+propia: edita el `command` del servicio `tunnel` a
+`tunnel --no-autoupdate run --token $TUNNEL_TOKEN` (token solo por
+entorno). Bajar todo: `docker compose -f docker/docker-compose.yml
+--profile tunnel down; docker compose -f docker/docker-compose.yml down`
+(volumenes intactos).
 
 ## Gotchas (probados en vivo)
 

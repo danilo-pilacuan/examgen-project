@@ -101,6 +101,28 @@ services:
       - "3000:80"
     depends_on:
       - exam-app
+    # The quick-tunnel container reaches the SPA by its compose network
+    # alias (no host.docker.internal, no host-gateway needed on Linux).
+    networks:
+      default:
+        aliases:
+          - exam-frontend
+
+  # Public exposure (cloudflared quick tunnel, RUN-016 Mode A). Opt-in with
+  # a profile: plain `compose up` stays local-only; bring-up.py or
+  # `docker compose -f docker/docker-compose.yml --profile tunnel up -d
+  # tunnel` starts it. Container name stays exam_tunnel (docs and teardown
+  # references); the service name avoids the exam_* prefix so stack
+  # detection in scripts/bring-up.py keeps counting app services only.
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: exam_tunnel
+    restart: no
+    profiles:
+      - tunnel
+    command: tunnel --url http://exam-frontend:80 --no-autoupdate
+    depends_on:
+      - frontend
 
   # OpenWebUI: legacy conversational interface ("legacy" profile).
   # Start with: docker compose --profile legacy up -d

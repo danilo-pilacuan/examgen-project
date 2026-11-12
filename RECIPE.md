@@ -63,7 +63,8 @@ sigue las secciones siguientes. **Este documento no contiene credenciales**; los
    - **Otro checkout**: para. NO hagas `compose down` ni rebuild por tu
      cuenta: pregunta al usuario entre (a) reutilizar el stack en marcha
      tal cual (verifica con el smoke de la seccion 4 y termina), o
-     (b) reemplazarlo (`docker rm -f exam_tunnel` y
+     (b) reemplazarlo (`docker compose -f docker/docker-compose.yml
+     --profile tunnel down` y
      `docker compose -f docker/docker-compose.yml down` **desde el
      checkout dueno del stack**, luego corre la script aqui).
    - **Stack parcial** (algunos contenedores exam_* Up y otros no,
@@ -192,31 +193,35 @@ curl http://localhost:3000/subjects -H 'Accept: application/json' \
 
 ## 5. Exponer al internet (cloudflared quick tunnel)
 
-Un solo comando, **sin credenciales**; la URL pública es aleatoria y cambia
-en cada levantamiento (RUN-016 Modo A):
+El tunel es hoy un **servicio compose** (`tunnel`, perfil opt-in
+`tunnel`), dentro de la misma red del stack; alcanza el frontend por su
+alias de red `exam-frontend` (no usa `host.docker.internal` ni rutas
+prohibidas). Un solo comando, **sin credenciales**; la URL publica es
+aleatoria y cambia en cada levantamiento (RUN-016 Modo A):
 
 ```bash
-docker pull cloudflare/cloudflared:latest
-docker run --rm -d --name exam_tunnel cloudflare/cloudflared:latest \
-  tunnel --url http://host.docker.internal:3000 --no-autoupdate
+docker compose -f docker/docker-compose.yml --profile tunnel up -d tunnel
 docker logs exam_tunnel 2>&1 | grep trycloudflare
 #    → https://<4-palabras>.trycloudflare.com   ← comparte esta URL
 ```
 
-- Linux: añade `--add-host=host.docker.internal:host-gateway`.
-- La script hace este paso completa: levanta el contenedor, espera y
-  extrae la URL de los logs del tunel. Si el frontend escucha en un
-  puerto host distinto (compose mapea `FRONTEND_PORT:80`), la script usa
-  ese puerto; a mano, cambialo en `--url`.
-- **URL estable (opcional):** tunnel token propio de Cloudflare Zero Trust
-  (placeholder `$TUNNEL_TOKEN`): `tunnel --no-autoupdate run --token $TUNNEL_TOKEN`.
-- Apagar: `docker rm -f exam_tunnel` (la URL muere al instante).
+- La script hace este paso completa: levanta el servicio, espera y extrae
+  la URL de los logs del tunel. El puerto host deja de importar: el tunel
+  va a `http://exam-frontend:80` por la red compose.
+- **URL estable (opcional):** tunnel token propio de Cloudflare Zero
+  Trust. En `docker/docker-compose.yml` cambia el `command` del servicio
+  `tunnel` por `tunnel --no-autoupdate run --token $TUNNEL_TOKEN`
+  (placeholder; nunca en git).
+- Apagar: `docker compose -f docker/docker-compose.yml --profile tunnel
+  down` (mata el tunel y la URL al instante).
+- *Modo heredado* (`docker run --name exam_tunnel ...`): sigue siendo
+  validamente accesible pero ya no es el camino soportado.
 
 ## 6. Teardown
 
 ```bash
-docker rm -f exam_tunnel                                 # mata la URL pública
-docker compose -f docker/docker-compose.yml down         # contenedores + red
+docker compose -f docker/docker-compose.yml --profile tunnel down  # tunel + URL
+docker compose -f docker/docker-compose.yml down                   # contenedores + red
 # los volumenes (BD, open_webui_data) sobreviven al down
 ```
 
@@ -259,8 +264,8 @@ docker compose -f docker/docker-compose.yml down         # contenedores + red
   llega como excepción; `docker logs` sin stderr se queda mudo — usa
   `cmd /c "docker logs exam_tunnel 2>&1"`; consola cp1252; `docker compose
   up` con exit 1 cosmético — valida con health + HTTP.
-- Gotchas Linux: el tunel necesita
-  `--add-host=host.docker.internal:host-gateway` (la script lo añade sola
-  en Linux); el interprete puede llamarse `python3` y no `python` — usa el
-  que exista; el interprete del zip embeddable en Windows se llama
-  `python.exe` (la ruta del bootstrap del encabezado ya lo usa).
+- Gotchas Linux: el tunel ya no depende de `host.docker.internal` (va por
+  la red compose al alias `exam-frontend`); el interprete puede llamarse
+  `python3` y no `python` — usa el que exista; el interprete del zip
+  embeddable en Windows se llama `python.exe` (la ruta del bootstrap del
+  encabezado ya lo usa).

@@ -12,20 +12,27 @@ status: stable
 sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.md, title: copilot-instructions }]
 ---
 
-> **Ultima actualizacion:** 2026-11-12 (launcher raiz `levantar.py` nuevo:
+> **Ultima actualizacion:** 2026-11-12 (segunda entrada del dia: `exam_tunnel`
+> es ahora un **servicio compose** `tunnel` con perfil opt-in `tunnel` en
+> `docker/docker-compose.yml`: mismo ciclo de vida que el stack, va por la
+> red compose al alias `exam-frontend` (sin `host.docker.internal` ni
+> `--add-host` de Linux; el puerto host del frontend deja de importar),
+> `container_name: exam_tunnel` preservado. `bring-up.py`/`levantar.py`
+> lo levantan con `compose --profile tunnel up -d tunnel`; teardown:
+> `compose --profile tunnel down` (probado: baja tunel + stack). Verificado
+> en vivo: URL nueva `https://undergraduate-workstation-projects-toe
+> .trycloudflare.com`, `/` -> 200 y `/subjects` con Accept JSON -> 401
+> desde fuera. Primera entrada del dia: launcher raiz `levantar.py` que
 > delega en `scripts/bring-up.py` via runpy conservando los flags
-> `--no-tunnel` y `--reuse-running`; una sola fuente de verdad.
-> Infraestructura re-levantada en vivo con la script: stack de este
-> checkout, exam_app healthy, smoke SPA 200 + /subjects 401, 6 submodulos
-> OK, `exam_tunnel` recreado y URL publica impresa en el banner final
-> `https://amenities-circle-now-panel.trycloudflare.com`, verificada desde
-> fuera: `/` 200 y `/subjects` con Accept JSON 401. La URL del quick
-> tunnel es efimera: cambia en cada levantamiento; estable solo con
+> `--no-tunnel` y `--reuse-running`; una sola fuente de verdad. La URL del
+> quick tunnel es efimera: cambia en cada levantamiento; estable solo con
 > `TUNNEL_TOKEN` propio - RUN-016 Modo B, DEC-005 abierta) | **Rama:**
 > `fix/recipe-agent-boundaries` (PR #4 abierto hacia main) | **Arbol:**
-> stack exam_* corriendo desde este checkout (6 contenedores Up,
-> incluido exam_tunnel; teardown con `docker rm -f exam_tunnel` y
-> `docker compose -f docker/docker-compose.yml down`);
+> stack exam_* corriendo desde este checkout (7 contenedores Up:
+> exam_app, exam_frontend, exam_tunnel, exam_postgres_db,
+> exam_latex_compiler, exam_embedding_service, exam_open_webui;
+> teardown con `docker compose -f docker/docker-compose.yml --profile
+> tunnel down` y `docker compose -f docker/docker-compose.yml down`);
 > `docs/graphs_extenso.md` sin trackear (ajeno a este trabajo, no
 > commitear).
 >
@@ -150,3 +157,4 @@ Exam Generator: MVP de tesis USFQ para que un profesor genere examenes LaTeX por
 | 2026-11-08 (recuperacion entorno) | Las imagenes y contenedores Docker del stack desaparecieron del host; se reconstruyeron con `docker compose -f docker/docker-compose.yml up -d --build` (pgvector, latex-compiler, embedding-service, exam-app, frontend) + open-webui con perfil legacy. El volumen `docker_postgres_data` sobrevivio: BD completa conservada (8 materias, 318 chunks, 647 preguntas, 5 examenes, alembic head c9d0e1f2a3b4, cuenta qa-r11), no fue necesario re-seed; data/inputs y data/agent_outputs intactos (894 archivos). Un proceso ajeno (React Native dev server, node C:\dev\trigger-hub) ocupa el puerto host 8081 -> el embedding-service se remapeo a 18081:8081 en docker/docker-compose.yml (lado contenedor sin cambios; scripts en host: EMBEDDING_URL=http://localhost:18081/v1/embeddings). Verificacion: health 200 en los 6 contenedores, login qa-r11 200, GET /subjects 200, POST /v1/embeddings 200, flujo completo POST /exams/generate 200 en ~3 min (2 preguntas multiple_choice aprobadas, 0 rechazos, 4 llamadas LLM, persist saved=2, Rebuild_Check_1 PDFs + ZIP creados y servidos por nginx 200). Pendiente: commit + push del cambio de puerto en el meta-repo |
 | 2026-11-09 (exposicion publica) | Pedido del propietario: exponer el stack al internet; comparados Tailscale Funnel y cloudflared; elegido cloudflared quick tunnel (0 credenciales, 1 comando docker, URL aleatoria efimera) - RUN-016 ejecutado en vivo: contenedor `exam_tunnel` (cloudflare/cloudflared:latest) -> http://host.docker.internal:3000; verificacion E2E real via URL publica: SPA 200, /subjects 401 sin token (la auth JWT se mantiene atravesando el tunel), login 200 con cuenta de prueba, GET /subjects 200 con 8 materias, WebSocket wss://.../ws OPEN (101). Ademas: RECIPE.md (entrada para cualquier agente: clone del repo principal, submodulos, secretos, stack, tunel) + scripts/bring-up.py (Python 3.7+, solo stdlib; una script para cualquier SO; bootstrap de interprete portable temporal si falta Python) probada E2E en vivo x2 (Python del host 3.14 y portable 3.12.8 desde %TEMP%) con URL nueva impresa y verificada desde fuera; .env solo pide OPENAI_API_KEY (AUTH_SECRET se genera). Documentacion: .ops/operations/ bootstrappeado (README, runbooks.md, RUN-016 estado probado, recipe-levantamiento.md agnostica a credenciales con $TUNNEL_TOKEN como placeholder), DEC-005 abierta (propietario confirma o pide named/tailscale), QT-016 aprobada con caso adversarial 401, handoff+PROGRESS actualizados. Gotchas nuevos: winget y curl.exe a GitHub releases devolvieron 504 en esta red -> docker pull cloudflare/cloudflared:latest funciona; quick tunnel muere con el contenedor (URL no reutilizable); `docker logs 2>&1` dispara NativeCommandError en PS 5.1 (usar `cmd /c`); `catch [HttpResponseException]` no existe en PS 5.1. Pendiente: verificado del propietario en DEC-005, alta de TUNNEL_TOKEN propio si se quiere URL estable |
 | 2026-11-09 (endurecimiento recipe) | Experimento del propietario: agente externo (Hermes, clon WSL) con RECIPE.md no logro instalar y derivo a ~20 comandos exploratorios (docker ausente en distro WSL sin integracion, debatio reusar vs re-desplegar, copio .env de otro clon, declaro verde sin exit 0 de la script). Cambios: RECIPE.md con 5 reglas duras (0A: sin exploracion - primera accion = ejecutar la script; ejecutar donde `docker version` responda sin depurar interop WSL; deteccion obligatoria de stack en marcha con arbol mismo-checkout/otro-checkout/parcial; secretos jamas se copian ni leen entre checkouts; exit 0 + lineas OK como unico veredicto), troubleshooting nuevo (vsock, puertos ocupados, stack ajeno, submodulos desviados) y requirements sin parseo de `docker ps`. scripts/bring-up.py: deteccion de stack por labels compose (config_files), aborto si el stack sale de otro checkout salvo `--reuse-running`, paso 6 de verificacion de 6 submodulos en SHAs fijados (rechaza +, -, U). Validado en vivo: py_compile verde, ejecucion real contra stack de este checkout (deteccion + smoke + 6 submodulos OK), simulacion de checkout ajeno (abort exit 1 con mensaje accionario), --reuse-running adopta sin tocar. .ops actualizado (recipe-levantamiento, handoff, PROGRESS). Pendiente: commit + push, verificado del propietario de las reglas 0A |
+| 2026-11-12 (launcher + tunel compose) | Dos mejoras del recipe en la rama `fix/recipe-agent-boundaries` (PR #4): (1) launcher raiz `levantar.py` (delega en `scripts/bring-up.py` via runpy, conserva `--no-tunnel`/`--reuse-running`), infra re-levantada en vivo con URL nueva verificada desde fuera (commit 80c7b05). (2) `exam_tunnel` migrado de `docker run` a servicio compose `tunnel` con perfil opt-in `tunnel` en docker-compose.yml: va por la red compose al alias `exam-frontend` (fuera `host.docker.internal` y el `--add-host` de Linux; puerto host deja de importar), `container_name: exam_tunnel` preservado, servicio sin prefijo `exam_` para no contaminar la deteccion de stack; `step5_tunnel` de bring-up.py usa `compose --profile tunnel up -d tunnel`. Docs sincronizados (RECIPE 5/6/0A/troubleshooting, exposicion-internet, RUN-016, recipe-levantamiento). Verificado en vivo x2: URL nueva impresa, `/` 200 y `/subjects` Accept JSON 401 desde fuera; teardown con perfil baja tunel + stack. Pendiente: merge del PR #4, verificado del propietario, DEC-005 (URL estable) |
