@@ -23,21 +23,19 @@ levantamiento** y desaparece al detener el contenedor. El túnel apunta al
 Requisitos: Docker corriendo y el stack arriba (`cd docker && docker compose up -d --build`).
 
 ```powershell
-# 1. Imagen (solo la primera vez; winget/curl directo falló con 504 en esta red)
-docker pull cloudflare/cloudflared:latest
+# 1. Levantar el tunel como servicio compose (perfil opt-in "tunnel")
+docker compose -f docker/docker-compose.yml --profile tunnel up -d tunnel
 
-# 2. Levantar el túnel (Windows/macOS; en Linux añade --add-host=host.docker.internal:host-gateway)
-docker run --rm -d --name exam_tunnel cloudflare/cloudflared:latest `
-  tunnel --url http://host.docker.internal:3000 --no-autoupdate
-
-# 3. Leer la URL pública generada de los logs
+# 2. Leer la URL pública generada de los logs
 docker logs exam_tunnel 2>&1 | Select-String "trycloudflare"
 #    → https://grab-testimonials-pty-numbers.trycloudflare.com (ejemplo; la tuya será otra)
 ```
 
 Comparte esa URL: el visitante ve el login del frontend y necesita una
-cuenta (la auth JWT se mantiene a través del túnel). Si el puerto del
-frontend es otro (DGX: 39005), sustitúyelo en `--url`.
+cuenta (la auth JWT se mantiene a través del túnel). El túnel va a
+`http://exam-frontend:80` por la red compose: el puerto host del frontend
+deja de importar (DGX u otro host con `FRONTEND_PORT` distinto no
+requieren cambios).
 
 ## Modo B — URL estable (requiere TU credencial propia)
 
@@ -46,8 +44,9 @@ Cuando necesites una URL fija (Dominio propio + subdominio), crea un
 → Create tunnel → copia el token) y ejecuta:
 
 ```powershell
-docker run --rm -d --name exam_tunnel cloudflare/cloudflared:latest `
-  tunnel --no-autoupdate run --token $env:TUNNEL_TOKEN
+docker compose -f docker/docker-compose.yml --profile tunnel up -d tunnel
+# con token: edita el `command` del servicio `tunnel` en docker-compose.yml:
+#   tunnel --no-autoupdate run --token $TUNNEL_TOKEN
 ```
 
 El token vive solo en tu entorno (`$env:TUNNEL_TOKEN` o un `.env` fuera de
@@ -77,7 +76,7 @@ Tailscale, HTTPS habilitado y ACL de funnel en la consola.
 - Apaga el túnel al terminar la demo:
 
 ```powershell
-docker rm -f exam_tunnel   # la URL queda muerta inmediatamente
+docker compose -f docker/docker-compose.yml --profile tunnel down   # la URL queda muerta inmediatamente
 ```
 
 ## Levantamiento completo (recipe)

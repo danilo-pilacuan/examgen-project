@@ -6,33 +6,50 @@ title: Handoff entre sesiones
 description: Punto de entrada de cada sesion; estado exacto donde se quedo el trabajo.
 estado: vigente
 dueno: rol:propietario
-fecha: 2026-11-09
+fecha: 2026-11-12
 relaciona: [plan, ops-readme, RUN-016]
 status: stable
 sources: [{ id: copilot-instructions, resource: ../.github/copilot-instructions.md, title: copilot-instructions }]
 ---
 
-> **Ultima actualizacion:** 2026-11-09 (exposicion publica del stack al
-> internet: decision tomada con el propietario en la sesion - cloudflared,
-> opcion mas simple y agnostica a credenciales; RUN-016 ejecutado en vivo
-> con quick tunnel Docker: SPA 200, auth 401 sin token / 200 con credenciales
-> de prueba, WS 101; RECIPE.md + scripts/bring-up.py (una sola script
-> multiplataforma, Python 3.7+ solo stdlib; si falta Python, bootstrap de
-> interprete portable temporal: zip embeddable de python.org a un
-> directorio temporal, sin instalar ni tocar el PATH; eleccion iterada con
-> el propietario: PS descartado, bash descartado por Git Bash, Python
-> elegido con portable autorizado) creada y probada E2E en vivo dos veces
-> (Python del host y portable):
-> submodulos, .env con OPENAI_API_KEY pedida al usuario y AUTH_SECRET
-> generado, build, healthy, smoke 200/401, tunnel con URL nueva impresa y
-> verificada desde fuera; doc de recipe en .ops/operations/recipe-levantamiento.md
-> y guia publica en docs/exposicion-internet.md, sin credenciales
-> embebidas) | **Rama:** `RC3/develop` | **Arbol:** `docker exam_tunnel`
-> corriendo (contenedor de tuneles, removable con `docker rm -f exam_tunnel`);
-> `.ops/operations/` nuevo (README, runbooks, RUN-016, recipe);
-> `.ops/decisions/DEC-005`, `.ops/qa/QT-016` nuevos; indexes actualizados.
+> **Ultima actualizacion:** 2026-11-12 (tercera entrada del dia: reescritura
+> de `docs/graphs.md` para describir el sistema solo en modo usuario - sin
+> OpenWebUI legacy ni lenguaje de batch; el pipeline de examenes queda
+> documentado como lo que es: la herramienta `generate_exam_pdf` invocada
+> desde el chat tras confirmacion HITL de nombre y versiones. Nuevo
+> `docs/graphs_tesis.md`: 4 diagramas simples y legibles en espanol para el
+> documento de tesis, con recomendacion de usar solo 1 y 3. 30 bloques
+> mermaid validados con mermaid-cli, 0 fallos. `.ops/architecture/graphs.md`
+> y README sincronizados. Segunda entrada del dia: `exam_tunnel`
+> es ahora un **servicio compose** `tunnel` con perfil opt-in `tunnel` en
+> `docker/docker-compose.yml`: mismo ciclo de vida que el stack, va por la
+> red compose al alias `exam-frontend` (sin `host.docker.internal` ni
+> `--add-host` de Linux; el puerto host del frontend deja de importar),
+> `container_name: exam_tunnel` preservado. `bring-up.py`/`levantar.py`
+> lo levantan con `compose --profile tunnel up -d tunnel`; teardown:
+> `compose --profile tunnel down` (probado: baja tunel + stack). Verificado
+> en vivo: URL nueva `https://undergraduate-workstation-projects-toe
+> .trycloudflare.com`, `/` -> 200 y `/subjects` con Accept JSON -> 401
+> desde fuera. Primera entrada del dia: launcher raiz `levantar.py` que
+> delega en `scripts/bring-up.py` via runpy conservando los flags
+> `--no-tunnel` y `--reuse-running`; una sola fuente de verdad. La URL del
+> quick tunnel es efimera: cambia en cada levantamiento; estable solo con
+> `TUNNEL_TOKEN` propio - RUN-016 Modo B, DEC-005 abierta) | **Rama:**
+> `fix/recipe-agent-boundaries` (PR #4 abierto hacia main) | **Arbol:**
+> stack exam_* corriendo desde este checkout (7 contenedores Up:
+> exam_app, exam_frontend, exam_tunnel, exam_postgres_db,
+> exam_latex_compiler, exam_embedding_service, exam_open_webui;
+> teardown con `docker compose -f docker/docker-compose.yml --profile
+> tunnel down` y `docker compose -f docker/docker-compose.yml down`);
+> `docs/graphs_extenso.md` sin trackear (ajeno a este trabajo, no
+> commitear).
 >
-> **Sesion anterior:** 2026-11-05 (tercera revision Felipe: A1 fechas de
+> **Sesion anterior:** 2026-11-09 (endurecimiento del recipe tras
+> experimento con agente externo: `RECIPE.md` con 5 reglas duras en
+> seccion 0A, `scripts/bring-up.py` detecta contenedores exam_* por
+> labels de compose y aborta si salen de otro checkout salvo
+> `--reuse-running`, verifica los 6 submodulos en SHAs fijados en paso 6;
+> commit b5e9d71 y PR #4 abierto hacia main). Anterior: 2026-11-05 (tercera revision Felipe: A1 fechas de
 > verificacion + A2 extendido tipos de pregunta). A1: migracion `c9d0e1f2a3b4`
 > (verified_at), sellado en service, DTOs, 2 columnas de fecha en BankView. A2
 > extendido: allowed_question_types en ExamBlueprint (default 6 tipos, lista
@@ -81,7 +98,9 @@ Exam Generator: MVP de tesis USFQ para que un profesor genere examenes LaTeX por
 1. Verificado del propietario de RUN-016/QT-016/DEC-005 (exposicion
    publica: confirmar quick tunnel o pedir named tunnel/Tailscale) y de la
    recipe (RECIPE.md + scripts/bring-up.py); si se quiere URL estable,
-   tunnel token propio (Modo B de RUN-016, nunca en el repo).
+   tunnel token propio (Modo B de RUN-016, nunca en el repo). Incluye el
+   verificado de las 5 reglas duras 0A y del flag `--reuse-running`
+   anadidos el 2026-11-09.
 2. Verificado del propietario de QT-015/BUG-030/BUG-031 (ronda 15) y de los
    pendientes previos: QT-011/QT-012/QT-013/QT-014, IMPL-028/029/030,
    BUG-026/027/028/029 (corregidos) y hallazgo J1: revisar evidencia
@@ -145,3 +164,6 @@ Exam Generator: MVP de tesis USFQ para que un profesor genere examenes LaTeX por
 | 2026-11-06 (ronda 15) | Feedback ronda 2 de la tercera revision (mandato del propietario: Bloom no select y blueprint por tema) implementado frontend-only (IMPL-031/BL-024): checkbox groups de Bloom (6 niveles) y dificultad (3) con distribucion uniforme (levelsToDist, resto a la primera clave) y selectores numericos por tema real del banco (0-50, topics por watch de activeSubjectId) convertidos a topics_weight (applyTopicCounts, fallback general 1.0); removidos presets y grids de peso custom; i18n EN/ES (7 claves nuevas, 3 removidas). BUG-030 detectado y corregido: interpolacion i18n sin {sum,total} -> hint "(of )"; fix en template + generate(), rebuild y hint "(of 10)" verificado. QA Playwright (materia Economia Aplicada - QA11): rechazo suma 60 > total 10 con 0 llamadas API; E2E real total 2 / Econometrics 2 / 3 niveles Bloom desmarcados -> POST 200 tras ~4 min, examen con ZIP. Docs .ops: BL-024, IMPL-031, QT-015, BUG-030 + indexes/traceability/handoff/PROGRESS. Pendiente: commit + push del submodulo frontend; verificado del propietario |
 | 2026-11-08 (recuperacion entorno) | Las imagenes y contenedores Docker del stack desaparecieron del host; se reconstruyeron con `docker compose -f docker/docker-compose.yml up -d --build` (pgvector, latex-compiler, embedding-service, exam-app, frontend) + open-webui con perfil legacy. El volumen `docker_postgres_data` sobrevivio: BD completa conservada (8 materias, 318 chunks, 647 preguntas, 5 examenes, alembic head c9d0e1f2a3b4, cuenta qa-r11), no fue necesario re-seed; data/inputs y data/agent_outputs intactos (894 archivos). Un proceso ajeno (React Native dev server, node C:\dev\trigger-hub) ocupa el puerto host 8081 -> el embedding-service se remapeo a 18081:8081 en docker/docker-compose.yml (lado contenedor sin cambios; scripts en host: EMBEDDING_URL=http://localhost:18081/v1/embeddings). Verificacion: health 200 en los 6 contenedores, login qa-r11 200, GET /subjects 200, POST /v1/embeddings 200, flujo completo POST /exams/generate 200 en ~3 min (2 preguntas multiple_choice aprobadas, 0 rechazos, 4 llamadas LLM, persist saved=2, Rebuild_Check_1 PDFs + ZIP creados y servidos por nginx 200). Pendiente: commit + push del cambio de puerto en el meta-repo |
 | 2026-11-09 (exposicion publica) | Pedido del propietario: exponer el stack al internet; comparados Tailscale Funnel y cloudflared; elegido cloudflared quick tunnel (0 credenciales, 1 comando docker, URL aleatoria efimera) - RUN-016 ejecutado en vivo: contenedor `exam_tunnel` (cloudflare/cloudflared:latest) -> http://host.docker.internal:3000; verificacion E2E real via URL publica: SPA 200, /subjects 401 sin token (la auth JWT se mantiene atravesando el tunel), login 200 con cuenta de prueba, GET /subjects 200 con 8 materias, WebSocket wss://.../ws OPEN (101). Ademas: RECIPE.md (entrada para cualquier agente: clone del repo principal, submodulos, secretos, stack, tunel) + scripts/bring-up.py (Python 3.7+, solo stdlib; una script para cualquier SO; bootstrap de interprete portable temporal si falta Python) probada E2E en vivo x2 (Python del host 3.14 y portable 3.12.8 desde %TEMP%) con URL nueva impresa y verificada desde fuera; .env solo pide OPENAI_API_KEY (AUTH_SECRET se genera). Documentacion: .ops/operations/ bootstrappeado (README, runbooks.md, RUN-016 estado probado, recipe-levantamiento.md agnostica a credenciales con $TUNNEL_TOKEN como placeholder), DEC-005 abierta (propietario confirma o pide named/tailscale), QT-016 aprobada con caso adversarial 401, handoff+PROGRESS actualizados. Gotchas nuevos: winget y curl.exe a GitHub releases devolvieron 504 en esta red -> docker pull cloudflare/cloudflared:latest funciona; quick tunnel muere con el contenedor (URL no reutilizable); `docker logs 2>&1` dispara NativeCommandError en PS 5.1 (usar `cmd /c`); `catch [HttpResponseException]` no existe en PS 5.1. Pendiente: verificado del propietario en DEC-005, alta de TUNNEL_TOKEN propio si se quiere URL estable |
+| 2026-11-09 (endurecimiento recipe) | Experimento del propietario: agente externo (Hermes, clon WSL) con RECIPE.md no logro instalar y derivo a ~20 comandos exploratorios (docker ausente en distro WSL sin integracion, debatio reusar vs re-desplegar, copio .env de otro clon, declaro verde sin exit 0 de la script). Cambios: RECIPE.md con 5 reglas duras (0A: sin exploracion - primera accion = ejecutar la script; ejecutar donde `docker version` responda sin depurar interop WSL; deteccion obligatoria de stack en marcha con arbol mismo-checkout/otro-checkout/parcial; secretos jamas se copian ni leen entre checkouts; exit 0 + lineas OK como unico veredicto), troubleshooting nuevo (vsock, puertos ocupados, stack ajeno, submodulos desviados) y requirements sin parseo de `docker ps`. scripts/bring-up.py: deteccion de stack por labels compose (config_files), aborto si el stack sale de otro checkout salvo `--reuse-running`, paso 6 de verificacion de 6 submodulos en SHAs fijados (rechaza +, -, U). Validado en vivo: py_compile verde, ejecucion real contra stack de este checkout (deteccion + smoke + 6 submodulos OK), simulacion de checkout ajeno (abort exit 1 con mensaje accionario), --reuse-running adopta sin tocar. .ops actualizado (recipe-levantamiento, handoff, PROGRESS). Pendiente: commit + push, verificado del propietario de las reglas 0A |
+| 2026-11-12 (launcher + tunel compose) | Dos mejoras del recipe en la rama `fix/recipe-agent-boundaries` (PR #4): (1) launcher raiz `levantar.py` (delega en `scripts/bring-up.py` via runpy, conserva `--no-tunnel`/`--reuse-running`), infra re-levantada en vivo con URL nueva verificada desde fuera (commit 80c7b05). (2) `exam_tunnel` migrado de `docker run` a servicio compose `tunnel` con perfil opt-in `tunnel` en docker-compose.yml: va por la red compose al alias `exam-frontend` (fuera `host.docker.internal` y el `--add-host` de Linux; puerto host deja de importar), `container_name: exam_tunnel` preservado, servicio sin prefijo `exam_` para no contaminar la deteccion de stack; `step5_tunnel` de bring-up.py usa `compose --profile tunnel up -d tunnel`. Docs sincronizados (RECIPE 5/6/0A/troubleshooting, exposicion-internet, RUN-016, recipe-levantamiento). Verificado en vivo x2: URL nueva impresa, `/` 200 y `/subjects` Accept JSON 401 desde fuera; teardown con perfil baja tunel + stack. Pendiente: merge del PR #4, verificado del propietario, DEC-005 (URL estable) |
+| 2026-11-12 (graficos modo usuario) | A pedido del propietario: `docs/graphs.md` reescrito para describir el sistema solo en modo usuario - eliminados OpenWebUI/frontend legacy (nodo webui, aristas, interfaz /v1 compat, seccion batch) y reformulado el "batch" como lo que realmente es: el pipeline de examenes invocado desde el chat via `generate_exam_pdf` tras confirmacion HITL (fiel a exam_pipeline/graph.py); el harness de evaluacion se conserva como vista de tesis (Level 4). Nuevo `docs/graphs_tesis.md` (documento de tesis): 4 diagramas simples en espanol sin diacriticos (contexto, arquitectura simplificada, bucle del agente con HITL, de chat a PDF) con recomendacion de incluir solo 2 en la tesis. Validacion: 30 bloques mermaid de ambos docs renderizados con mermaid-cli, 0 fallos. Docs .ops sincronizados (architecture/graphs.md + README, handoff, PROGRESS). Pendiente: commit + push, verificado del propietario |

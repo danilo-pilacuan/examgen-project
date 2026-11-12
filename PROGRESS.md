@@ -6,6 +6,102 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
+## 2026-11-12 (graficos en modo usuario + version tesis)
+
+* **Hecho:** `docs/graphs.md` reescrito para hablar solo del sistema en modo
+  usuario: fuera el nodo/interfaz de OpenWebUI legacy y todo el lenguaje de
+  batch. El pipeline de examenes queda documentado como la herramienta de chat
+  `generate_exam_pdf` (HITL: nombre + versiones confirmados por el profesor),
+  fiel a `exam_pipeline/graph.py`; el harness de evaluacion se conserva como la
+  vista primaria de tesis (Level 4). Nuevo `docs/graphs_tesis.md`: 4 diagramas
+  simples en espanol para el documento de tesis (contexto, arquitectura,
+  bucle del agente con confirmacion humana, de chat a PDF), con recomendacion
+  de incluir solo 2 en la tesis para no saturar. Validacion: 30 bloques
+  mermaid de ambos archivos renderizados con mermaid-cli, 0 fallos.
+  Sincronizados `.ops/architecture/graphs.md`, su README, handoff y esta
+  bitacora.
+* **Falta:** verificado del propietario de los dos documentos; decidir que
+  diagramas de `graphs_tesis.md` entran al capitulo de experimentacion.
+* **Decision:** el "batch" no era un modo de usuario separado sino la via de
+  invocacion interna del pipeline desde el chat; se documenta como tal y la
+  palabra batch desaparece de la documentacion de usuario.
+
+## 2026-11-12 (exam_tunnel como servicio compose del stack)
+
+* **Hecho:** `exam_tunnel` migrado de contenedor suelto (`docker run`) a
+  **servicio compose** `tunnel` en `docker/docker-compose.yml`, perfil
+  opt-in `tunnel` (mismo patron que `open-webui`/legacy):
+  `docker compose up -d --build` normal sigue siendo local-only; el tunel
+  entra con `--profile tunnel`. El servicio lleva
+  `container_name: exam_tunnel` (tooling y docs intactos), nombre de
+  servicio `tunnel` (sin prefijo `exam_` para no contaminar la deteccion
+  de stack de `bring-up.py`, que solo cuenta los 5 exam_* de app), y va
+  por la red compose al alias `exam-frontend`: ya no usa
+  `host.docker.internal` ni el `--add-host` de Linux (quirk del puerto
+  DGX 39005 desaparece: el puerto host deja de importar). `step5_tunnel`
+  de `bring-up.py` ahora hace `compose --profile tunnel up -d tunnel`;
+  banner de teardown actualizado. Docs sincronizados: RECIPE.md
+  (secciones 5/6, regla 0A, troubleshooting Linux), docs/exposicion-internet.md,
+  RUN-016, recipe-levantamiento.md. Verificado en vivo dos veces:
+  standalone eliminado, `python levantar.py` levanto el servicio (exit 0
+  primera corrida; la segunda con exit 1 cosmico de compose en PS, banner
+  OK), URL nueva impresa y probada desde fuera: `/` -> 200,
+  `/subjects` con Accept JSON -> 401. Teardown con perfil probado:
+  `compose --profile tunnel down` detiene tunel + stack.
+* **Falta:** fusion del PR #4 (este cambio entra en la misma rama);
+  decision sobre URL estable (DEC-005).
+* **Decision:** el tunel pertenece al ciclo de vida del stack: mismo
+  `compose down`, sin `--rm` ni contenedor huerfano. Servicio `tunnel`
+  con perfil para que el levantamiento por defecto siga sin exponer nada
+  al internet.
+
+## 2026-11-12 (launcher raiz levantar.py + re-levantamiento con salida publica por cloudflared)
+
+* **Hecho:** `levantar.py` nuevo en la raiz: launcher fino que delega en
+  `scripts/bring-up.py` via `runpy.run_path` conservando `sys.argv` (pasan
+  `--no-tunnel` y `--reuse-running`); una sola fuente de verdad para el
+  levantamiento. Infraestructura re-levantada en vivo con la script:
+  stack detectado como de este checkout, imagenes re-build rapidas,
+  exam_app healthy, smoke SPA 200 + /subjects 401 (Accept JSON),
+  6 submodulos OK, quick tunnel recreado (`exam_tunnel` Up). URL publica
+  impresa por el banner final: `https://amenities-circle-now-panel
+  .trycloudflare.com` y verificada desde fuera: `/` -> 200, `/subjects`
+  sin Accept JSON -> 200 (SPA catch-all, text/html), `/subjects` con
+  `Accept: application/json` -> 401 (auth intacta atravesando el tunel).
+* **Falta:** el propietario decide si el PR #4 fusiona esta rama (el
+  launcher va en el mismo PR); decision sobre URL estable (DEC-005).
+* **Decision:** la URL publica del quick tunnel es efimera por diseno:
+  subdominio aleatorio de Cloudflare que muere con `exam_tunnel` y cambia
+  en cada levantamiento; la script la imprime siempre al final para
+  compartirla. URL estable requiere Modo B con `TUNNEL_TOKEN` propio
+  (RUN-016; DEC-005 abierta, decision del propietario, el token jamas va
+  al repo).
+
+## 2026-11-09 (endurecimiento del RECIPE y de bring-up.py tras experimento con agente externo)
+
+* **Hecho:** Analisis de la transcripcion `aprendizajes_despliegue.md`
+  (agente externo en clon WSL no logro instalar y derivo a ~20 comandos
+  exploratorios). Causas corregidas en `RECIPE.md` (seccion 0A: 5 reglas
+  duras - sin exploracion, ejecutar donde Docker es nativo, deteccion de
+  stack en marcha, secretos jamas entre checkouts, exit 0 como unico
+  veredicto; troubleshooting nuevo: WSL vsock, puertos ocupados, stack
+  ajeno, submodulos desviados). En `scripts/bring-up.py`: deteccion de
+  contenedores exam_* por labels de compose
+  (`com.docker.compose.project.config_files`), aborto si pertenecen a otro
+  checkout salvo `--reuse-running` (adopta el stack ajeno sin tocarlo),
+  aviso si el stack es de este checkout, y paso 6 nuevo: verificacion de
+  los 6 submodulos en SHAs fijados (rechaza +, -, U con comando exacto de
+  arreglo). Validado en vivo: py_compile verde; ejecucion real contra el
+  stack de este checkout (deteccion "already running from this checkout",
+  smoke SPA 200 + /subjects 401, 6 submodulos OK); simulacion de checkout
+  ajeno (aborta exit 1 con mensaje accionable) y `--reuse-running`
+  (reutiliza). `.ops/operations/recipe-levantamiento.md` actualizado.
+* **Falta:** commit + push; verificacion del propietario de las nuevas
+  reglas 0A (el agente nunca se la asigna a si mismo).
+* **Decision:** la decision reutilizar-vs-reemplazar un stack de otro
+  checkout es siempre del usuario (la script solo aborta o adopta con
+  `--reuse-running`); el agente externo nunca decide por su cuenta.
+
 ## 2026-11-08 (recuperacion de entorno Docker: imagenes perdidas, stack reconstruido, flujo completo verificado)
 
 * **Hecho:** Las imagenes y contenedores del stack local se perdieron en el
