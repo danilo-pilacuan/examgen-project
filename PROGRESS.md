@@ -6,6 +6,24 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
+## 2026-11-25 (tunnel cloudflared levantado; era opt-in)
+
+* **Hecho:** el propietario noto que el tunel cloudflared no estaba activo
+  tras el relanzamiento. Causa (comportamiento esperado, no un fallo):
+  `tunnel` es un servicio opt-in con perfil `tunnel` en el compose, y un
+  `docker compose up -d` plano no lo incluye; solo el paso 5 de
+  `levantar.py`/`bring-up.py` lo levanta, y yo habia levantado el stack a
+  mano con `compose up`. Levantado con
+  `docker compose -f docker/docker-compose.yml -p exam_gen --profile
+  tunnel up -d tunnel`: URL efimera obtenida de los logs y verificada
+  desde fuera (SPA 200, `/subjects` con Accept JSON -> 401, auth OK).
+  6 contenedores Up incluido `exam_tunnel`.
+* **Recordatorio:** la via canonica para el ciclo completo es
+  `python levantar.py`; la URL del quick tunnel cambia en cada
+  levantamiento (estable solo con `TUNNEL_TOKEN` propio - RUN-016 Modo B,
+  DEC-005 abierta). Teardown completo: `... -p exam_gen --profile tunnel
+  down`.
+
 ## 2026-11-25 (stack renombrado a exam_gen; .env del propietario)
 
 * **Hecho:** el propietario actualizo `.env` y pidio dos cosas: volver a
