@@ -13,7 +13,7 @@ status: stable
 
 ## Alcance
 
-Incluye: `docker/docker-compose.yml` con exam_frontend (:3000), exam_app (:8000),
+Incluye: `docker/docker-compose.yml` con exam_frontend (:39730), exam_app (:39731),
 exam_postgres_db (:5432), exam_latex_compiler, exam_embedding_service y exam_open_webui,
 todos healthy con datos de prueba reales. No incluye: CI de images (IMPL-001).
 

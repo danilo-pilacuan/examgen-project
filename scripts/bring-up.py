@@ -259,17 +259,17 @@ def http_status(url, headers=None):
 def step4_smoke():
     step_header(4, "Smoke checks")
     try:
-        code = http_status("http://localhost:3000/")
+        code = http_status("http://localhost:39730/")
         if code != 200:
             fail("frontend / returned %d (expected 200)" % code)
         log("    SPA 200")
-        code = http_status("http://localhost:3000/subjects",
+        code = http_status("http://localhost:39730/subjects",
                            {"Accept": "application/json"})
         if code != 401:
             fail("/subjects returned %d without token (expected 401)" % code)
         log("    /subjects 401 without token (auth OK)")
     except urllib.error.URLError as e:
-        fail("cannot reach http://localhost:3000 (%s); is the frontend up?"
+        fail("cannot reach http://localhost:39730 (%s); is the frontend up?"
              % getattr(e, "reason", e))
 
 
@@ -296,7 +296,7 @@ def step5_tunnel():
     log("")
     log("=" * 60)
     log("  System is UP and EXPOSED")
-    log("  Local:    http://localhost:3000")
+    log("  Local:    http://localhost:39730")
     log("  Public:   %s" % url)
     log("  Teardown: docker compose -f docker/docker-compose.yml "
         "--profile tunnel down")

@@ -13,7 +13,7 @@ status: draft
 
 ## Evidencia
 
-Ronda 15 (2026-11-06), Playwright contra http://localhost:3000/exams con
+Ronda 15 (2026-11-06), Playwright contra http://localhost:39730/exams con
 materia "Economia Aplicada - QA11": al abrir el panel avanzado con conteos
 por tema, el hint bajo los selectores numericos renderizaba literal
 "2 of 3 questions planned (of )" - el sufijo "(of )" vacio. La cadena

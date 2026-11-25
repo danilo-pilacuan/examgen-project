@@ -50,7 +50,7 @@ cd docker && docker compose up -d --build
 #    (el entrypoint de exam-app aplica las migraciones Alembic al arrancar)
 
 # 2. Abrir el frontend
-#    http://localhost:3000  → login/registro de profesor (sesión JWT)
+#    http://localhost:39730  → login/registro de profesor (sesión JWT)
 
 # 3. Conversar con el agente
 #    - "What subjects are registered?"        → list subjects

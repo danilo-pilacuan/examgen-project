@@ -13,7 +13,7 @@ status: draft
 
 ## Evidencia
 
-Ronda 7 (2026-10-27), `curl -sI http://localhost:3000/`:
+Ronda 7 (2026-10-27), `curl -sI http://localhost:39730/`:
 
 ```
 HTTP/1.1 200 OK
@@ -37,5 +37,5 @@ la config, asi que el fix exige rebuild.
 Anadir en el bloque server de nginx: `X-Content-Type-Options: nosniff`,
 `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`;
 HSTS solo si hay TLS. Rebuild del contenedor y verificar con
-`curl -sI http://localhost:3000/` que las 3 cabeceras aparecen en /, /api/
+`curl -sI http://localhost:39730/` que las 3 cabeceras aparecen en /, /api/
 y /output/.

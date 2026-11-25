@@ -2,7 +2,7 @@
 import json
 import urllib.request
 
-BASE = "http://localhost:8000"
+BASE = "http://localhost:39731"
 SUBJECT = "6c9e3cc3-6599-4868-a8a4-685bbb12bc30"
 
 
@@ -25,7 +25,7 @@ def count_chunks() -> int:
     import psycopg
 
     with psycopg.connect(
-        "host=localhost port=5432 user=exam_user password=exam_password dbname=exam_generator_db"
+        "host=localhost port=39732 user=exam_user password=exam_password dbname=exam_generator_db"
     ) as conn:
         with conn.cursor() as cur:
             cur.execute(

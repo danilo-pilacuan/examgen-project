@@ -18,7 +18,7 @@ Reemplazar la interfaz de OpenWebUI por un frontend propio (Vue 3) que:
 ## 2. Estado actual (línea base)
 
 ```
-Navegador ──> OpenWebUI (:3000) ──> exam-app (:8000) ──> LLM local (vLLM GLM-5.3-Flash)
+Navegador ──> OpenWebUI (:39735) ──> exam-app (:39731) ──> LLM local (vLLM GLM-5.3-Flash)
                     │                     │
                     │                     ├── Postgres + pgvector (checkpointer + banco)
                     │                     ├── latex-compiler (:8080)
@@ -42,7 +42,7 @@ Navegador ──> OpenWebUI (:3000) ──> exam-app (:8000) ──> LLM local (
 - **Streaming es FALSO**: `src/api/chat.py` ejecuta `conversational_graph.invoke()` (sync, completo) y luego re-chunkea el texto final en trozos de 20 caracteres SSE. No hay tokens reales ni eventos de tools.
 - **Sin CORS** en todo el repo; sin websockets; sin frontend existente (greenfield).
 - **thread_id** ya se devuelve como campo extra en la respuesta y se persiste con PostgresSaver → continuidad de conversación lista para usar.
-- **Artefactos son markdown-only**: las tools devuelven strings con tablas markdown y links (`[Descargar el PDF](http://localhost:3000/api/v1/files/{id}/content)`, fallback `http://localhost:8000/output/...`). No hay payloads estructurados para widgets.
+- **Artefactos son markdown-only**: las tools devuelven strings con tablas markdown y links (`[Descargar el PDF](http://localhost:39730/api/v1/files/{id}/content)`, fallback `http://localhost:39731/output/...`). No hay payloads estructurados para widgets.
 - **Grafo sync bloquea el event loop**: PostgresSaver con `Connection.connect` sync + `graph.invoke` sync dentro de endpoint async de FastAPI.
 - **HITL**: los `interrupt()` fueron eliminados del grafo (OpenWebUI no podía reanudarlos); la confirmación es a nivel de prompt. El endpoint `resume` existe pero es dead code.
 - **`_PENDING_ITEM` es global de módulo** (`src/agents/conversational/tools.py`): no thread-safe, se pierde al reiniciar, compartido entre todos los threads/usuarios.

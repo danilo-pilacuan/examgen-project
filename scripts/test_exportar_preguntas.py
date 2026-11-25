@@ -76,7 +76,7 @@ def main():
         res_xlsx = tools_mod.export_questions.func(subject_id="x", format="xlsx")
 
     assert "Exported **3 question(s)**" in res_csv, res_csv
-    assert "Download" in res_csv and "http://localhost:8000/output/" in res_csv, res_csv
+    assert "Download" in res_csv and "http://localhost:39731/output/" in res_csv, res_csv
     print("3a. CSV generated with HTTP fallback: OK")
 
     assert "Exported **3 question(s)**" in res_xlsx, res_xlsx
@@ -109,7 +109,7 @@ def main():
          patch("exam_app.infrastructure.openwebui_bridge.upload_file_to_openwebui",
                return_value={"id": "abc-123", "filename": "questions.xlsx"}):
         res_up = tools_mod.export_questions.func(subject_id="x", format="xlsx")
-    assert "http://localhost:3000/api/v1/files/abc-123/content" in res_up, res_up
+    assert "http://localhost:39730/api/v1/files/abc-123/content" in res_up, res_up
     assert "Download the Excel" in res_up, res_up
     print("4. Upload to OpenWebUI -> native attachment with link: OK")
 

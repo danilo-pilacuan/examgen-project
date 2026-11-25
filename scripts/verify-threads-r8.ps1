@@ -1,5 +1,5 @@
 $ErrorActionPreference = 'Continue'
-$base = 'http://localhost:8000'
+$base = 'http://localhost:39731'
 
 # Login both users
 $lA = Invoke-RestMethod -Uri "$base/auth/login" -Method Post -ContentType 'application/json' -Body '{"email":"qa-r8-a@usfq.test","password":"Qa-R8-Pass-2026!"}'

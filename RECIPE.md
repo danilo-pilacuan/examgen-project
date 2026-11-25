@@ -164,10 +164,10 @@ no por exit code (la script ya lo hace asi).
 
 ```bash
 # SPA
-curl -sf -o /dev/null -w '%{http_code}\n' http://localhost:3000/          # → 200
+curl -sf -o /dev/null -w '%{http_code}\n' http://localhost:39730/          # → 200
 # auth intacta (este caso DEBE fallar con 401)
 curl -s -o /dev/null -w '%{http_code}\n' -H 'Accept: application/json' \
-  http://localhost:3000/subjects                                          # → 401
+  http://localhost:39730/subjects                                          # → 401
 ```
 
 Los puertos del smoke salen del mapeo real del compose (`FRONTEND_PORT:80`
@@ -176,18 +176,18 @@ y `APP_PORT:8000`), no de valores fijos; la script los lee de
 
 La script ejecuta estas verificaciones automaticamente tras el build
 (Windows 10+ ya incluye `curl`; si falta, usa `python -c "import
-urllib.request; print(urllib.request.urlopen('http://localhost:3000/').status)"`).
+urllib.request; print(urllib.request.urlopen('http://localhost:39730/').status)"`).
 
 Opcional, cuenta de prueba (pregúntale al propietario; nunca en la doc):
 
 ```bash
-curl -X POST http://localhost:8000/auth/register \
+curl -X POST http://localhost:39731/auth/register \
   -H 'Content-Type: application/json' \
   -d '{"email": "<nuevo>", "password": "<nueva>"}'
-curl -X POST http://localhost:8000/auth/login \
+curl -X POST http://localhost:39731/auth/login \
   -H 'Content-Type: application/json' \
   -d '{"email": "...", "password": "..."}'                                # -> 200
-curl http://localhost:3000/subjects -H 'Accept: application/json' \
+curl http://localhost:39730/subjects -H 'Accept: application/json' \
   -H "Authorization: Bearer $TOKEN"                                       # -> 200
 ```
 

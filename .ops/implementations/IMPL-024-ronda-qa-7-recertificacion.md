@@ -25,12 +25,12 @@ examen (omitida: LLM largo ya cubierto en C19 ronda 5 y C2 ronda 6).
 
 ## Diseno
 
-Stack Docker healthy (nginx :3000 -> exam-app :8000 -> Postgres). Cuenta
+Stack Docker healthy (nginx :39730 -> exam-app :39731 -> Postgres). Cuenta
 qa-r7@usfq.test + usuarios de contraste qa-r7-b@usfq.test (API) y
 qa-r7-ui-temp@usfq.test (navegador, borrado al cierre). Materia propia
 "QA R7 Recert" + hilos de control ad0e765d y c35b172e. Flujo del reporte
 reproducido limpiando `mvp_chat_threads` y reloggeando. Sondas de
-integracion via PowerShell + nginx y directo a :8000, con trampas
+integracion via PowerShell + nginx y directo a :39731, con trampas
 conocidas: Accept json en /subjects y /questions, login con body JSON,
 `docker exec ... psql -t -A` para escalares.
 
