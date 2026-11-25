@@ -6,6 +6,35 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
+## 2026-11-25 (migracion Windows -> Linux: envs, paquetes y contenedores)
+
+* **Hecho:** reinstalacion completa del entorno tras migrar el checkout de
+  Windows a Linux: `.venv` de Windows eliminada y recreada (python 3.14.4,
+  `pip install -r requirements.txt`, imports core verificados);
+  `projects/frontend/node_modules` de Windows (binarios win32: esbuild.exe,
+  rollup win32) eliminado y reinstalado con `npm ci` + `npm rebuild esbuild`
+  (binario linux-x64 verificado). Imagenes del stack reconstruidas
+  (`docker compose build`: pgvector, latex-compiler, embedding-service,
+  exam-app, frontend) y stack levantado: 5 contenedores Up (exam_app
+  healthy; tunnel y open_webui quedan opt-in, no levantados). El volumen
+  `docker_postgres_data` sobrevivio a la migracion: BD completa conservada
+  (8 materias, 318 chunks, 6 examenes, cuenta qa-r11), sin re-seed.
+  Puertos host 5432 y 8080 ocupados por otros proyectos locales
+  (automation-core) -> postgres remapeado a 15436:5432 y latex-compiler a
+  15437:8080 en docker/docker-compose.yml; `.env` actualizado
+  (LATEX_COMPILER_URL=http://localhost:15437/compile). Smoke verificado con
+  salida real: /health 200, frontend 200, login qa-r11 200, GET /subjects
+  200 (8 materias), POST /v1/embeddings 200 (dim 1024), POST /compile 200
+  con PDF valido via data/agent_outputs. Commit 3ab2f11 (remap de puertos)
+  en rama fix/recipe-agent-boundaries.
+* **Falta:** push a origin - el entorno nuevo no tiene credenciales GitHub
+  (gh sin autenticar, sin credential helper); el propietario debe
+  autenticarse y hacer `git push origin fix/recipe-agent-boundaries`.
+* **Decision:** se remapearon los puertos host en el compose en lugar de
+  detener los contenedores ajenos que ocupan 5432/8080 (mismo patron que la
+  remocion 8081->18081 del embedding-service del 2026-11-08); el lado
+  contenedor y la red compose quedan intactos.
+
 ## 2026-11-12 (graficos en modo usuario + version tesis)
 
 * **Hecho:** `docs/graphs.md` reescrito para hablar solo del sistema en modo
