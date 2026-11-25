@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: exam_password
       POSTGRES_DB: exam_generator_db
     ports:
-      - "5432:5432"
+      - "15436:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -21,7 +21,7 @@ services:
     container_name: exam_latex_compiler
     restart: always
     ports:
-      - "8080:8080"
+      - "15437:8080"
     volumes:
       - ../data/agent_outputs:/app/output
 
