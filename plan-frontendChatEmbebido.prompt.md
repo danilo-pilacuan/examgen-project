@@ -18,11 +18,11 @@ Reemplazar la interfaz de OpenWebUI por un frontend propio (Vue 3) que:
 ## 2. Estado actual (línea base)
 
 ```
-Navegador ──> OpenWebUI (:3000) ──> exam-app (:8000) ──> LLM local (vLLM GLM-5.3-Flash)
+Navegador ──> OpenWebUI (:39735) ──> exam-app (:39731) ──> LLM local (vLLM GLM-5.3-Flash)
                     │                     │
                     │                     ├── Postgres + pgvector (checkpointer + banco)
-                    │                     ├── latex-compiler (:8080)
-                    │                     └── embedding-service (:8081)
+                    │                     ├── latex-compiler (:39733)
+                    │                     └── embedding-service (:39734)
                     └── guarda PDFs/CSV/XLSX como adjuntos propios
 ```
 
@@ -33,7 +33,7 @@ Navegador ──> OpenWebUI (:3000) ──> exam-app (:8000) ──> LLM local (
 | Interfaz de chat con streaming | SSE fake (backend re-chunkea texto completo en trozos de 20 chars) | 🟢 Baja |
 | Historial de conversaciones | `thread_id` + PostgresSaver (ya funciona, se devuelve en cada respuesta) | 🟢 Baja |
 | Subida de adjuntos (material) | OpenWebUI extrae texto → tag `<file id/>` → tool `agregar_material_archivo` | 🟡 Media |
-| Descarga de artefactos (PDF/CSV/XLSX) | Links a `:3000/api/v1/files/{id}/content` con fallback `:8000/output/{name}` | 🟢 Baja |
+| Descarga de artefactos (PDF/CSV/XLSX) | Links a `:39730/api/v1/files/{id}/content` con fallback `:39731/output/{name}` | 🟢 Baja |
 | Render de markdown/tablas | MarkdownIt de OpenWebUI | 🟢 Baja |
 | Autenticación/sesiones | WEBUI_AUTH=false (un solo usuario) | 🟢 Baja (MVP sin auth) |
 
@@ -42,7 +42,7 @@ Navegador ──> OpenWebUI (:3000) ──> exam-app (:8000) ──> LLM local (
 - **Streaming es FALSO**: `src/api/chat.py` ejecuta `conversational_graph.invoke()` (sync, completo) y luego re-chunkea el texto final en trozos de 20 caracteres SSE. No hay tokens reales ni eventos de tools.
 - **Sin CORS** en todo el repo; sin websockets; sin frontend existente (greenfield).
 - **thread_id** ya se devuelve como campo extra en la respuesta y se persiste con PostgresSaver → continuidad de conversación lista para usar.
-- **Artefactos son markdown-only**: las tools devuelven strings con tablas markdown y links (`[Descargar el PDF](http://localhost:3000/api/v1/files/{id}/content)`, fallback `http://localhost:8000/output/...`). No hay payloads estructurados para widgets.
+- **Artefactos son markdown-only**: las tools devuelven strings con tablas markdown y links (`[Descargar el PDF](http://localhost:39730/api/v1/files/{id}/content)`, fallback `http://localhost:39731/output/...`). No hay payloads estructurados para widgets.
 - **Grafo sync bloquea el event loop**: PostgresSaver con `Connection.connect` sync + `graph.invoke` sync dentro de endpoint async de FastAPI.
 - **HITL**: los `interrupt()` fueron eliminados del grafo (OpenWebUI no podía reanudarlos); la confirmación es a nivel de prompt. El endpoint `resume` existe pero es dead code.
 - **`_PENDING_ITEM` es global de módulo** (`src/agents/conversational/tools.py`): no thread-safe, se pierde al reiniciar, compartido entre todos los threads/usuarios.
@@ -155,7 +155,7 @@ Mecanismo: las tools emiten **eventos tipados** (`question_generated`, `question
 - [ ] Reapuntar `alembic.ini` a las migraciones en `libs/core`.
 - [ ] Reubicar tests por app/lib; suite verde.
 - [ ] Convertir cada app/lib en repo propio y agregarlos como **submódulos git** al meta-repo (§8.6).
-- [ ] Criterio de aceptación: tests OK + pipeline end-to-end genera PDF + exam-app en :8000 + clon limpio con `--recurse-submodules` funciona.
+- [ ] Criterio de aceptación: tests OK + pipeline end-to-end genera PDF + exam-app en :39731 + clon limpio con `--recurse-submodules` funciona.
 
 ### F1 — Backend reactivo (2-3 sesiones)
 - [ ] CORS middleware en `main.py` (origen del frontend dev).

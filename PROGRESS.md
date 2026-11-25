@@ -6,6 +6,208 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
+## 2026-11-25 (tunnel cloudflared levantado; era opt-in)
+
+* **Hecho:** el propietario noto que el tunel cloudflared no estaba activo
+  tras el relanzamiento. Causa (comportamiento esperado, no un fallo):
+  `tunnel` es un servicio opt-in con perfil `tunnel` en el compose, y un
+  `docker compose up -d` plano no lo incluye; solo el paso 5 de
+  `levantar.py`/`bring-up.py` lo levanta, y yo habia levantado el stack a
+  mano con `compose up`. Levantado con
+  `docker compose -f docker/docker-compose.yml -p exam_gen --profile
+  tunnel up -d tunnel`: URL efimera obtenida de los logs y verificada
+  desde fuera (SPA 200, `/subjects` con Accept JSON -> 401, auth OK).
+  6 contenedores Up incluido `exam_tunnel`.
+* **Recordatorio:** la via canonica para el ciclo completo es
+  `python levantar.py`; la URL del quick tunnel cambia en cada
+  levantamiento (estable solo con `TUNNEL_TOKEN` propio - RUN-016 Modo B,
+  DEC-005 abierta). Teardown completo: `... -p exam_gen --profile tunnel
+  down`.
+
+## 2026-11-25 (stack renombrado a exam_gen; .env del propietario)
+
+* **Hecho:** el propietario actualizo `.env` y pidio dos cosas: volver a
+  levantar todo y renombrar el proyecto compose, que aparecia como `docker`
+  (nombre de la carpeta) entre los demas stacks de la maquina. Cambios:
+  clave `name: exam_gen` en [docker/docker-compose.yml](docker/docker-compose.yml)
+  (el archivo `config` de compose valida: `project: exam_gen`,
+  `restart: always` intacto), `-p exam_gen` explicito en `bring-up.py`
+  (up, tunnel up, mensajes de teardown) y en RECIPE.md con una nota
+  explicativa. Antes del rename se migraron los volumenes 1:1 para no
+  perder la BD: `docker_postgres_data -> exam_gen_postgres_data` y
+  `docker_open_webui_data -> exam_gen_open_webui_data` (`cp -a` en
+  contenedor efimero, 76.6M verificados). Stack levantado con el `.env`
+  nuevo: 5 contenedores Up, exam_app healthy, proyecto confirmado
+  `exam_gen`, red `exam_gen_default`, BD intacta (8 materias / 318 chunks /
+  6 examenes), smoke 200: health, login qa-r11, subjects via nginx,
+  embeddings (dim 1024), latex compile.
+* **Falta:** push (sin credenciales GitHub en el entorno); el propietario
+  decidira cuando borrar los volumenes antiguos `docker_postgres_data` y
+  `docker_open_webui_data`, que quedan como respaldo.
+* **Decision:** rename via clave `name:` del compose (no `-p` suelto ni
+  `COMPOSE_PROJECT_NAME` en .env) para que cualquier invocacion manual sin
+  flags tambien caiga en `exam_gen`; los volumenes se copiaron en vez de
+  renombrar con `docker volume rename` para mantener el respaldo.
+
+## 2026-11-25 (todos los puertos host al rango 3973X)
+
+* **Hecho:** segunda mitad de la sesion de migracion. La maquina es
+  multiusuario con multiples stacks Docker y los puertos comunes suelen
+  estar ocupados, asi que TODO el stack se movio a un rango dedicado:
+  frontend 3000->39730, exam-app 8000->39731, postgres 5432->39732,
+  latex-compiler 8080->39733, embedding-service 8081->39734, open-webui
+  3001->39735 (legacy), vite dev 5173->39736. El lado contenedor y la red
+  compose NO cambian; nginx sigue llegando a exam-app por nombre de
+  servicio. Referencias actualizadas: docker/docker-compose.yml, `.env`
+  (DATABASE_URL y LATEX_COMPILER_URL), scripts host (bring-up.py,
+  qa_r11_docx_index.py, test_exportar_preguntas.py, verify-threads-r8.ps1),
+  submodulos core (config.py: embedding_url 39734, openwebui_public_url
+  39730), exam-app (CORS 39730/39736), frontend (entrypoint.sh,
+  vite.config, .env.development, e2e helpers/bug026, playwright.config) y
+  agents-backend (links de descarga /output), ademas de docs (RECIPE,
+  ARCHITECTURE, readme, informe_avance, plan-frontendChatEmbebido) y .ops
+  (QT-009, IMPL-008/024/026, BUG-024/030/031, strategy). Stack recreado y
+  smoke verificado con salida real en los puertos nuevos: /health 200,
+  frontend 200, login qa-r11 200, GET /subjects 200 via nginx con Accept
+  JSON (8 materias), POST /v1/embeddings 200 (dim 1024), POST /compile 200.
+  Ademas: untrack de 10 PDFs generados en data/agent_outputs (gitignored
+  desde 58a1db7 pero aun trackeados por un commit antiguo). Commits: meta
+  10c8d9d; core 749b1a4, exam-app 362d1c8, frontend 408bbde, agents-backend
+  f5074d3.
+* **Falta:** push de meta y de los 4 submodulos - el entorno nuevo no tiene
+  credenciales GitHub; tras `gh auth login` (o token en el credential
+  helper): `git -C projects/<mod> push` en core/exam-app/frontend/
+  agents-backend y `git push origin fix/recipe-agent-boundaries` en el meta.
+* **Decision:** rango dedicado 3973X elegido y verificado libre
+  (39730-39743 sin listeners en el host); el lado contenedor se mantiene en
+  los puertos canonicos (8000/8080/8081/5432) para no romper la red compose
+  ni la documentacion interna.
+
+## 2026-11-25 (migracion Windows -> Linux: envs, paquetes y contenedores)
+
+* **Hecho:** reinstalacion completa del entorno tras migrar el checkout de
+  Windows a Linux: `.venv` de Windows eliminada y recreada (python 3.14.4,
+  `pip install -r requirements.txt`, imports core verificados);
+  `projects/frontend/node_modules` de Windows (binarios win32: esbuild.exe,
+  rollup win32) eliminado y reinstalado con `npm ci` + `npm rebuild esbuild`
+  (binario linux-x64 verificado). Imagenes del stack reconstruidas
+  (`docker compose build`: pgvector, latex-compiler, embedding-service,
+  exam-app, frontend) y stack levantado: 5 contenedores Up (exam_app
+  healthy; tunnel y open_webui quedan opt-in, no levantados). El volumen
+  `docker_postgres_data` sobrevivio a la migracion: BD completa conservada
+  (8 materias, 318 chunks, 6 examenes, cuenta qa-r11), sin re-seed.
+  Puertos host 5432 y 8080 ocupados por otros proyectos locales
+  (automation-core) -> postgres remapeado a 15436:5432 y latex-compiler a
+  15437:8080 en docker/docker-compose.yml; `.env` actualizado
+  (LATEX_COMPILER_URL=http://localhost:15437/compile). Smoke verificado con
+  salida real: /health 200, frontend 200, login qa-r11 200, GET /subjects
+  200 (8 materias), POST /v1/embeddings 200 (dim 1024), POST /compile 200
+  con PDF valido via data/agent_outputs. Commit 3ab2f11 (remap de puertos)
+  en rama fix/recipe-agent-boundaries.
+* **Falta:** push a origin - el entorno nuevo no tiene credenciales GitHub
+  (gh sin autenticar, sin credential helper); el propietario debe
+  autenticarse y hacer `git push origin fix/recipe-agent-boundaries`.
+* **Decision:** se remapearon los puertos host en el compose en lugar de
+  detener los contenedores ajenos que ocupan 5432/8080 (mismo patron que la
+  remocion 8081->18081 del embedding-service del 2026-11-08); el lado
+  contenedor y la red compose quedan intactos.
+
+## 2026-11-12 (graficos en modo usuario + version tesis)
+
+* **Hecho:** `docs/graphs.md` reescrito para hablar solo del sistema en modo
+  usuario: fuera el nodo/interfaz de OpenWebUI legacy y todo el lenguaje de
+  batch. El pipeline de examenes queda documentado como la herramienta de chat
+  `generate_exam_pdf` (HITL: nombre + versiones confirmados por el profesor),
+  fiel a `exam_pipeline/graph.py`; el harness de evaluacion se conserva como la
+  vista primaria de tesis (Level 4). Nuevo `docs/graphs_tesis.md`: 4 diagramas
+  simples en espanol para el documento de tesis (contexto, arquitectura,
+  bucle del agente con confirmacion humana, de chat a PDF), con recomendacion
+  de incluir solo 2 en la tesis para no saturar. Validacion: 30 bloques
+  mermaid de ambos archivos renderizados con mermaid-cli, 0 fallos.
+  Sincronizados `.ops/architecture/graphs.md`, su README, handoff y esta
+  bitacora.
+* **Falta:** verificado del propietario de los dos documentos; decidir que
+  diagramas de `graphs_tesis.md` entran al capitulo de experimentacion.
+* **Decision:** el "batch" no era un modo de usuario separado sino la via de
+  invocacion interna del pipeline desde el chat; se documenta como tal y la
+  palabra batch desaparece de la documentacion de usuario.
+
+## 2026-11-12 (exam_tunnel como servicio compose del stack)
+
+* **Hecho:** `exam_tunnel` migrado de contenedor suelto (`docker run`) a
+  **servicio compose** `tunnel` en `docker/docker-compose.yml`, perfil
+  opt-in `tunnel` (mismo patron que `open-webui`/legacy):
+  `docker compose up -d --build` normal sigue siendo local-only; el tunel
+  entra con `--profile tunnel`. El servicio lleva
+  `container_name: exam_tunnel` (tooling y docs intactos), nombre de
+  servicio `tunnel` (sin prefijo `exam_` para no contaminar la deteccion
+  de stack de `bring-up.py`, que solo cuenta los 5 exam_* de app), y va
+  por la red compose al alias `exam-frontend`: ya no usa
+  `host.docker.internal` ni el `--add-host` de Linux (quirk del puerto
+  DGX 39005 desaparece: el puerto host deja de importar). `step5_tunnel`
+  de `bring-up.py` ahora hace `compose --profile tunnel up -d tunnel`;
+  banner de teardown actualizado. Docs sincronizados: RECIPE.md
+  (secciones 5/6, regla 0A, troubleshooting Linux), docs/exposicion-internet.md,
+  RUN-016, recipe-levantamiento.md. Verificado en vivo dos veces:
+  standalone eliminado, `python levantar.py` levanto el servicio (exit 0
+  primera corrida; la segunda con exit 1 cosmico de compose en PS, banner
+  OK), URL nueva impresa y probada desde fuera: `/` -> 200,
+  `/subjects` con Accept JSON -> 401. Teardown con perfil probado:
+  `compose --profile tunnel down` detiene tunel + stack.
+* **Falta:** fusion del PR #4 (este cambio entra en la misma rama);
+  decision sobre URL estable (DEC-005).
+* **Decision:** el tunel pertenece al ciclo de vida del stack: mismo
+  `compose down`, sin `--rm` ni contenedor huerfano. Servicio `tunnel`
+  con perfil para que el levantamiento por defecto siga sin exponer nada
+  al internet.
+
+## 2026-11-12 (launcher raiz levantar.py + re-levantamiento con salida publica por cloudflared)
+
+* **Hecho:** `levantar.py` nuevo en la raiz: launcher fino que delega en
+  `scripts/bring-up.py` via `runpy.run_path` conservando `sys.argv` (pasan
+  `--no-tunnel` y `--reuse-running`); una sola fuente de verdad para el
+  levantamiento. Infraestructura re-levantada en vivo con la script:
+  stack detectado como de este checkout, imagenes re-build rapidas,
+  exam_app healthy, smoke SPA 200 + /subjects 401 (Accept JSON),
+  6 submodulos OK, quick tunnel recreado (`exam_tunnel` Up). URL publica
+  impresa por el banner final: `https://amenities-circle-now-panel
+  .trycloudflare.com` y verificada desde fuera: `/` -> 200, `/subjects`
+  sin Accept JSON -> 200 (SPA catch-all, text/html), `/subjects` con
+  `Accept: application/json` -> 401 (auth intacta atravesando el tunel).
+* **Falta:** el propietario decide si el PR #4 fusiona esta rama (el
+  launcher va en el mismo PR); decision sobre URL estable (DEC-005).
+* **Decision:** la URL publica del quick tunnel es efimera por diseno:
+  subdominio aleatorio de Cloudflare que muere con `exam_tunnel` y cambia
+  en cada levantamiento; la script la imprime siempre al final para
+  compartirla. URL estable requiere Modo B con `TUNNEL_TOKEN` propio
+  (RUN-016; DEC-005 abierta, decision del propietario, el token jamas va
+  al repo).
+
+## 2026-11-09 (endurecimiento del RECIPE y de bring-up.py tras experimento con agente externo)
+
+* **Hecho:** Analisis de la transcripcion `aprendizajes_despliegue.md`
+  (agente externo en clon WSL no logro instalar y derivo a ~20 comandos
+  exploratorios). Causas corregidas en `RECIPE.md` (seccion 0A: 5 reglas
+  duras - sin exploracion, ejecutar donde Docker es nativo, deteccion de
+  stack en marcha, secretos jamas entre checkouts, exit 0 como unico
+  veredicto; troubleshooting nuevo: WSL vsock, puertos ocupados, stack
+  ajeno, submodulos desviados). En `scripts/bring-up.py`: deteccion de
+  contenedores exam_* por labels de compose
+  (`com.docker.compose.project.config_files`), aborto si pertenecen a otro
+  checkout salvo `--reuse-running` (adopta el stack ajeno sin tocarlo),
+  aviso si el stack es de este checkout, y paso 6 nuevo: verificacion de
+  los 6 submodulos en SHAs fijados (rechaza +, -, U con comando exacto de
+  arreglo). Validado en vivo: py_compile verde; ejecucion real contra el
+  stack de este checkout (deteccion "already running from this checkout",
+  smoke SPA 200 + /subjects 401, 6 submodulos OK); simulacion de checkout
+  ajeno (aborta exit 1 con mensaje accionable) y `--reuse-running`
+  (reutiliza). `.ops/operations/recipe-levantamiento.md` actualizado.
+* **Falta:** commit + push; verificacion del propietario de las nuevas
+  reglas 0A (el agente nunca se la asigna a si mismo).
+* **Decision:** la decision reutilizar-vs-reemplazar un stack de otro
+  checkout es siempre del usuario (la script solo aborta o adopta con
+  `--reuse-running`); el agente externo nunca decide por su cuenta.
+
 ## 2026-11-08 (recuperacion de entorno Docker: imagenes perdidas, stack reconstruido, flujo completo verificado)
 
 * **Hecho:** Las imagenes y contenedores del stack local se perdieron en el
@@ -548,7 +750,7 @@
   winget y curl.exe a GitHub releases devolvieron 504 en esta red -> se uso
   la imagen Docker (`docker pull cloudflare/cloudflared:latest`);
   `docker run --rm -d --name exam_tunnel cloudflare/cloudflared:latest
-  tunnel --url http://host.docker.internal:3000 --no-autoupdate` levanto el
+  tunnel --url http://host.docker.internal:39730 --no-autoupdate` levanto el
   tunel y de los logs salio la URL publica
   https://grab-testimonials-pty-numbers.trycloudflare.com. Verificacion E2E
   real a traves de internet: GET / -> 200 (SPA), GET /subjects con

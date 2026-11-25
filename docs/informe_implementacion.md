@@ -130,12 +130,12 @@ graph TB
 
 | Servicio | Imagen base | Puerto | Rol |
 |---|---|---|---|
-| `exam_postgres_db` | PostgreSQL 16 + pgvector | 5432 | Banco, chunks RAG, checkpoints, auditoría LLM (12 tablas) |
-| `exam_app` | Python 3.11 + FastAPI + LangGraph | 8000 | API única: REST/SSE/WS, aplica migraciones Alembic al arrancar |
-| `latex_compiler` | Python + TeXLive completo | 8081 | Compila LaTeX → PDF (doble pasada para referencias) |
-| `embedding-service` | bge-m3 (endpoint OpenAI-compatible) | 9050 | Embeddings de chunks y enunciados (1024 dims) |
-| `exam_frontend` | Node build + nginx | **3000** | SPA + proxy único con enrutamiento por cabecera `Accept` |
-| Open WebUI (perfil `legacy`) | — | 3001 | Interfaz legada opcional vía `/v1/chat/completions` |
+| `exam_postgres_db` | PostgreSQL 16 + pgvector | 39732 (host) / 5432 (contenedor) | Banco, chunks RAG, checkpoints, auditoría LLM (12 tablas) |
+| `exam_app` | Python 3.11 + FastAPI + LangGraph | 39731 (host) / 8000 (contenedor) | API única: REST/SSE/WS, aplica migraciones Alembic al arrancar |
+| `latex_compiler` | Python + TeXLive completo | 39733 (host) / 8080 (contenedor) | Compila LaTeX → PDF (doble pasada para referencias) |
+| `embedding-service` | bge-m3 (endpoint OpenAI-compatible) | 39734 (host) / 8081 (contenedor) | Embeddings de chunks y enunciados (1024 dims) |
+| `exam_frontend` | Node build + nginx | **39730** | SPA + proxy único con enrutamiento por cabecera `Accept` |
+| Open WebUI (perfil `legacy`) | — | 39735 (host) / 8080 (contenedor) | Interfaz legada opcional vía `/v1/chat/completions` |
 
 ### 4.2 Las 12 tablas de la base de datos
 
@@ -153,7 +153,7 @@ graph TB
 
 ### 4.3 Enrutamiento del frontend (patrón clave)
 
-nginx enruta por **cabecera `Accept`**: si el navegador pide `application/json` a `/subjects`, el proxy lo manda al backend; si pide HTML (navegación SPA), sirve el `index.html` de Vue. Un solo puerto (3000) y un solo origen: sin CORS, sin cookies de terceros. Lección aprendida en QA (BUG-017b): este patrón exige probar **todos los métodos HTTP de cada prefijo**, no solo los GET.
+nginx enruta por **cabecera `Accept`**: si el navegador pide `application/json` a `/subjects`, el proxy lo manda al backend; si pide HTML (navegación SPA), sirve el `index.html` de Vue. Un solo puerto (39730) y un solo origen: sin CORS, sin cookies de terceros. Lección aprendida en QA (BUG-017b): este patrón exige probar **todos los métodos HTTP de cada prefijo**, no solo los GET.
 
 ---
 

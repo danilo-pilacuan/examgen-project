@@ -256,7 +256,7 @@ Resuelve las decisiones abiertas del plan de frontend sobre el formato de evento
 
 El plan de [plan-frontendChatEmbebido.prompt.md](../plan-frontendChatEmbebido.prompt.md) se amplió con una **Fase 0** previa (ya ejecutada):
 
-- **F0 — Reestructuración del monorepo** ✅ (etapa 0): mapa de migración de §4 ejecutado (a `projects/`), imports/Dockerfiles/compose/alembic actualizados. Criterio de aceptación cumplido: pipeline end-to-end genera PDF + exam-app responde en el puerto 8000.
+- **F0 — Reestructuración del monorepo** ✅ (etapa 0): mapa de migración de §4 ejecutado (a `projects/`), imports/Dockerfiles/compose/alembic actualizados. Criterio de aceptación cumplido: pipeline end-to-end genera PDF + exam-app responde en el puerto host 39731.
 - F1-F5 del plan se ejecutaron **sobre la nueva estructura** (etapas 3-5 del plan de implementaciones).
 
 ---

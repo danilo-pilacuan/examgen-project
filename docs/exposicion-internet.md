@@ -15,7 +15,7 @@ recibe tráfico de vuelta: no se publica ningún puerto, no se modifica el
 firewall ni el router. El modo *quick tunnel* imprime una URL pública
 aleatoria (`https://<4-palabras>.trycloudflare.com`) que **cambia en cada
 levantamiento** y desaparece al detener el contenedor. El túnel apunta al
-**frontend (nginx, puerto host 3000)**, que ya hace mismo-origen y proxifica
+**frontend (nginx, puerto host 39730)**, que ya hace mismo-origen y proxifica
 `/api`, `/ws`, `/auth`, `/subjects`, `/output`, etc. — nunca al backend directo.
 
 ## Modo A — Demo (sin credenciales, el más simple)
@@ -23,21 +23,19 @@ levantamiento** y desaparece al detener el contenedor. El túnel apunta al
 Requisitos: Docker corriendo y el stack arriba (`cd docker && docker compose up -d --build`).
 
 ```powershell
-# 1. Imagen (solo la primera vez; winget/curl directo falló con 504 en esta red)
-docker pull cloudflare/cloudflared:latest
+# 1. Levantar el tunel como servicio compose (perfil opt-in "tunnel")
+docker compose -f docker/docker-compose.yml --profile tunnel up -d tunnel
 
-# 2. Levantar el túnel (Windows/macOS; en Linux añade --add-host=host.docker.internal:host-gateway)
-docker run --rm -d --name exam_tunnel cloudflare/cloudflared:latest `
-  tunnel --url http://host.docker.internal:3000 --no-autoupdate
-
-# 3. Leer la URL pública generada de los logs
+# 2. Leer la URL pública generada de los logs
 docker logs exam_tunnel 2>&1 | Select-String "trycloudflare"
 #    → https://grab-testimonials-pty-numbers.trycloudflare.com (ejemplo; la tuya será otra)
 ```
 
 Comparte esa URL: el visitante ve el login del frontend y necesita una
-cuenta (la auth JWT se mantiene a través del túnel). Si el puerto del
-frontend es otro (DGX: 39005), sustitúyelo en `--url`.
+cuenta (la auth JWT se mantiene a través del túnel). El túnel va a
+`http://exam-frontend:80` por la red compose: el puerto host del frontend
+deja de importar (DGX u otro host con `FRONTEND_PORT` distinto no
+requieren cambios).
 
 ## Modo B — URL estable (requiere TU credencial propia)
 
@@ -46,13 +44,14 @@ Cuando necesites una URL fija (Dominio propio + subdominio), crea un
 → Create tunnel → copia el token) y ejecuta:
 
 ```powershell
-docker run --rm -d --name exam_tunnel cloudflare/cloudflared:latest `
-  tunnel --no-autoupdate run --token $env:TUNNEL_TOKEN
+docker compose -f docker/docker-compose.yml --profile tunnel up -d tunnel
+# con token: edita el `command` del servicio `tunnel` en docker-compose.yml:
+#   tunnel --no-autoupdate run --token $TUNNEL_TOKEN
 ```
 
 El token vive solo en tu entorno (`$env:TUNNEL_TOKEN` o un `.env` fuera de
 git); **jamás se commitea ni se documenta**. Alternativa: Tailscale Funnel
-(`tailscale funnel 3000`) da URL `*.ts.net` estable, pero exige cuenta
+(`tailscale funnel 39730`) da URL `*.ts.net` estable, pero exige cuenta
 Tailscale, HTTPS habilitado y ACL de funnel en la consola.
 
 ## Verificación (todas pasaron el 2026-11-09 a través de la URL pública)
@@ -66,10 +65,10 @@ Tailscale, HTTPS habilitado y ACL de funnel en la consola.
 
 ## Seguridad — lee antes de exponer
 
-- **No expongas** puertos crudos: Postgres (5432), exam-app (8000),
-  latex-compiler (8080) o embedding-service (18081) quedan solo en la red
+- **No expongas** puertos crudos: Postgres (host 39732), exam-app (host 39731),
+  latex-compiler (host 39733) o embedding-service (host 39734) quedan solo en la red
   interna de Docker.
-- **Nunca expongas open-webui** (puerto 3001, perfil legacy): corre con
+- **Nunca expongas open-webui** (puerto host 39735, perfil legacy): corre con
   `WEBUI_AUTH=false`, sin login.
 - [BUG-024](../.ops/qa/BUG-024-sin-cabeceras-seguridad-nginx.md) (cabeceras
   de seguridad nginx) sigue abierto: evita compartir la URL más tiempo del
@@ -77,7 +76,7 @@ Tailscale, HTTPS habilitado y ACL de funnel en la consola.
 - Apaga el túnel al terminar la demo:
 
 ```powershell
-docker rm -f exam_tunnel   # la URL queda muerta inmediatamente
+docker compose -f docker/docker-compose.yml --profile tunnel down   # la URL queda muerta inmediatamente
 ```
 
 ## Levantamiento completo (recipe)

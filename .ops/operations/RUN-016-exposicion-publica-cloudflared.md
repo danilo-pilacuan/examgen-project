@@ -28,19 +28,21 @@ portable).
 
 ## Procedimiento
 
-1. Stack arriba y frontend en el puerto host `FRONTEND_PORT` (3000 local,
-   39005 en el DGX): `docker ps --filter name=exam_frontend`.
-2. Tunel rapido (sin credenciales ni cuenta):
-   `docker run --rm -d --name exam_tunnel cloudflare/cloudflared:latest
-   tunnel --url http://host.docker.internal:FRONTEND_PORT --no-autoupdate`.
-   Requiere la imagen (una vez): `docker pull cloudflare/cloudflared:latest`.
+1. Stack arriba: `docker ps --filter name=exam_frontend` (el tunel va por
+   la red compose al alias `exam-frontend`; el puerto host del frontend
+   deja de importar).
+2. Tunel rapido (sin credenciales ni cuenta), como servicio compose con
+   perfil opt-in `tunnel`:
+   `docker compose -f docker/docker-compose.yml --profile tunnel up -d
+   tunnel`. La imagen `cloudflare/cloudflared:latest` se descarga sola la
+   primera vez.
 3. Leer la URL de los logs: `docker logs exam_tunnel 2>&1 | Select-String
    "trycloudflare"`. Ejemplo de formato: `https://<4-palabras>.trycloudflare.com`.
 4. Alternativa con credenciales (URL estable, requiere tunnel token propio,
-   nunca en el repo): `docker run --rm -d --name exam_tunnel
-   cloudflare/cloudflared:latest tunnel --no-autoupdate run
-   --token $TUNNEL_TOKEN`. La variable va en el entorno del host o en un
-   `.env` fuera de git; el runbook no la define.
+   nunca en el repo): edita el `command` del servicio `tunnel` en
+   `docker/docker-compose.yml` a
+   `tunnel --no-autoupdate run --token $TUNNEL_TOKEN`. La variable va en
+   el entorno del host o en un `.env` fuera de git; el runbook no la define.
 
 ## Verificacion y cierre
 
@@ -48,5 +50,6 @@ SPA: `Invoke-WebRequest <URL>/` -> 200. API: `<URL>/subjects` con
 `Accept: application/json` -> 401 sin token (la auth sigue activa).
 Con credenciales de prueba del propietario: login 200 y listado 200.
 WS: `new WebSocket("wss://<URL sin https://>/ws")` -> open.
-Stop: `docker rm -f exam_tunnel` (el quick tunnel muere con el contenedor;
-la URL queda invalida). El propietario marca `vigente` tras una demo real.
+Stop: `docker compose -f docker/docker-compose.yml --profile tunnel down`
+(el quick tunnel muere con el contenedor; la URL queda invalida). El
+propietario marca `vigente` tras una demo real.

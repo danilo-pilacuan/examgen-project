@@ -108,13 +108,13 @@ graph TB
 
     subgraph "Docker Compose (MVP_v1/docker)"
         PG[("PostgreSQL 16<br/>+ pgvector<br/>exam_generator_db")]
-        LC["latex-compiler<br/>FastAPI + TeXLive<br/>puerto 8080"]
+        LC["latex-compiler<br/>FastAPI + TeXLive<br/>host 39733"]
     end
 
     RUN -->|"ejecuta"| APP
     APP -->|"chat/completions<br/>https://ai.usfq.edu.ec/api/agents/llm/main/v1"| VLLM
     APP -->|"SQLAlchemy<br/>postgresql://:5432"| PG
-    APP -->|"POST /compile<br/>http://localhost:8080"| LC
+    APP -->|"POST /compile<br/>http://localhost:39733"| LC
     LC -->|"genera PDF"| OUT["data/agent_outputs/*.pdf"]
     CONFIG -->|"lee .env"| APP
 ```
@@ -124,11 +124,11 @@ graph TB
 | Componente | Tecnología | Ubicación | Puerto |
 |---|---|---|---|
 | **Aplicación principal** | Python + LangGraph | `MVP_v1/` | — |
-| **API** | FastAPI | `main.py` | `8000` |
+| **API** | FastAPI | `main.py` | host `39731` (contenedor `8000`) |
 | **LLM (gateway USFQ)** | OpenAI-compatible + GLM-5.3-Flash | `ai.usfq.edu.ec` | `443` |
-| **Base de datos** | PostgreSQL 16 + pgvector | Docker (`postgres-db`) | `5432` |
-| **Compilador LaTeX** | FastAPI + TeXLive | Docker (`latex-compiler`) | `8080` |
-| **Servicio de embeddings** | FastAPI + sentence-transformers (bge-m3) | Docker (`embedding-service`) | `8081` |
+| **Base de datos** | PostgreSQL 16 + pgvector | Docker (`postgres-db`) | host `39732` (contenedor `5432`) |
+| **Compilador LaTeX** | FastAPI + TeXLive | Docker (`latex-compiler`) | host `39733` (contenedor `8080`) |
+| **Servicio de embeddings** | FastAPI + sentence-transformers (bge-m3) | Docker (`embedding-service`) | host `39734` (contenedor `8081`) |
 
 ---
 
@@ -484,9 +484,9 @@ Definida en `projects/core/src/core/config.py` y `projects/agents-backend/src/ag
 |---|---|---|
 | `embedding_model` | `BAAI/bge-m3` | Modelo de embeddings (open-source) |
 | `embedding_dim` | `1024` | Dimensión del vector |
-| `embedding_url` | `http://localhost:8081/v1/embeddings` | Servicio de embeddings (Docker) |
+| `embedding_url` | `http://localhost:39734/v1/embeddings` | Servicio de embeddings (Docker) |
 
-Los embeddings se generan en un **microservicio Docker** (`embedding-service`, puerto 8081) que sirve `BAAI/bge-m3` como endpoint OpenAI-compatible. El pipeline los usa para indexar el material (RAG) y para la deduplicación/persistencia.
+Los embeddings se generan en un **microservicio Docker** (`embedding-service`, puerto host 39734) que sirve `BAAI/bge-m3` como endpoint OpenAI-compatible. El pipeline los usa para indexar el material (RAG) y para la deduplicación/persistencia.
 
 ---
 
@@ -585,7 +585,7 @@ erDiagram
 **Docker (etapa 6):**
 - Frontend dockerizado (multi-stage node → nginx) con proxy único de `/api`, `/ws`, `/output`, `/v1` y rutas REST hacia exam-app (sin CORS)
 - `env.js` generado en runtime por el entrypoint (`VITE_API_URL`/`VITE_WS_URL`)
-- Healthchecks en compose; OpenWebUI movido al perfil `legacy` (puerto 3001)
+- Healthchecks en compose; OpenWebUI movido al perfil `legacy` (puerto host 39735)
 - E2E validado en Docker: chat con tools, generación de examen vía proxy, PDF descargable
 
 **Traducción e i18n (etapa 7):**
@@ -628,7 +628,7 @@ erDiagram
 
 ```mermaid
 graph LR
-    FE[Frontend Vue 3<br/>puerto 3000] -->|"SSE /api/chat/stream<br/>WS /ws · REST"| API[exam-app FastAPI]
+    FE[Frontend Vue 3<br/>puerto 39730] -->|"SSE /api/chat/stream<br/>WS /ws · REST"| API[exam-app FastAPI]
     API --> GR[Grafo conversacional<br/>agents_backend/conversational/graph.py]
     GR --> AS[assistant<br/>LLM + tools]
     AS -->|"tool_calls"| TOOLS[nodo tools<br/>con human-in-the-loop]
@@ -746,7 +746,7 @@ alembic upgrade head
 # 4b. Ejecutar el pipeline completo (genera un PDF)
 .venv/Scripts/python.exe scripts/run_pipeline.py
 
-# 5. API de exam-app (http://localhost:8000)
+# 5. API de exam-app (http://localhost:39731)
 #    --- Chat propio del frontend ---
 #    POST /api/chat/stream        → chat SSE (tokens + eventos tipados)
 #    POST /api/chat               → chat sin streaming
@@ -770,8 +770,8 @@ alembic upgrade head
 #    POST /v1/chat/completions     → conversar con el agente
 #    POST /v1/chat/completions     → reanudar confirmación humana (resume)
 
-# 7. Frontend propio (http://localhost:3000) — chat + widgets + pantallas
-#    OpenWebUI legado (http://localhost:3001) con perfil "legacy"
+# 7. Frontend propio (http://localhost:39730) — chat + widgets + pantallas
+#    OpenWebUI legado (http://localhost:39735) con perfil "legacy"
 ```
 
 ---

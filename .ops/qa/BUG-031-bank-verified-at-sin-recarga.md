@@ -15,7 +15,7 @@ status: draft
 
 Reporte del propietario (2026-11-06): al verificar una pregunta en Bank la
 columna de fecha no cambiaba. Reproduccion pre-fix en
-http://localhost:3000/bank (materia "Economia Aplicada - QA11"): toggle
+http://localhost:39730/bank (materia "Economia Aplicada - QA11"): toggle
 Verify dejaba la celda en "-" y el badge "Pending" hasta recargar la tabla;
 la respuesta del PUT ya traia el QuestionOut actualizado.
 

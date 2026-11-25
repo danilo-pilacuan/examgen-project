@@ -48,8 +48,8 @@ Este informe resume **qué está implementado**, **qué falta** y **cómo funcio
 - Servicio de embeddings (bge-m3, 1024 dims, endpoint OpenAI-compatible)
 - Compilador LaTeX (FastAPI + TeXLive, doble pasada `pdflatex`)
 - `exam-app` (FastAPI + LangGraph, aplica migraciones al arrancar)
-- `frontend` propio (Vue 3 + nginx, puerto 3000, proxy único hacia exam-app)
-- Open WebUI (interfaz legada opcional, perfil `legacy`, puerto 3001)
+- `frontend` propio (Vue 3 + nginx, puerto 39730, proxy único hacia exam-app)
+- Open WebUI (interfaz legada opcional, perfil `legacy`, puerto host 39735)
 
 **Pipeline batch de generación de exámenes (LangGraph):**
 - 6 nodos: ingestor → planner → generator → evaluator → assembler → compiler
@@ -106,7 +106,7 @@ Este informe resume **qué está implementado**, **qué falta** y **cómo funcio
 
 El sistema es un **asistente de cátedra IA** que ayuda a un profesor a crear, catalogar y reutilizar preguntas de examen a partir de su material de clase. Tiene **dos modos de uso** sobre la misma base de conocimiento:
 
-1. **Modo conversacional (principal):** el profesor conversa con el agente en el **frontend propio** (chat embebido en http://localhost:3000). Le pide preguntas existentes del banco, genera nuevas una por una con confirmación humana, arma exámenes y recibe el PDF en el chat. También gestiona materias, banco, exámenes y material desde pantallas dedicadas.
+1. **Modo conversacional (principal):** el profesor conversa con el agente en el **frontend propio** (chat embebido en http://localhost:39730). Le pide preguntas existentes del banco, genera nuevas una por una con confirmación humana, arma exámenes y recibe el PDF en el chat. También gestiona materias, banco, exámenes y material desde pantallas dedicadas.
 2. **Modo batch (API):** un pipeline LangGraph genera un examen completo de una vez a partir de un blueprint (distribución por Bloom, dificultad y temas). Útil para experimentación y para la evaluación formal.
 
 ### 2.2 Arquitectura de infraestructura
@@ -114,7 +114,7 @@ El sistema es un **asistente de cátedra IA** que ayuda a un profesor a crear, c
 ```mermaid
 graph TB
     subgraph "Navegador del profesor"
-        FE["Frontend propio (Vue 3)<br/>puerto 3000<br/>chat + widgets + pantallas"]
+        FE["Frontend propio (Vue 3)<br/>puerto 39730<br/>chat + widgets + pantallas"]
     end
 
     subgraph "exam-app (FastAPI)"

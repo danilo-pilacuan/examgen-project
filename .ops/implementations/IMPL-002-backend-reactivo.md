@@ -13,7 +13,7 @@ status: stable
 
 ## Alcance
 
-Incluye: exam-app (FastAPI :8000) con SSE de chat, auth multi-profesor JWT, REST
+Incluye: exam-app (FastAPI, host 39731) con SSE de chat, auth multi-profesor JWT, REST
 (subjects, bank, exams, material), integracion con latex-compiler y `/output/` para
 artefactos. Sub-tareas 2.1-2.7 completadas. No incluye: token streaming real por tokens
 (backlog BL-002); el turno llega como un solo bloque al final.

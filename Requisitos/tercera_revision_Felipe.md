@@ -13,7 +13,7 @@
 
 ### Demo del estado actual de la aplicación
 
-- Interfaz basada en el chat, personalizada para un flujo clásico de interacción; se apoya en el servicio ya levantado en `localhost:3000`
+- Interfaz basada en el chat, personalizada para un flujo clásico de interacción; se apoya en el servicio ya levantado en `localhost:39730`
 - El "activo" es la materia sobre la que trabaja el chat; se puede iniciar una nueva conversación y cargar data de prueba (copias para rondas de circunscripción)
 - Las preguntas generadas son exclusivas del activo seleccionado y se muestra su estado
 - Material: permite subir y borrar archivos, se actualiza la inyección y se pueden ver los chunks extraídos en Markdown

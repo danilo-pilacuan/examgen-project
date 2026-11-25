@@ -22,7 +22,7 @@ sesion: toda interaccion exclusivamente por navegador integrado + Playwright.
   toca logica de servicio.
 - Frontend: `npm run type-check` + `lint:check` + `build-only`.
 - Rebuild Docker de los containers cuyo codigo/conf va horneado (nginx, exam-app).
-- E2E manual en navegador sobre `http://localhost:3000`.
+- E2E manual en navegador sobre `http://localhost:39730`.
 
 ## Reglas duras de las rondas (aprendidas)
 

@@ -48,7 +48,8 @@ La politica de mantenimiento vive en [.github/copilot-instructions.md](../../.gi
   DEC-013 (registradas en fase 6; no bloquean fases 7-11).
 - Servicios del producto: `pg`, `mcp` (8100 interno), `embedding` (18081),
   `backend` BFF (18000), `web` nginx (13000); perfil `product` del compose.
-- Playground MVP_v1 sigue arriba en 3000/8000/8081 y comparte la red docker.
+- Playground MVP_v1 sigue arriba en 39730/39731/39734 (rango dedicado 3973X
+  para todos sus servicios desde 2026-11-25) y comparte la red docker.
 
 ## Entorno local
 

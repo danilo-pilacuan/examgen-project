@@ -1,3 +1,8 @@
+# Compose project name: keeps volumes/networks under exam_gen_* instead of
+# docker_* (folder-name default) so the stack is identifiable among the
+# other compose projects on this multi-user machine.
+name: exam_gen
+
 services:
   # DB
   postgres-db:
@@ -9,7 +14,7 @@ services:
       POSTGRES_PASSWORD: exam_password
       POSTGRES_DB: exam_generator_db
     ports:
-      - "5432:5432"
+      - "39732:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -21,7 +26,7 @@ services:
     container_name: exam_latex_compiler
     restart: always
     ports:
-      - "8080:8080"
+      - "39733:8080"
     volumes:
       - ../data/agent_outputs:/app/output
 
@@ -35,11 +40,10 @@ services:
     environment:
       EMBEDDING_MODEL: BAAI/bge-m3
       EMBEDDING_DEVICE: cpu
-    # Host port 18081 (instead of the documented 8081): another local dev
-    # server occupies 8081. Container side stays 8081; host scripts must
-    # set EMBEDDING_URL=http://localhost:18081/v1/embeddings.
+    # Host port 39734 (container side stays 8081); host scripts must set
+    # EMBEDDING_URL=http://localhost:39734/v1/embeddings.
     ports:
-      - "18081:8081"
+      - "39734:8081"
 
   # Orchestrator app (FastAPI) — exposes the REST API + the OpenAI-compatible
   # conversational agent (/v1/chat/completions) for OpenWebUI.
@@ -57,7 +61,7 @@ services:
       LATEX_COMPILER_URL: http://latex-compiler:8080/compile
       EMBEDDING_URL: http://embedding-service:8081/v1/embeddings
       OPENWEBUI_URL: http://open-webui:8080
-      OPENWEBUI_PUBLIC_URL: http://localhost:3000
+      OPENWEBUI_PUBLIC_URL: http://localhost:39730
       OPENWEBUI_ADMIN_EMAIL: admin@localhost
       OPENWEBUI_ADMIN_PASSWORD: admin
       # LLM raw audit (llm_responses table): prompt+answer always,
@@ -67,7 +71,7 @@ services:
       # Root directory of the subjects' material (mounted at /app/inputs).
       MATERIAL_ROOT: /app/inputs
     ports:
-      - "8000:8000"
+      - "39731:8000"
     # Share the output directory with the latex-compiler to serve the PDFs,
     # and mount the material directory to store files uploaded in the chat.
     volumes:
@@ -98,9 +102,31 @@ services:
       VITE_API_URL: ""
       VITE_WS_URL: ""
     ports:
-      - "3000:80"
+      - "39730:80"
     depends_on:
       - exam-app
+    # The quick-tunnel container reaches the SPA by its compose network
+    # alias (no host.docker.internal, no host-gateway needed on Linux).
+    networks:
+      default:
+        aliases:
+          - exam-frontend
+
+  # Public exposure (cloudflared quick tunnel, RUN-016 Mode A). Opt-in with
+  # a profile: plain `compose up` stays local-only; bring-up.py or
+  # `docker compose -f docker/docker-compose.yml --profile tunnel up -d
+  # tunnel` starts it. Container name stays exam_tunnel (docs and teardown
+  # references); the service name avoids the exam_* prefix so stack
+  # detection in scripts/bring-up.py keeps counting app services only.
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: exam_tunnel
+    restart: no
+    profiles:
+      - tunnel
+    command: tunnel --url http://exam-frontend:80 --no-autoupdate
+    depends_on:
+      - frontend
 
   # OpenWebUI: legacy conversational interface ("legacy" profile).
   # Start with: docker compose --profile legacy up -d
@@ -111,7 +137,7 @@ services:
     profiles:
       - legacy
     ports:
-      - "3001:8080"
+      - "39735:8080"
     environment:
       # Connects OpenWebUI with the agent as a custom provider.
       OPENAI_API_BASE_URLS: http://exam-app:8000/v1
