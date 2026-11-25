@@ -69,7 +69,7 @@ flowchart TB
     app --> files
 ```
 
-The local Compose profile uses ports 3000/8000/5432/8080/8081. The remote
+The local Compose profile uses host ports 39730/39731/39732/39733/39734 (container ports unchanged). The remote
 deployment uses the high ports shown above and mounts data only below the
 deployment user's home directory.
 

@@ -15,7 +15,7 @@ recibe tráfico de vuelta: no se publica ningún puerto, no se modifica el
 firewall ni el router. El modo *quick tunnel* imprime una URL pública
 aleatoria (`https://<4-palabras>.trycloudflare.com`) que **cambia en cada
 levantamiento** y desaparece al detener el contenedor. El túnel apunta al
-**frontend (nginx, puerto host 3000)**, que ya hace mismo-origen y proxifica
+**frontend (nginx, puerto host 39730)**, que ya hace mismo-origen y proxifica
 `/api`, `/ws`, `/auth`, `/subjects`, `/output`, etc. — nunca al backend directo.
 
 ## Modo A — Demo (sin credenciales, el más simple)
@@ -51,7 +51,7 @@ docker compose -f docker/docker-compose.yml --profile tunnel up -d tunnel
 
 El token vive solo en tu entorno (`$env:TUNNEL_TOKEN` o un `.env` fuera de
 git); **jamás se commitea ni se documenta**. Alternativa: Tailscale Funnel
-(`tailscale funnel 3000`) da URL `*.ts.net` estable, pero exige cuenta
+(`tailscale funnel 39730`) da URL `*.ts.net` estable, pero exige cuenta
 Tailscale, HTTPS habilitado y ACL de funnel en la consola.
 
 ## Verificación (todas pasaron el 2026-11-09 a través de la URL pública)
@@ -65,10 +65,10 @@ Tailscale, HTTPS habilitado y ACL de funnel en la consola.
 
 ## Seguridad — lee antes de exponer
 
-- **No expongas** puertos crudos: Postgres (5432), exam-app (8000),
-  latex-compiler (8080) o embedding-service (18081) quedan solo en la red
+- **No expongas** puertos crudos: Postgres (host 39732), exam-app (host 39731),
+  latex-compiler (host 39733) o embedding-service (host 39734) quedan solo en la red
   interna de Docker.
-- **Nunca expongas open-webui** (puerto 3001, perfil legacy): corre con
+- **Nunca expongas open-webui** (puerto host 39735, perfil legacy): corre con
   `WEBUI_AUTH=false`, sin login.
 - [BUG-024](../.ops/qa/BUG-024-sin-cabeceras-seguridad-nginx.md) (cabeceras
   de seguridad nginx) sigue abierto: evita compartir la URL más tiempo del

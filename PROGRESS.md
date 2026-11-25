@@ -707,7 +707,7 @@
   winget y curl.exe a GitHub releases devolvieron 504 en esta red -> se uso
   la imagen Docker (`docker pull cloudflare/cloudflared:latest`);
   `docker run --rm -d --name exam_tunnel cloudflare/cloudflared:latest
-  tunnel --url http://host.docker.internal:3000 --no-autoupdate` levanto el
+  tunnel --url http://host.docker.internal:39730 --no-autoupdate` levanto el
   tunel y de los logs salio la URL publica
   https://grab-testimonials-pty-numbers.trycloudflare.com. Verificacion E2E
   real a traves de internet: GET / -> 200 (SPA), GET /subjects con

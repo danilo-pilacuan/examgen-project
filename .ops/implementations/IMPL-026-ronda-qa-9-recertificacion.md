@@ -32,7 +32,7 @@ reset). Datos semilla Economia Aplicada Eva/Lucia heredados de rondas
 anteriores (owner NULL, visibles por el fallback legacy) para tener bancos
 grandes (497 preguntas, 82 chunks) sin tocar datos del profesor real.
 Navegador integrado con la app en http://localhost:39730; sondas de
-integracion por PowerShell via nginx (:3000) y directo a :8000 cuando se
+integracion por PowerShell via nginx (:39730) y directo a :39731 cuando se
 compara routing.
 
 Pasos atomicos en orden:

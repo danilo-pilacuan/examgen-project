@@ -108,7 +108,7 @@ graph TB
 
     subgraph "Docker Compose (MVP_v1/docker)"
         PG[("PostgreSQL 16<br/>+ pgvector<br/>exam_generator_db")]
-        LC["latex-compiler<br/>FastAPI + TeXLive<br/>puerto 8080"]
+        LC["latex-compiler<br/>FastAPI + TeXLive<br/>host 39733"]
     end
 
     RUN -->|"ejecuta"| APP
@@ -124,11 +124,11 @@ graph TB
 | Componente | Tecnología | Ubicación | Puerto |
 |---|---|---|---|
 | **Aplicación principal** | Python + LangGraph | `MVP_v1/` | — |
-| **API** | FastAPI | `main.py` | `8000` |
+| **API** | FastAPI | `main.py` | host `39731` (contenedor `8000`) |
 | **LLM (gateway USFQ)** | OpenAI-compatible + GLM-5.3-Flash | `ai.usfq.edu.ec` | `443` |
-| **Base de datos** | PostgreSQL 16 + pgvector | Docker (`postgres-db`) | `5432` |
-| **Compilador LaTeX** | FastAPI + TeXLive | Docker (`latex-compiler`) | `8080` |
-| **Servicio de embeddings** | FastAPI + sentence-transformers (bge-m3) | Docker (`embedding-service`) | `8081` |
+| **Base de datos** | PostgreSQL 16 + pgvector | Docker (`postgres-db`) | host `39732` (contenedor `5432`) |
+| **Compilador LaTeX** | FastAPI + TeXLive | Docker (`latex-compiler`) | host `39733` (contenedor `8080`) |
+| **Servicio de embeddings** | FastAPI + sentence-transformers (bge-m3) | Docker (`embedding-service`) | host `39734` (contenedor `8081`) |
 
 ---
 
@@ -585,7 +585,7 @@ erDiagram
 **Docker (etapa 6):**
 - Frontend dockerizado (multi-stage node → nginx) con proxy único de `/api`, `/ws`, `/output`, `/v1` y rutas REST hacia exam-app (sin CORS)
 - `env.js` generado en runtime por el entrypoint (`VITE_API_URL`/`VITE_WS_URL`)
-- Healthchecks en compose; OpenWebUI movido al perfil `legacy` (puerto 3001)
+- Healthchecks en compose; OpenWebUI movido al perfil `legacy` (puerto host 39735)
 - E2E validado en Docker: chat con tools, generación de examen vía proxy, PDF descargable
 
 **Traducción e i18n (etapa 7):**
@@ -771,7 +771,7 @@ alembic upgrade head
 #    POST /v1/chat/completions     → reanudar confirmación humana (resume)
 
 # 7. Frontend propio (http://localhost:39730) — chat + widgets + pantallas
-#    OpenWebUI legado (http://localhost:3001) con perfil "legacy"
+#    OpenWebUI legado (http://localhost:39735) con perfil "legacy"
 ```
 
 ---

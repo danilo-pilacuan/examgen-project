@@ -49,7 +49,7 @@ Este informe resume **qué está implementado**, **qué falta** y **cómo funcio
 - Compilador LaTeX (FastAPI + TeXLive, doble pasada `pdflatex`)
 - `exam-app` (FastAPI + LangGraph, aplica migraciones al arrancar)
 - `frontend` propio (Vue 3 + nginx, puerto 39730, proxy único hacia exam-app)
-- Open WebUI (interfaz legada opcional, perfil `legacy`, puerto 3001)
+- Open WebUI (interfaz legada opcional, perfil `legacy`, puerto host 39735)
 
 **Pipeline batch de generación de exámenes (LangGraph):**
 - 6 nodos: ingestor → planner → generator → evaluator → assembler → compiler

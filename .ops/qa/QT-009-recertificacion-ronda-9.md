@@ -22,7 +22,7 @@ ZIP, PDFs, descarga, BD) que las rondas 7 omitieron. Deriva de la seccion 0
 (validacion obligatoria) y la estrategia QA (navegador real, nunca solo curl).
 
 Precondiciones: stack Docker healthy (nginx :39730, exam-app :39731,
-postgres :5432); usuarios de control qa-r7 (A) y qa-r7-b (B) con contrasenas
+postgres host 39732); usuarios de control qa-r7 (A) y qa-r7-b (B) con contrasenas
 restablecidas en esta sesion; navegador integrado con la app abierta.
 
 ## Caso que debe pasar (funcionales, Playwright, navegador real)
