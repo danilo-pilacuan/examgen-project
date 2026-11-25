@@ -6,6 +6,40 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
+## 2026-11-25 (todos los puertos host al rango 3973X)
+
+* **Hecho:** segunda mitad de la sesion de migracion. La maquina es
+  multiusuario con multiples stacks Docker y los puertos comunes suelen
+  estar ocupados, asi que TODO el stack se movio a un rango dedicado:
+  frontend 3000->39730, exam-app 8000->39731, postgres 5432->39732,
+  latex-compiler 8080->39733, embedding-service 8081->39734, open-webui
+  3001->39735 (legacy), vite dev 5173->39736. El lado contenedor y la red
+  compose NO cambian; nginx sigue llegando a exam-app por nombre de
+  servicio. Referencias actualizadas: docker/docker-compose.yml, `.env`
+  (DATABASE_URL y LATEX_COMPILER_URL), scripts host (bring-up.py,
+  qa_r11_docx_index.py, test_exportar_preguntas.py, verify-threads-r8.ps1),
+  submodulos core (config.py: embedding_url 39734, openwebui_public_url
+  39730), exam-app (CORS 39730/39736), frontend (entrypoint.sh,
+  vite.config, .env.development, e2e helpers/bug026, playwright.config) y
+  agents-backend (links de descarga /output), ademas de docs (RECIPE,
+  ARCHITECTURE, readme, informe_avance, plan-frontendChatEmbebido) y .ops
+  (QT-009, IMPL-008/024/026, BUG-024/030/031, strategy). Stack recreado y
+  smoke verificado con salida real en los puertos nuevos: /health 200,
+  frontend 200, login qa-r11 200, GET /subjects 200 via nginx con Accept
+  JSON (8 materias), POST /v1/embeddings 200 (dim 1024), POST /compile 200.
+  Ademas: untrack de 10 PDFs generados en data/agent_outputs (gitignored
+  desde 58a1db7 pero aun trackeados por un commit antiguo). Commits: meta
+  10c8d9d; core 749b1a4, exam-app 362d1c8, frontend 408bbde, agents-backend
+  f5074d3.
+* **Falta:** push de meta y de los 4 submodulos - el entorno nuevo no tiene
+  credenciales GitHub; tras `gh auth login` (o token en el credential
+  helper): `git -C projects/<mod> push` en core/exam-app/frontend/
+  agents-backend y `git push origin fix/recipe-agent-boundaries` en el meta.
+* **Decision:** rango dedicado 3973X elegido y verificado libre
+  (39730-39743 sin listeners en el host); el lado contenedor se mantiene en
+  los puertos canonicos (8000/8080/8081/5432) para no romper la red compose
+  ni la documentacion interna.
+
 ## 2026-11-25 (migracion Windows -> Linux: envs, paquetes y contenedores)
 
 * **Hecho:** reinstalacion completa del entorno tras migrar el checkout de
