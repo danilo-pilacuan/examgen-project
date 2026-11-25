@@ -1,3 +1,8 @@
+# Compose project name: keeps volumes/networks under exam_gen_* instead of
+# docker_* (folder-name default) so the stack is identifiable among the
+# other compose projects on this multi-user machine.
+name: exam_gen
+
 services:
   # DB
   postgres-db:

@@ -6,6 +6,31 @@
 > Formato: una entrada por tarea, mas reciente primero. Coexiste con `.ops/project/progress.md`
 > si en el futuro se aprueba el modelo OKF de bitacora.
 
+## 2026-11-25 (stack renombrado a exam_gen; .env del propietario)
+
+* **Hecho:** el propietario actualizo `.env` y pidio dos cosas: volver a
+  levantar todo y renombrar el proyecto compose, que aparecia como `docker`
+  (nombre de la carpeta) entre los demas stacks de la maquina. Cambios:
+  clave `name: exam_gen` en [docker/docker-compose.yml](docker/docker-compose.yml)
+  (el archivo `config` de compose valida: `project: exam_gen`,
+  `restart: always` intacto), `-p exam_gen` explicito en `bring-up.py`
+  (up, tunnel up, mensajes de teardown) y en RECIPE.md con una nota
+  explicativa. Antes del rename se migraron los volumenes 1:1 para no
+  perder la BD: `docker_postgres_data -> exam_gen_postgres_data` y
+  `docker_open_webui_data -> exam_gen_open_webui_data` (`cp -a` en
+  contenedor efimero, 76.6M verificados). Stack levantado con el `.env`
+  nuevo: 5 contenedores Up, exam_app healthy, proyecto confirmado
+  `exam_gen`, red `exam_gen_default`, BD intacta (8 materias / 318 chunks /
+  6 examenes), smoke 200: health, login qa-r11, subjects via nginx,
+  embeddings (dim 1024), latex compile.
+* **Falta:** push (sin credenciales GitHub en el entorno); el propietario
+  decidira cuando borrar los volumenes antiguos `docker_postgres_data` y
+  `docker_open_webui_data`, que quedan como respaldo.
+* **Decision:** rename via clave `name:` del compose (no `-p` suelto ni
+  `COMPOSE_PROJECT_NAME` en .env) para que cualquier invocacion manual sin
+  flags tambien caiga en `exam_gen`; los volumenes se copiaron en vez de
+  renombrar con `docker volume rename` para mantener el respaldo.
+
 ## 2026-11-25 (todos los puertos host al rango 3973X)
 
 * **Hecho:** segunda mitad de la sesion de migracion. La maquina es

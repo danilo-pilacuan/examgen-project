@@ -140,8 +140,13 @@ python3 -c "import secrets; print(secrets.token_hex(48))"
 ## 3. Levantar el stack (build + health)
 
 ```bash
-docker compose -f docker/docker-compose.yml up -d --build
+docker compose -f docker/docker-compose.yml -p exam_gen up -d --build
 ```
+
+El proyecto compose se llama `exam_gen` (clave `name:` en el compose): sus
+recursos se crean como `exam_gen_postgres_data`, `exam_gen_open_webui_data`
+y red `exam_gen_default`, identificables entre los demas stacks de la
+maquina. `-p exam_gen` en comandos manuales es redundante pero inocuo.
 
 Antes de esto, la script aplica la regla 3 (deteccion de stack): si los
 contenedores `exam_*` que ya corren salen de OTRO checkout, para y

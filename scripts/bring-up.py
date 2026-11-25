@@ -36,6 +36,9 @@ import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 COMPOSE_FILE = os.path.join("docker", "docker-compose.yml")
+# Explicit project name (matches the "name:" key in the compose file)
+# so commands never depend on the folder name ("docker").
+COMPOSE_PROJECT = "exam_gen"
 HEALTH_TIMEOUT_S = 600
 TUNNEL_TIMEOUT_S = 120
 PLACEHOLDERS = ("", "sk-xxxx", "__REPLACE_ME__")
@@ -223,7 +226,7 @@ def step3_stack(args):
             msg += " (%s)" % other
         msg += ("; refusing to touch them. Re-run with --reuse-running to"
                 " adopt the running stack as-is, or stop it first from its"
-                " own checkout: docker compose -f docker/docker-compose.yml"
+                " own checkout: docker compose -f docker/docker-compose.yml -p exam_gen"
                 " down")
         fail(msg)
     if count:
@@ -231,7 +234,7 @@ def step3_stack(args):
             "refreshing with compose up")
     # A nonzero exit here can be cosmetic on some shells; health + smoke
     # checks below are the source of truth.
-    sh(["docker", "compose", "-f", COMPOSE_FILE, "up", "-d", "--build"],
+    sh(["docker", "compose", "-f", COMPOSE_FILE, "-p", COMPOSE_PROJECT, "up", "-d", "--build"],
        check=False)
     log("    Waiting for exam_app to become healthy")
     waited = 0
@@ -279,7 +282,7 @@ def step5_tunnel():
     # exam_tunnel runs inside the compose project (service "tunnel",
     # profile "tunnel") and reaches the SPA by the compose alias
     # exam-frontend; same teardown as the rest of the stack.
-    sh(["docker", "compose", "-f", COMPOSE_FILE, "--profile", "tunnel",
+    sh(["docker", "compose", "-f", COMPOSE_FILE, "-p", COMPOSE_PROJECT, "--profile", "tunnel",
         "up", "-d", "tunnel"], check=False)
     url = ""
     deadline = time.time() + TUNNEL_TIMEOUT_S
@@ -298,7 +301,7 @@ def step5_tunnel():
     log("  System is UP and EXPOSED")
     log("  Local:    http://localhost:39730")
     log("  Public:   %s" % url)
-    log("  Teardown: docker compose -f docker/docker-compose.yml "
+    log("  Teardown: docker compose -f docker/docker-compose.yml -p exam_gen "
         "--profile tunnel down")
     log("=" * 60)
 
@@ -357,7 +360,7 @@ def main():
     if args.no_tunnel:
         log("")
         log("System is UP (local only). Teardown: "
-            "docker compose -f docker/docker-compose.yml down")
+            "docker compose -f docker/docker-compose.yml -p exam_gen down")
         return
     step5_tunnel()
 
